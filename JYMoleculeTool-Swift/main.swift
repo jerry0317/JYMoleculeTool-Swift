@@ -8,32 +8,66 @@
 
 import Foundation
 
-//
-// Currently a test ground to test everything
-//
+var filePass = false
+var xyzSet = XYZFile()
 
-print("Hello, World!")
+while !filePass {
+    do {
+        let filePath: String = String(describing: input(name: "XYZ file Path", type: "string"))
+        xyzSet = try XYZFile(fromPath: filePath)
+        filePass = true
+        print("Successfully imported from XYZ file.")
+    } catch let error {
+        print("Error: \(error). Please try again.")
+    }
+}
 
-//let vec1 = Vector3D(1,2,3)
-//let vec2 = Vector3D(2,3,4)
-//let vec3 = Vector3D(1,2,3)
-//
-//print(vec1 == vec2)
-//print(vec1 == vec3)
+guard let rawAtoms = xyzSet.atoms else {
+    print("No Atoms. Fatal Error.")
+    exit(-1)
+}
 
-//let bond = ChemBondType("C", "O")
-//let bond2 = ChemBondType("C", "C", 2)
-//let bond3 = ChemBondType("C", "O", 1)
-//print(bond == bond2)
-//print(bond == bond3)
+let carbonAtoms: [Atom] = rawAtoms.select(byName: "C")
+let oxygenAtoms: [Atom] = rawAtoms.select(byName: "O")
 
-//let bond = ChemBondType("C", "C")
-//print(bond.validate())
+let combAtoms = carbonAtoms + oxygenAtoms
 
-//let bond = ChemBond(Atom("C"), Atom("C"), ChemBondType("C", "C"))
-//let bond2 = ChemBond(Atom("C"), Atom("C"), ChemBondType("C", "C", 1))
-//print(bond == bond2)
+let tolerenceLevel = 0.1
 
-let vec1 = Vector3D(1.5,2.3,3.2)
-let vec2 = Vector3D(1.2,-1.2,9.0)
-print(vec1 .* vec2)
+let A1 = combAtoms[0]
+print("The first atom has been fixed.")
+
+let combrAtoms = combAtoms.filter({$0 != A1})
+
+let initialSMol = StrcMolecule(Set([A1]))
+
+var possibleList: [StrcMolecule] = []
+
+let tInitial = Date()
+
+rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, possibleList: &possibleList)
+
+let tTaken = -(Double(tInitial.timeIntervalSinceNow))
+let roundTTaken = String(format: "%.2f", tTaken)
+
+
+var iCode = 0
+
+// Printing results
+for pMol in possibleList {
+    iCode = iCode + 1
+    print("**** Molecule No.\(iCode) ****")
+    for atom in pMol.atoms {
+        print("\(atom.name)     \(atom.rvec!.dictVec)")
+    }
+}
+
+print("=================")
+print("Duration of computation: \(roundTTaken) s.")
+print("Number of combinations to work with: \(pow(8, combrAtoms.count)).")
+print("Number of plausible results: \(possibleList.count).")
+
+
+
+
+

@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		9C12549522BC167100411356 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C12549422BC167100411356 /* main.swift */; };
 		9C12549C22BC176D00411356 /* mTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C12549B22BC176D00411356 /* mTools.swift */; };
+		9D2A500122BD6C0900EEB2CD /* fileTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D2A500022BD6C0900EEB2CD /* fileTools.swift */; };
+		9D2A500322BD7AD100EEB2CD /* basicTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D2A500222BD7AD100EEB2CD /* basicTools.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,6 +29,8 @@
 		9C12549122BC167100411356 /* JYMoleculeTool-Swift */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "JYMoleculeTool-Swift"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C12549422BC167100411356 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		9C12549B22BC176D00411356 /* mTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mTools.swift; sourceTree = "<group>"; };
+		9D2A500022BD6C0900EEB2CD /* fileTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = fileTools.swift; sourceTree = "<group>"; };
+		9D2A500222BD7AD100EEB2CD /* basicTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = basicTools.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +64,8 @@
 			isa = PBXGroup;
 			children = (
 				9C12549422BC167100411356 /* main.swift */,
+				9D2A500222BD7AD100EEB2CD /* basicTools.swift */,
+				9D2A500022BD6C0900EEB2CD /* fileTools.swift */,
 				9C12549B22BC176D00411356 /* mTools.swift */,
 			);
 			path = "JYMoleculeTool-Swift";
@@ -123,7 +129,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9D2A500122BD6C0900EEB2CD /* fileTools.swift in Sources */,
 				9C12549522BC167100411356 /* main.swift in Sources */,
+				9D2A500322BD7AD100EEB2CD /* basicTools.swift in Sources */,
 				9C12549C22BC176D00411356 /* mTools.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

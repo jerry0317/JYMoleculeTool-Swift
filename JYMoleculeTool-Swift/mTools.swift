@@ -128,6 +128,20 @@ struct Atom {
         self.name = name
         self.rvec = rvec
     }
+    
+    var possibles: [Atom] {
+        var possibleList: [Atom] = []
+        if rvec == nil {
+            return []
+        } else {
+            let possibleRvecList = rvec!.resign()
+            for possibleRvec in possibleRvecList {
+                let newAtom = Atom(name, possibleRvec)
+                possibleList.append(newAtom)
+            }
+        }
+        return possibleList
+    }
 }
 
 extension Atom: Hashable {
@@ -150,7 +164,7 @@ struct ChemBondType {
     /**
      The names of the two atoms in the chemical bond.
      */
-    var atomNames: Set<String>
+    var atomNames: Array<String>
     
     /**
      The order of the bond.
@@ -167,7 +181,7 @@ struct ChemBondType {
      */
     var bdCode: String {
         var code = ""
-        var atomNamesArray = Array(atomNames)
+        var atomNamesArray = atomNames
         atomNamesArray.sort()
         for a in atomNamesArray {
             code.append(a)
@@ -340,25 +354,6 @@ extension StrcMolecule: Hashable {
     }
 }
 
-
-/**
- Resign the rvec for a list of atoms
- */
-func findPossibleAtoms(_ atoms: [Atom]) -> [Atom] {
-    var possibleList: [Atom] = []
-    for atom in atoms {
-        guard atom.rvec != nil else {
-            continue
-        }
-        let possibleRvecList = atom.rvec!.resign()
-        for possibleRvec in possibleRvecList {
-            let newAtom = Atom(atom.name, possibleRvec)
-            possibleList.append(newAtom)
-        }
-    }
-    return possibleList
-}
-
 /**
  Calculate the distance between two atoms
  */
@@ -421,7 +416,6 @@ func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange
     }
     else {
         mol.bondGraphs.removeAll()
-        
         for vAtom in stMol.atoms {
             let possibleBts = possibleBondTypes(vAtom.name, atom.name)
             for bondType in possibleBts {
@@ -460,4 +454,62 @@ func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange
         }
     }
     return mol
+}
+
+/**
+ Extension of Atom array to be selected by name
+ */
+extension Array where Element == Atom {
+    func select(byName name: String) -> [Atom] {
+        return filter({$0.name == name})
+    }
+    
+    var possibles: [Atom] {
+        var possibleList: [Atom] = []
+        for atom in self {
+            possibleList.append(contentsOf: atom.possibles)
+        }
+        return possibleList
+    }
+}
+
+/**
+ The recursion constructor. It takes a test atom and compared it with a valid structrual molecule. It will return the possible structural molecules as the atom and the molecule join together.
+ */
+func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1) -> [StrcMolecule] {
+    let possibleAtoms = atom.possibles
+    var possibleSMList: [StrcMolecule] = []
+    
+    for pAtom in possibleAtoms {
+        let sMol = bondLengthStrcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange)
+        
+        if !sMol.bondGraphs.isEmpty {
+            possibleSMList.append(sMol)
+        }
+    }
+    return possibleSMList
+}
+
+/**
+ The recursion action to perform recursion.
+ */
+func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, possibleList pList: inout [StrcMolecule]) {
+    if !rAtoms.isEmpty {
+        for stMol in mList {
+            for rAtom in rAtoms {
+                let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange)
+                if !newMList.isEmpty {
+                    let newRAtoms = rAtoms.filter({$0 != rAtom})
+                    rcsAction(rAtoms: newRAtoms, stMolList: newMList, tolRange: tolRange, possibleList: &pList)
+                }
+            }
+        }
+    } else {
+        for stMol in mList {
+            if pList.filter({$0 == stMol}).isEmpty {
+                pList.append(stMol)
+                print("The possible No. \(pList.count) is found.")
+            }
+        }
+    }
 }
