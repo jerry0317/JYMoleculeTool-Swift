@@ -88,4 +88,3 @@ struct XYZFile: File {
         return (countFromFile, noteFromFile, atomsFromFile)
     }
 }
-

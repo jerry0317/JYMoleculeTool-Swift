@@ -8,6 +8,16 @@
 
 import Foundation
 
+/**
+ Tolerence level used in bond length filter. Unit in angstrom.
+ */
+let tolerenceLevel = 0.1
+
+/**
+ Trim level used to trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level. Unit in angstrom. Suggested to be siginificantly smaller than the major component(s) of the position vector.
+ */
+let trimLevel = 0.01
+
 var filePass = false
 var xyzSet = XYZFile()
 
@@ -27,18 +37,14 @@ guard let rawAtoms = xyzSet.atoms else {
     exit(-1)
 }
 
-let carbonAtoms: [Atom] = rawAtoms.select(byName: "C")
-let oxygenAtoms: [Atom] = rawAtoms.select(byName: "O")
+var combAtoms: [Atom] = rawAtoms.select(byName: "C") + rawAtoms.select(byName: "O")
+combAtoms.trimDownRVecs(level: trimLevel)
 
-let combAtoms = carbonAtoms + oxygenAtoms
-
-let tolerenceLevel = 0.1
-
+// Fix the first atom
 let A1 = combAtoms[0]
 print("The first atom has been fixed.")
 
 let combrAtoms = combAtoms.filter({$0 != A1})
-
 let initialSMol = StrcMolecule(Set([A1]))
 
 var possibleList: [StrcMolecule] = []
@@ -47,9 +53,8 @@ let tInitial = Date()
 
 rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, possibleList: &possibleList)
 
-let tTaken = -(Double(tInitial.timeIntervalSinceNow))
-let roundTTaken = String(format: "%.2f", tTaken)
-
+let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
+let roundTTaken = String(format: "%.4f", timeTaken)
 
 var iCode = 0
 
@@ -66,8 +71,3 @@ print("=================")
 print("Duration of computation: \(roundTTaken) s.")
 print("Number of combinations to work with: \(pow(8, combrAtoms.count)).")
 print("Number of plausible results: \(possibleList.count).")
-
-
-
-
-

@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Accelerate
 
 /**
  Position vector (three-dimensional)
@@ -106,6 +105,7 @@ extension Vector3D {
             let newRVec = Vector3D(newDict)
             possibleList.append(newRVec)
         }
+        possibleList = Array(Set(possibleList)) // Remove duplicates
         return possibleList
     }
 }
@@ -141,6 +141,19 @@ struct Atom {
             }
         }
         return possibleList
+    }
+    
+    @discardableResult
+    mutating func trimDownRVec(level trimLevel: Double = 0.01) -> Bool {
+        guard rvec != nil else {
+            return false
+        }
+        for i in 0...2 {
+            if abs(rvec!.dictVec[i]) <= trimLevel {
+                rvec!.dictVec[i] = 0
+            }
+        }
+        return true
     }
 }
 
@@ -456,10 +469,10 @@ func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange
     return mol
 }
 
-/**
- Extension of Atom array to be selected by name
- */
 extension Array where Element == Atom {
+    /**
+     Extension of Atom array to be selected by name
+     */
     func select(byName name: String) -> [Atom] {
         return filter({$0.name == name})
     }
@@ -470,6 +483,11 @@ extension Array where Element == Atom {
             possibleList.append(contentsOf: atom.possibles)
         }
         return possibleList
+    }
+    
+    @discardableResult
+    mutating func trimDownRVecs(level trimLevel: Double = 0.005) -> [Bool] {
+        return self.indices.map({self[$0].trimDownRVec(level: trimLevel)})
     }
 }
 
