@@ -27,6 +27,10 @@ struct Vector3D{
         self.dictVec = dictVec
     }
     
+    var magnitude: Double {
+        return sqrt(self.*self)
+    }
+    
     var dictVec: [Double] {
         get {
             return [x, y, z]
@@ -69,6 +73,8 @@ extension Vector3D {
 infix operator +: AdditionPrecedence
 infix operator -: AdditionPrecedence
 infix operator .*: MultiplicationPrecedence
+infix operator *: MultiplicationPrecedence
+infix operator /: MultiplicationPrecedence
 extension Vector3D {
     /**
      Vector Addition
@@ -87,6 +93,24 @@ extension Vector3D {
      */
     static func .* (left: Vector3D, right: Vector3D) -> Double {
         return left.x * right.x + left.y * right.y + left.z * right.z
+    }
+    /**
+     Scalar Product
+     */
+    static func * (left: Double, right: Vector3D) -> Vector3D {
+        return Vector3D(left * right.x, left * right.y, left * right.z)
+    }
+    /**
+     Scalar Product
+     */
+    static func * (left: Vector3D, right: Double) -> Vector3D {
+        return Vector3D(left.x * right, left.y * right, left.z * right)
+    }
+    /**
+     Scalar Product (Division)
+     */
+    static func / (left: Vector3D, right: Double) -> Vector3D {
+        return Vector3D(left.x / right, left.y / right, left.z / right)
     }
 }
 
@@ -217,14 +241,9 @@ struct ChemBondType {
     /**
      The dictionary storing the known bond lengths.
      */
-    private let bondLengths = [
-        "CC1": 1.54,
-        "CC2": 1.34,
-        "CC3": 1.20,
-        "CO1": 1.43,
-        "OO1": 1.48,
-        "OO2": 1.21
-    ]
+    private var bondLengths: [String: Double] {
+        return Constants.Chem.bondLengths
+    }
     
     /**
      Tells if a bond type is valid.
@@ -305,11 +324,27 @@ struct ChemBondGraph {
     func degreeOfAtom(_ atom: Atom) -> Int{
         var deg = 0
         for bond in bonds {
-            if bond.atoms.contains(atom){
+            if bond.atoms.contains(atom) {
                 deg = deg + 1
             }
         }
         return deg
+    }
+    
+    /**
+     The adjacencies of atom. Returns the neighboring atoms and connecting bonds.
+     */
+    func adjacenciesOfAtom(_ atom: Atom) -> ([Atom], [ChemBond]) {
+        var atomList: [Atom] = []
+        var bondList: [ChemBond] = []
+        for bond in bonds {
+            if bond.atoms.contains(atom) {
+                let rAtoms = Array(bond.atoms).filter({$0 != atom})
+                atomList.append(rAtoms[0])
+                bondList.append(bond)
+            }
+        }
+        return (atomList, bondList)
     }
 }
 
@@ -347,6 +382,13 @@ struct StrcMolecule {
      */
     var size: Int {
         return atoms.count
+    }
+    
+    /**
+     The center of mass of the molecule
+     */
+    var centerOfMass: Vector3D {
+        return atoms.centerOfMass
     }
     
     mutating func addAtom(_ atom: Atom){
@@ -477,6 +519,16 @@ extension Array where Element == Atom {
         return filter({$0.name == name})
     }
     
+    @discardableResult
+    mutating func trimDownRVecs(level trimLevel: Double = 0.005) -> [Bool] {
+        return self.indices.map({self[$0].trimDownRVec(level: trimLevel)})
+    }
+}
+
+extension Collection where Iterator.Element == Atom {
+    /**
+     Possible atoms after resigning
+     */
     var possibles: [Atom] {
         var possibleList: [Atom] = []
         for atom in self {
@@ -485,9 +537,26 @@ extension Array where Element == Atom {
         return possibleList
     }
     
-    @discardableResult
-    mutating func trimDownRVecs(level trimLevel: Double = 0.005) -> [Bool] {
-        return self.indices.map({self[$0].trimDownRVec(level: trimLevel)})
+    /**
+     The center of mass of several atoms
+     */
+    var centerOfMass: Vector3D {
+        var cmVec = Vector3D()
+        if self.count > 0 {
+            var totalMass: Double = 0.0
+            for atom in self {
+                guard let rvec: Vector3D = atom.rvec else {
+                    continue
+                }
+                guard let mass: Double = Constants.Chem.atomicMasses[atom.name] else {
+                    continue
+                }
+                totalMass = totalMass + mass
+                cmVec = cmVec + mass * rvec
+            }
+            cmVec = cmVec / totalMass
+        }
+        return cmVec
     }
 }
 
@@ -530,4 +599,13 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
             }
         }
     }
+}
+
+func fourCarbonPlanarDistance(center: Atom, attached: [Atom]) -> Double? {
+    let attachedCenter = attached.centerOfMass
+    guard let centerVec: Vector3D = center.rvec else{
+        return nil
+    }
+    let dVec = centerVec - attachedCenter
+    return dVec.magnitude
 }

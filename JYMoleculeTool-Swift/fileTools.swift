@@ -49,6 +49,27 @@ struct XYZFile: File {
         try self.init(fromURL: urlPath)
     }
     
+    init(fromAtoms atoms: [Atom]) {
+        self.importFromAtoms(atoms)
+    }
+    
+    var xyzString: String? {
+        guard count != nil && note != nil && atoms != nil else {
+            return nil
+        }
+        
+        var str: String
+        str = String(count!) + "\n" + note! + "\n"
+        for atom in atoms! {
+            guard atom.rvec != nil else {
+                continue
+            }
+            let rvec = atom.rvec!.dictVec
+            str = str + "\(atom.name)   \(rvec[0])  \(rvec[1])  \(rvec[2])\n"
+        }
+        return str
+    }
+    
     private func importFromString(_ str: String) -> (Int?, String?, [Atom]?) {
         let lines = str.split {$0.isNewline}
         var countFromFile: Int? = nil
@@ -86,5 +107,40 @@ struct XYZFile: File {
             }
         }
         return (countFromFile, noteFromFile, atomsFromFile)
+    }
+    
+    mutating func importFromAtoms(_ atomList: [Atom], note comment: String = "") {
+        count = atomList.count
+        note = comment
+        atoms = atomList
+    }
+    
+    enum xyzExportError: Error {
+        case xyzStringIsNil
+    }
+    
+    func export(toFile path: URL) throws {
+        guard xyzString != nil else {
+            throw xyzExportError.xyzStringIsNil
+        }
+        let data = Data(xyzString!.utf8)
+        do {
+            try data.write(to: path)
+        } catch let error {
+            throw error
+        }
+    }
+}
+
+extension URL {
+    var lastPathComponentName: String {
+        let lastPath = self.lastPathComponent
+        var components = lastPath.components(separatedBy: ".")
+        if components.count > 1 {
+            components.removeLast()
+            return components.joined(separator: ".")
+        } else {
+            return lastPath
+        }
     }
 }
