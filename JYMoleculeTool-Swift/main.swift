@@ -16,7 +16,7 @@ let tolerenceLevel = 0.1
 /**
  Trim level used to trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level. Unit in angstrom. Suggested to be siginificantly smaller than the major component(s) of the position vector.
  */
-let trimLevel = 0.1
+let trimLevel = 0.05
 
 let saveXYZ = false
 var writePass = false
@@ -94,9 +94,16 @@ for pMol in possibleList {
         }
         return $0.rvec!.magnitude > $1.rvec!.magnitude
     })
-    print("Number of Bond Graphs: \(pMol.bondGraphs.count)")
+    let bondGraph = Array(pMol.bondGraphs)[0]
+    
     for atom in atomList {
-        print("\(atom.name)     \(atom.rvec!.dictVec)")
+        print("\(atom.name)     \(atom.rvec!.dictVec)", terminator: "")
+        if bondGraph.degreeOfAtom(atom) == 3 {
+            let (adjacentAtoms, _) = bondGraph.adjacenciesOfAtom(atom)
+            print("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))")
+        }else{
+            print()
+        }
     }
     
     let cmVec = pMol.centerOfMass

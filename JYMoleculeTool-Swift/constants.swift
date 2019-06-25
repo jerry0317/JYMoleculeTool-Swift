@@ -17,19 +17,23 @@ enum Constants {
      */
     enum Chem {
         /**
-         Known bond lengths of chemical bonds. Unit in Angstrom.
+         Known bond lengths of chemical bonds. Unit in Angstrom. **(Currently simplified list)**
+         
+         - **Source:** Allen, F. H., Kennard, O., Watson, D. G., Brammer, L., Orpen, A. G., & Taylor, R. (1987). Tables of bond lengths determined by X-ray and neutron diffraction. Part 1. Bond lengths in organic compounds. Journal of the Chemical Society, Perkin Transactions 2, (12), S1-S19.
          */
         static let bondLengths = [
-            "CC1": 1.54,
-            "CC2": 1.34,
-            "CC3": 1.20,
-            "CO1": 1.43,
-            "OO1": 1.48,
-            "OO2": 1.21
+            "CC1": 1.4825,
+            "CC2": 1.343,
+            "CC3": 1.183,
+            "CO1": 1.3925,
+            "CO2": 1.221,
+            "OO1": 1.480
         ]
         
         /**
-         Known atom mass. Unit in amu. (source: pbg.lbl.gov)
+         Known atom mass. Unit in amu.
+         
+         - **Source:** pbg.lbl.gov)
          */
         static let atomicMasses = [
             "H": 1.00794,

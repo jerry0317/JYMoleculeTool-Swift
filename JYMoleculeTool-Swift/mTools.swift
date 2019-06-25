@@ -601,7 +601,10 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
     }
 }
 
-func fourCarbonPlanarDistance(center: Atom, attached: [Atom]) -> Double? {
+/**
+ (D3APD) The distance between a degree-3 atom and the co-plane of its three adjacent atom.
+ */
+func degreeThreeAtomPlanarDistance(center: Atom, attached: [Atom]) -> Double? {
     let attachedCenter = attached.centerOfMass
     guard let centerVec: Vector3D = center.rvec else{
         return nil
