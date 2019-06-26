@@ -176,6 +176,9 @@ struct Atom {
         return possibleList
     }
     
+    /**
+     Trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level.
+     */
     @discardableResult
     mutating func trimDownRVec(level trimLevel: Double = 0.01) -> Bool {
         guard rvec != nil else {
@@ -185,6 +188,20 @@ struct Atom {
             if abs(rvec!.dictVec[i]) <= trimLevel {
                 rvec!.dictVec[i] = 0
             }
+        }
+        return true
+    }
+    
+    /**
+     Round the component of the position vector to provided digits after decimal.
+     */
+    @discardableResult
+    mutating func roundRVec(digitsAfterDecimal digit: Int) -> Bool {
+        guard rvec != nil else {
+            return false
+        }
+        for i in 0...2 {
+            rvec!.dictVec[i].round(digitsAfterDecimal: digit)
         }
         return true
     }
@@ -538,9 +555,27 @@ extension Array where Element == Atom {
         return filter({$0.name == name})
     }
     
+    /**
+     Extension of Atom array to be removed by name
+     */
+    func remove(byName name: String) -> [Atom] {
+        return filter({$0.name != name})
+    }
+    
+    /**
+     Trim down the position vectors of all the atoms in the array.
+     */
     @discardableResult
     mutating func trimDownRVecs(level trimLevel: Double = 0.005) -> [Bool] {
         return self.indices.map({self[$0].trimDownRVec(level: trimLevel)})
+    }
+    
+    /**
+     Round the position vectors of all the atoms in the array.
+     */
+    @discardableResult
+    mutating func roundRVecs(digitsAfterDecimal digits: Int) -> [Bool] {
+        return self.indices.map({self[$0].roundRVec(digitsAfterDecimal: digits)})
     }
 }
 
@@ -616,7 +651,7 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
                 pList.append(stMol)
                 print("Number of possible results: \(pList.count)", terminator: "")
                 if trueMol != nil && trueMol!.atoms == stMol.atoms {
-                    print("     ##The correct structure has been found.")
+                    print("     ## The correct structure has been found.")
                 } else {
                     print()
                 }

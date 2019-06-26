@@ -9,25 +9,25 @@
 import Foundation
 
 extension Double {
-    func rounded(digitsAfterDecimal digit: Double) -> Double{
-        let power = pow(10, digit)
+    func rounded(digitsAfterDecimal digit: Int) -> Double{
+        let power = Double(pow(10, Double(digit)))
         var x = self * power
         x.round()
         x = x / power
         return x
     }
     
-    mutating func round(digitsAfterDecimal digit: Double) {
+    mutating func round(digitsAfterDecimal digit: Int) {
         self = self.rounded(digitsAfterDecimal: digit)
     }
 }
 
 extension Array where Element == Double {
-    func rounded(digitsAfterDecimal digit: Double) -> [Double]{
+    func rounded(digitsAfterDecimal digit: Int) -> [Double]{
         return self.map({$0.rounded(digitsAfterDecimal: digit)})
     }
     
-    mutating func round(digitsAfterDecimal digit: Double) {
+    mutating func round(digitsAfterDecimal digit: Int) {
         self = self.rounded(digitsAfterDecimal: digit)
     }
 }

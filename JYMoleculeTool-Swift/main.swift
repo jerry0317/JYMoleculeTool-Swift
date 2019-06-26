@@ -11,12 +11,18 @@ import Foundation
 /**
  Tolerence level used in bond length filter. Unit in angstrom.
  */
-let tolerenceLevel = 0.1
+let tolerenceLevel = 0.05
 
 /**
+ (Deprecated, may be invoked for future use)
  Trim level used to trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level. Unit in angstrom. Suggested to be siginificantly smaller than the major component(s) of the position vector.
  */
-let trimLevel = 0.05
+//let trimLevel = 0.05
+
+/**
+ The number of digits preserved after rounding the position vector of the atoms. The rounding level is suggested to be siginificantly smaller than the major component(s) of the position vector.
+ */
+let roundDigits = 2
 
 let saveXYZ = false
 var writePass = false
@@ -55,8 +61,11 @@ if saveXYZ {
     }
 }
 
-var combAtoms: [Atom] = rawAtoms.select(byName: "C") + rawAtoms.select(byName: "O")
-combAtoms.trimDownRVecs(level: trimLevel)
+var combAtoms: [Atom] = rawAtoms.remove(byName: "H")
+//combAtoms.trimDownRVecs(level: trimLevel)
+combAtoms.roundRVecs(digitsAfterDecimal: roundDigits)
+
+print("Total number of non-Hydrogen atoms: \(combAtoms.count)")
 
 // Fix the first atom
 let A1 = combAtoms[0]
@@ -105,10 +114,12 @@ for pMol in possibleList {
         }
     }
     
-//    print("--Bond information--")
-//    for bond in bondGraph.bonds {
-//        print("Bond code: \(bond.type.bdCode)   Bond distance: \(bond.distance!)")
-//    }
+    print("--Bond information--")
+    print("The number of possible bond graphs: \(pMol.bondGraphs.count)")
+    print("====The first bond graph====")
+    for bond in bondGraph.bonds {
+        print("Bond code: \(bond.type.bdCode)   Bond distance: \(bond.distance!.rounded(digitsAfterDecimal: 4))")
+    }
     
     let cmVec = pMol.centerOfMass
     let cmDevVec = cmVec - combAtoms.centerOfMass
@@ -132,3 +143,4 @@ print("=================")
 print("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
 print("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
 print("Total number of possible results: \(possibleList.count).")
+print("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1))")
