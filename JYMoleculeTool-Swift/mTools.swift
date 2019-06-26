@@ -11,7 +11,7 @@ import Foundation
 /**
  Position vector (three-dimensional)
  */
-struct Vector3D{
+struct Vector3D {
     var x: Double
     var y: Double
     var z: Double
@@ -25,6 +25,15 @@ struct Vector3D{
     init(_ dictVec: [Double]){
         self.init()
         self.dictVec = dictVec
+    }
+    
+    subscript(index: Int) -> Double {
+        get {
+            return dictVec[index]
+        }
+        set {
+            dictVec[index] = newValue
+        }
     }
     
     var magnitude: Double {
@@ -287,9 +296,13 @@ struct ChemBond {
         self.type = bondType
     }
     
-//    var distance: Double {
-//
-//    }
+    var distance: Double? {
+        let atomList = Array(atoms)
+        guard atomList.count == 2 else {
+            return nil
+        }
+        return atomDistance(atomList[0], atomList[1])
+    }
 }
 
 extension ChemBond: Hashable {
@@ -487,11 +500,17 @@ func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange
                             continue
                         }
                         if d < (bondType.length! - tolRange) {
+                            //print("Distance: \(d)   BondType length: \(bondType.length!)  Atoms: \(vRAtom.name)   \(atom.name)")
+//                            let diff = d - (bondType.length! - tolRange)
+//                            if abs(diff) < abs(tolRange) {
+//                                print("\(diff.rounded(digitsAfterDecimal: 4))")
+//                            }
                             dPass = false
                         }
                     }
                     if dPass {
                         let pBond = ChemBond(vAtom, atom, bondType)
+                        // print("Distance: \(pBond.distance!)     Type: \(pBond.type.bdCode)")
                         mol.addAtom(atom)
                         if stMol.size == 1 {
                             mol.bondGraphs.insert(ChemBondGraph(Set([pBond])))
@@ -580,14 +599,14 @@ func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1) -> 
 /**
  The recursion action to perform recursion.
  */
-func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, possibleList pList: inout [StrcMolecule]) {
+func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, possibleList pList: inout [StrcMolecule], trueMol: StrcMolecule? = nil) {
     if !rAtoms.isEmpty {
         for stMol in mList {
             for rAtom in rAtoms {
                 let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange)
                 if !newMList.isEmpty {
                     let newRAtoms = rAtoms.filter({$0 != rAtom})
-                    rcsAction(rAtoms: newRAtoms, stMolList: newMList, tolRange: tolRange, possibleList: &pList)
+                    rcsAction(rAtoms: newRAtoms, stMolList: newMList, tolRange: tolRange, possibleList: &pList, trueMol: trueMol)
                 }
             }
         }
@@ -595,7 +614,12 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
         for stMol in mList {
             if pList.filter({$0 == stMol}).isEmpty {
                 pList.append(stMol)
-                print("The possible No. \(pList.count) is found.")
+                print("Number of possible results: \(pList.count)", terminator: "")
+                if trueMol != nil && trueMol!.atoms == stMol.atoms {
+                    print("     ##The correct structure has been found.")
+                } else {
+                    print()
+                }
             }
         }
     }

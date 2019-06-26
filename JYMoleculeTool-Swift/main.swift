@@ -69,10 +69,9 @@ var possibleList: [StrcMolecule] = []
 
 let tInitial = Date()
 
-rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, possibleList: &possibleList)
+rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, possibleList: &possibleList, trueMol: StrcMolecule(Set(combAtoms)))
 
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
-let roundTTaken = String(format: "%.4f", timeTaken)
 
 var iCode = 0
 
@@ -106,6 +105,11 @@ for pMol in possibleList {
         }
     }
     
+//    print("--Bond information--")
+//    for bond in bondGraph.bonds {
+//        print("Bond code: \(bond.type.bdCode)   Bond distance: \(bond.distance!)")
+//    }
+    
     let cmVec = pMol.centerOfMass
     let cmDevVec = cmVec - combAtoms.centerOfMass
     print("- Center of Mass: \(cmVec.dictVec.rounded(digitsAfterDecimal: 4))")
@@ -125,6 +129,6 @@ for pMol in possibleList {
 }
 
 print("=================")
-print("Duration of computation: \(roundTTaken) s.")
-print("Number of combinations to work with: \(pow(8, combrAtoms.count)).")
-print("Number of plausible results: \(possibleList.count).")
+print("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
+print("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
+print("Total number of possible results: \(possibleList.count).")

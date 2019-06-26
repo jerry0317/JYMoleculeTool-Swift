@@ -71,7 +71,7 @@ struct XYZFile: File {
     }
     
     private func importFromString(_ str: String) -> (Int?, String?, [Atom]?) {
-        let lines = str.split {$0.isNewline}
+        let lines = str.split(omittingEmptySubsequences: false, whereSeparator: {$0.isNewline})
         var countFromFile: Int? = nil
         var noteFromFile: String? = nil
         var atomsFromFile: Array<Atom>? = nil
@@ -87,6 +87,9 @@ struct XYZFile: File {
             case 1:
                 noteFromFile = String(line)
             default:
+                guard !line.isEmpty else {
+                    break
+                }
                 if atomsFromFile == nil {
                     atomsFromFile = []
                 }

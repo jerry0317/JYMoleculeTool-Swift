@@ -33,7 +33,7 @@ enum Constants {
         /**
          Known atom mass. Unit in amu.
          
-         - **Source:** pbg.lbl.gov)
+         - **Source:** pbg.lbl.gov
          */
         static let atomicMasses = [
             "H": 1.00794,
