@@ -71,8 +71,8 @@
 				9D2A500222BD7AD100EEB2CD /* basicTools.swift */,
 				9D2A500022BD6C0900EEB2CD /* fileTools.swift */,
 				9C12549B22BC176D00411356 /* mTools.swift */,
-				9D49100722C15EEC0026B068 /* constants.swift */,
 				9D49100922C168C10026B068 /* mathTools.swift */,
+				9D49100722C15EEC0026B068 /* constants.swift */,
 			);
 			path = "JYMoleculeTool-Swift";
 			sourceTree = "<group>";

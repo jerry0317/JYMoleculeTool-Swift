@@ -11,7 +11,8 @@ import Foundation
 /**
  Tolerence level used in bond length filter. Unit in angstrom.
  */
-let tolerenceLevel = 0.05
+let tolerenceLevel = 0.1
+
 
 /**
  (Deprecated, may be invoked for future use)
@@ -109,12 +110,10 @@ for pMol in possibleList {
         print("\(atom.name)     \(atom.rvec!.dictVec)", terminator: "")
         let (adjacentAtoms, _) = bondGraph.adjacenciesOfAtom(atom)
         if bondGraph.degreeOfAtom(atom) == 3 {
-            print("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))")
-        } else if bondGraph.degreeOfAtom(atom) == 2 {
-            print("     D2ABA: \(bondAngle(center: atom, attached: adjacentAtoms, unit: UnitAngle.degrees)!.rounded(digitsAfterDecimal: 2))°")
-        } else {
-            print()
+            print("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))", terminator: "")
         }
+        let bAString: String = bondAngles(center: atom, attached: adjacentAtoms, unit: UnitAngle.degrees).map({ Array($0.1.map { $0.name }).joined(separator: atom.name) + ": " + String($0.0!.rounded(digitsAfterDecimal: 1)) + "°" }).joined(separator: ", ")
+        print("     BAs: [" + bAString + "]")
     }
     
     print("--Bond information--")

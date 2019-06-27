@@ -48,6 +48,11 @@ enum Constants {
             "Ne": 20.1797
         ]
         
+        static let valences = [
+            "C": 4,
+            "O": 2
+        ]
+        
         /**
          The VESPR molecular type.
          */

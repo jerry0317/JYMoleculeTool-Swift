@@ -213,6 +213,10 @@ struct Atom {
         return possibleList
     }
     
+    var valence: Int {
+        return Constants.Chem.valences[name] ?? 0
+    }
+    
     /**
      Trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level.
      */
@@ -269,11 +273,11 @@ struct ChemBondType {
     /**
      The order of the bond.
      */
-    var bondOrder: Int
+    var order: Int
     
     init(_ atom1: String, _ atom2: String, _ bondOrder: Int = 1){
         self.atomNames = [atom1, atom2]
-        self.bondOrder = bondOrder
+        self.order = bondOrder
     }
     
     /**
@@ -286,7 +290,7 @@ struct ChemBondType {
         for a in atomNamesArray {
             code.append(a)
         }
-        code.append(String(bondOrder))
+        code.append(String(order))
         return code
     }
     
@@ -426,14 +430,41 @@ protocol SubChemBondGraph {
 /**
  A subgraph of the bond graph that centered on one atom for VSEPR analysis. (Not finished)
  */
-struct VESPRSubBondGraph: SubChemBondGraph {
+struct VESPRGraph: SubChemBondGraph {
     var bonds: Set<ChemBond>
     
     var type: Constants.Chem.VESPRType
     
-    var center: Atom
+    var center: Atom? {
+        let atomList = Array(bonds).flatMap { Array($0.atoms) }
+        var centerAtom: Atom? = nil
+        for atom in atoms {
+            if (atomList.filter { $0 == atom }).count == bonds.count {
+                centerAtom = atom
+            }
+        }
+        return centerAtom
+    }
     
-    var attached: [Atom]
+    private var atoms: Set<Atom> {
+        return Set(Array(bonds).flatMap { Array($0.atoms) })
+    }
+    
+    var attached: [Atom] {
+        return Array(atoms).filter { $0 != center }
+    }
+    
+    var valenceAllowed: Int {
+        return center?.valence ?? 0
+    }
+    
+    var valenceOccupied: Int {
+        return Array(bonds).reduce(0, { $0 + $1.type.order })
+    }
+    
+    var valenceAvailable: Int {
+        return valenceAllowed - valenceOccupied
+    }
     
 }
 
@@ -544,8 +575,8 @@ func possibleBondTypes(_ atomName1: String, _ atomName2: String) -> [ChemBondTyp
  A bond angle filter for AX2E2 type. (Experimental)
  */
 func ax2e2BondAngleFilter(center aAtom: Atom, attached xAtoms: [Atom], range: ClosedRange<Double> = 90.0...120.0) -> Bool {
-    let bondAngle = degreeTwoAtomBondAngle(center: aAtom, attached: xAtoms, unit: UnitAngle.degrees)
-    if bondAngle == nil || !range.contains(bondAngle!) {
+    let theta = bondAngle(center: aAtom, attached: xAtoms, unit: UnitAngle.degrees)
+    if theta == nil || !range.contains(theta!) {
         return false
     } else {
         return true
@@ -774,20 +805,6 @@ func degreeThreeAtomPlanarDistance(center: Atom, attached: [Atom]) -> Double? {
 }
 
 /**
- (D2ABA) The angle between the two adjacent atoms of a degree-2 atom.
- */
-func degreeTwoAtomBondAngle(center: Atom, attached: [Atom]) -> Measurement<UnitAngle>? {
-    let attachedRVecs = attached.compactMap { $0.rvec }
-    guard center.rvec != nil && attachedRVecs.count == 2 else {
-        return nil
-    }
-    let dVec1 = center.rvec! - attachedRVecs[0]
-    let dVec2 = center.rvec! - attachedRVecs[1]
-    
-    return dVec1.angle(to: dVec2)
-}
-
-/**
  The bond angle of the two bonds of an atom. Takes the two attached atoms as parameter.
  */
 func bondAngle(center: Atom, attached: [Atom]) -> Measurement<UnitAngle>? {
@@ -812,12 +829,20 @@ func bondAngle(center: Atom, bonds: [ChemBond]) -> Measurement<UnitAngle>? {
     return bondAngle(center: center, attached: attachedAtoms)
 }
 
+/**
+ The bond angle of any number of bonds of an atom. Returns tuple of angle and the set of the adjacent atoms involved in the two bonds of the bond angle.
+ */
+func bondAngles(center: Atom, attached: [Atom]) -> [(Measurement<UnitAngle>?, Set<Atom>)] {
+    let attachedAtomsList = combinations(attached, 2)
+    return attachedAtomsList.map { (bondAngle(center: center, attached: Array($0)), $0) }
+}
 
 /**
- (D2ABA) The angle between the two adjacent atoms of a degree-2 atom. Return the value of the angle given provided unit.
+ The bond angle of any number of bonds of an atom. Returns tuple of angle and the set of the adjacent atoms involved in the two bonds of the bond angle.
  */
-func degreeTwoAtomBondAngle(center: Atom, attached: [Atom], unit: UnitAngle) -> Double? {
-    return degreeTwoAtomBondAngle(center: center, attached: attached)?.converted(to: unit).value
+func bondAngles(center: Atom, bonds: [ChemBond]) -> [(Measurement<UnitAngle>?, Set<ChemBond>)] {
+    let attachedAtomsList = combinations(bonds, 2)
+    return attachedAtomsList.map { (bondAngle(center: center, bonds: Array($0)), $0) }
 }
 
 /**
@@ -832,4 +857,20 @@ func bondAngle(center: Atom, attached: [Atom], unit: UnitAngle) -> Double? {
  */
 func bondAngle(center: Atom, bonds: [ChemBond], unit: UnitAngle) -> Double? {
     return bondAngle(center: center, bonds: bonds)?.converted(to: unit).value
+}
+
+/**
+ The bond angle of any number of bonds of an atom. Returns tuple of the value of the angle given provided unit and the set of the adjacent atoms involved in the two bonds of the bond angle.
+ */
+func bondAngles(center: Atom, attached: [Atom], unit: UnitAngle) -> [(Double?, Set<Atom>)] {
+    let attachedAtomsList = combinations(attached, 2)
+    return attachedAtomsList.map { (bondAngle(center: center, attached: Array($0), unit: unit), $0) }
+}
+
+/**
+ The bond angle of any number of bonds of an atom. Returns tuple of the value of the angle given provided unit and the set of the adjacent atoms involved in the two bonds of the bond angle.
+ */
+func bondAngles(center: Atom, bonds: [ChemBond], unit: UnitAngle) -> [(Double?, Set<ChemBond>)] {
+    let attachedAtomsList = combinations(bonds, 2)
+    return attachedAtomsList.map { (bondAngle(center: center, bonds: Array($0), unit: unit), $0) }
 }
