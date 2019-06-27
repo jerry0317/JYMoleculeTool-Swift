@@ -59,9 +59,10 @@ if saveXYZ {
             print("Not a directory. Please try again.")
         }
     }
+
 }
 
-var combAtoms: [Atom] = rawAtoms.remove(byName: "H")
+var combAtoms: [Atom] = rawAtoms.removed(byName: "H")
 //combAtoms.trimDownRVecs(level: trimLevel)
 combAtoms.roundRVecs(digitsAfterDecimal: roundDigits)
 
@@ -106,10 +107,12 @@ for pMol in possibleList {
     
     for atom in atomList {
         print("\(atom.name)     \(atom.rvec!.dictVec)", terminator: "")
+        let (adjacentAtoms, _) = bondGraph.adjacenciesOfAtom(atom)
         if bondGraph.degreeOfAtom(atom) == 3 {
-            let (adjacentAtoms, _) = bondGraph.adjacenciesOfAtom(atom)
             print("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))")
-        }else{
+        } else if bondGraph.degreeOfAtom(atom) == 2 {
+            print("     D2ABA: \(bondAngle(center: atom, attached: adjacentAtoms, unit: UnitAngle.degrees)!.rounded(digitsAfterDecimal: 2))°")
+        } else {
             print()
         }
     }

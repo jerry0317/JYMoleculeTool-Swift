@@ -51,6 +51,36 @@ struct Vector3D {
         }
     }
     
+    /**
+     Scalar projection of the vector onto another vector (not necessarily normal)
+     */
+    func scalarProject(on bVec: Vector3D) -> Double {
+        return (self .* bVec) / bVec.magnitude
+    }
+    
+    /**
+     Vector projection of the vector onto another vector (not necessarily normal)
+     */
+    func vectorProject(on bVec: Vector3D) -> Vector3D {
+        return (scalarProject(on: bVec) / bVec.magnitude) * bVec
+    }
+    
+    /**
+     The angle between the self vector and another vector. Returns a measurement with unit in UnitAngle.
+     */
+    func angle(to bVec: Vector3D) -> Measurement<UnitAngle> {
+        let cosTheta = (self .* bVec) / (magnitude * bVec.magnitude)
+        let theta = acos(cosTheta)
+        return Measurement(value: theta, unit: UnitAngle.radians)
+    }
+    
+    /**
+     The angle between the self vector and another vector. Provided with the desired unit, the function will return the value of the angle.
+     */
+    func angle(to bVec: Vector3D, unit: UnitAngle) -> Double {
+        return angle(to: bVec).converted(to: unit).value
+    }
+    
 }
 
 extension Vector3D: Hashable {
@@ -82,6 +112,7 @@ extension Vector3D {
 infix operator +: AdditionPrecedence
 infix operator -: AdditionPrecedence
 infix operator .*: MultiplicationPrecedence
+infix operator **: MultiplicationPrecedence
 infix operator *: MultiplicationPrecedence
 infix operator /: MultiplicationPrecedence
 extension Vector3D {
@@ -102,6 +133,12 @@ extension Vector3D {
      */
     static func .* (left: Vector3D, right: Vector3D) -> Double {
         return left.x * right.x + left.y * right.y + left.z * right.z
+    }
+    /**
+     Cross Product
+     */
+    static func ** (left: Vector3D, right: Vector3D) -> Vector3D {
+        return Vector3D(left.y * right.z - left.z * right.y, left.z * right.x - left.x * right.z, left.x * right.y - left.y * right.x)
     }
     /**
      Scalar Product
@@ -320,6 +357,7 @@ struct ChemBond {
         }
         return atomDistance(atomList[0], atomList[1])
     }
+    
 }
 
 extension ChemBond: Hashable {
@@ -376,6 +414,27 @@ struct ChemBondGraph {
         }
         return (atomList, bondList)
     }
+}
+
+/**
+ A protocol to control the subgraphs of a bond graph.
+ */
+protocol SubChemBondGraph {
+    var bonds: Set<ChemBond> { get set }
+}
+
+/**
+ A subgraph of the bond graph that centered on one atom for VSEPR analysis. (Not finished)
+ */
+struct VESPRSubBondGraph: SubChemBondGraph {
+    var bonds: Set<ChemBond>
+    
+    var type: Constants.Chem.VESPRType
+    
+    var center: Atom
+    
+    var attached: [Atom]
+    
 }
 
 extension ChemBondGraph: Hashable {
@@ -482,6 +541,18 @@ func possibleBondTypes(_ atomName1: String, _ atomName2: String) -> [ChemBondTyp
 }
 
 /**
+ A bond angle filter for AX2E2 type. (Experimental)
+ */
+func ax2e2BondAngleFilter(center aAtom: Atom, attached xAtoms: [Atom], range: ClosedRange<Double> = 90.0...120.0) -> Bool {
+    let bondAngle = degreeTwoAtomBondAngle(center: aAtom, attached: xAtoms, unit: UnitAngle.degrees)
+    if bondAngle == nil || !range.contains(bondAngle!) {
+        return false
+    } else {
+        return true
+    }
+}
+
+/**
  Molecule constructor for an atom. One atom is compared with a valid structural molecule. The atom will be added to the structural molecule. If the atom is valid to be connected through certain bonds to the structural molecule, that bond will be added to the existing bond graphs. Otherwise, the bond graphs will be empty.
  
  - Parameter stMol: The existing valid structural molecule.
@@ -491,7 +562,6 @@ func possibleBondTypes(_ atomName1: String, _ atomName2: String) -> [ChemBondTyp
  - Parameter tolRange: The tolerance level, unit in angstrom.
  
  */
-
 func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1) -> StrcMolecule {
     var mol = stMol
     let bondGraphs = mol.bondGraphs
@@ -517,17 +587,11 @@ func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange
                             continue
                         }
                         if d < (bondType.length! - tolRange) {
-                            //print("Distance: \(d)   BondType length: \(bondType.length!)  Atoms: \(vRAtom.name)   \(atom.name)")
-//                            let diff = d - (bondType.length! - tolRange)
-//                            if abs(diff) < abs(tolRange) {
-//                                print("\(diff.rounded(digitsAfterDecimal: 4))")
-//                            }
                             dPass = false
                         }
                     }
                     if dPass {
                         let pBond = ChemBond(vAtom, atom, bondType)
-                        // print("Distance: \(pBond.distance!)     Type: \(pBond.type.bdCode)")
                         mol.addAtom(atom)
                         if stMol.size == 1 {
                             mol.bondGraphs.insert(ChemBondGraph(Set([pBond])))
@@ -536,7 +600,19 @@ func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange
                             for bondGraph in bondGraphs {
                                 var pBondGraph = bondGraph
                                 pBondGraph.bonds.insert(pBond)
-                                mol.bondGraphs.insert(pBondGraph)
+                                var bPass = true
+                                // Experimental
+                                for bAtom in mol.atoms {
+                                    if pBondGraph.degreeOfAtom(bAtom) == 2 {
+                                        let (adjacentAtoms, _) = pBondGraph.adjacenciesOfAtom(bAtom)
+                                        if !ax2e2BondAngleFilter(center: bAtom, attached: adjacentAtoms) {
+                                            bPass = false
+                                        }
+                                    }
+                                }
+                                if bPass {
+                                    mol.bondGraphs.insert(pBondGraph)
+                                }
                             }
                         }
                     }
@@ -558,8 +634,29 @@ extension Array where Element == Atom {
     /**
      Extension of Atom array to be removed by name
      */
-    func remove(byName name: String) -> [Atom] {
+    func removed(byName name: String) -> [Atom] {
         return filter({$0.name != name})
+    }
+    
+    /**
+     Extension of Atom array to remove atoms by name
+     */
+    mutating func remove(byName name: String) {
+        self = removed(byName: name)
+    }
+    
+    /**
+     Extension of Atom array to be removed by a specific atom.
+     */
+    func removed(_ atom: Atom) -> [Atom] {
+        return filter({$0 != atom})
+    }
+    
+    /**
+     Extension of Atom array to remove a specific atom.
+     */
+    mutating func remove(_ atom: Atom) {
+        self = removed(atom)
     }
     
     /**
@@ -664,10 +761,75 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
  (D3APD) The distance between a degree-3 atom and the co-plane of its three adjacent atom.
  */
 func degreeThreeAtomPlanarDistance(center: Atom, attached: [Atom]) -> Double? {
-    let attachedCenter = attached.centerOfMass
-    guard let centerVec: Vector3D = center.rvec else{
+    let attachedRVecs = attached.compactMap { $0.rvec }
+    guard center.rvec != nil && attachedRVecs.count == 3 else{
         return nil
     }
-    let dVec = centerVec - attachedCenter
-    return dVec.magnitude
+    let dVec1 = attachedRVecs[0] - attachedRVecs[1]
+    let dVec2 = attachedRVecs[0] - attachedRVecs[2]
+    let nVec = dVec1 ** dVec2
+    let dVec = center.rvec! - attachedRVecs[0]
+    
+    return abs(dVec.scalarProject(on: nVec))
+}
+
+/**
+ (D2ABA) The angle between the two adjacent atoms of a degree-2 atom.
+ */
+func degreeTwoAtomBondAngle(center: Atom, attached: [Atom]) -> Measurement<UnitAngle>? {
+    let attachedRVecs = attached.compactMap { $0.rvec }
+    guard center.rvec != nil && attachedRVecs.count == 2 else {
+        return nil
+    }
+    let dVec1 = center.rvec! - attachedRVecs[0]
+    let dVec2 = center.rvec! - attachedRVecs[1]
+    
+    return dVec1.angle(to: dVec2)
+}
+
+/**
+ The bond angle of the two bonds of an atom. Takes the two attached atoms as parameter.
+ */
+func bondAngle(center: Atom, attached: [Atom]) -> Measurement<UnitAngle>? {
+    let attachedRVecs = attached.compactMap { $0.rvec }
+    guard center.rvec != nil && attachedRVecs.count == 2 else {
+        return nil
+    }
+    let dVec1 = center.rvec! - attachedRVecs[0]
+    let dVec2 = center.rvec! - attachedRVecs[1]
+    
+    return dVec1.angle(to: dVec2)
+}
+
+/**
+ The bond angle of the two bonds of an atom. Takes the two attached bonds as parameter.
+ */
+func bondAngle(center: Atom, bonds: [ChemBond]) -> Measurement<UnitAngle>? {
+    var attachedAtoms = bonds.flatMap { $0.atoms }
+    attachedAtoms.remove(center)
+    attachedAtoms = Array(Set(attachedAtoms))
+    
+    return bondAngle(center: center, attached: attachedAtoms)
+}
+
+
+/**
+ (D2ABA) The angle between the two adjacent atoms of a degree-2 atom. Return the value of the angle given provided unit.
+ */
+func degreeTwoAtomBondAngle(center: Atom, attached: [Atom], unit: UnitAngle) -> Double? {
+    return degreeTwoAtomBondAngle(center: center, attached: attached)?.converted(to: unit).value
+}
+
+/**
+ The bond angle of the two bonds of an atom. Takes the two attached atoms as parameter. Return the value of the angle given provided unit.
+ */
+func bondAngle(center: Atom, attached: [Atom], unit: UnitAngle) -> Double? {
+    return bondAngle(center: center, attached: attached)?.converted(to: unit).value
+}
+
+/**
+ The bond angle of the two bonds of an atom. Takes the two attached bonds as parameter. Return the value of the angle given provided unit.
+ */
+func bondAngle(center: Atom, bonds: [ChemBond], unit: UnitAngle) -> Double? {
+    return bondAngle(center: center, bonds: bonds)?.converted(to: unit).value
 }

@@ -47,5 +47,29 @@ enum Constants {
             "F": 18.9984032,
             "Ne": 20.1797
         ]
+        
+        /**
+         The VESPR molecular type.
+         */
+        enum VESPRType {
+            case ax2e0
+            case ax2e1
+            case ax2e2
+            case ax2e3
+            case ax3e0
+            case ax3e1
+            case ax3e2
+            case ax4e0
+            case ax4e1
+            case ax4e2
+            case ax5e0
+            case ax5e1
+            case ax5e2
+            case ax6e0
+            case ax6e1
+            case ax7e0
+            case ax8e0
+            case ax9e0
+        }
     }
 }
