@@ -420,6 +420,16 @@ struct ChemBondGraph {
     }
 }
 
+extension ChemBondGraph: Hashable {
+    static func == (lhs: ChemBondGraph, rhs: ChemBondGraph) -> Bool {
+        return lhs.bonds == rhs.bonds
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(bonds)
+    }
+}
+
 /**
  A protocol to control the subgraphs of a bond graph.
  */
@@ -468,16 +478,6 @@ struct VESPRGraph: SubChemBondGraph {
     
 }
 
-extension ChemBondGraph: Hashable {
-    static func == (lhs: ChemBondGraph, rhs: ChemBondGraph) -> Bool {
-        return lhs.bonds == rhs.bonds
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(bonds)
-    }
-}
-
 /**
  Structural molecule: a not necessarily meaningful "molecule" with atoms constrained by serveral possible bond graphs
  */
@@ -514,6 +514,26 @@ struct StrcMolecule {
     mutating func addAtom(_ atom: Atom){
         atoms.insert(atom)
     }
+    
+    @discardableResult
+    mutating func combine(_ stMol: StrcMolecule) -> Bool {
+        if stMol ~= self {
+            bondGraphs = bondGraphs.union(stMol.bondGraphs)
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    func combined(_ stMol: StrcMolecule) -> StrcMolecule? {
+        var result = stMol
+        if result ~= self {
+            result.combine(self)
+            return result
+        } else {
+            return nil
+        }
+    }
 }
 
 extension StrcMolecule: Hashable {
@@ -526,6 +546,28 @@ extension StrcMolecule: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(atoms)
         hasher.combine(bondGraphs)
+    }
+}
+
+infix operator ~=: ComparisonPrecedence
+infix operator !~=: ComparisonPrecedence
+
+extension StrcMolecule {
+    /**
+     Atom Match
+     - Returns ture if the two molecules have the same set of atoms.
+     */
+    static func ~= (lhs: StrcMolecule, rhs: StrcMolecule) -> Bool {
+        return
+            lhs.atoms == rhs.atoms
+    }
+    
+    /**
+     Atom Not Match
+     - Returns ture if the two molecules does not the same set of atoms.
+     */
+    static func !~= (lhs: StrcMolecule, rhs: StrcMolecule) -> Bool {
+        return !(lhs ~= rhs)
     }
 }
 
@@ -574,7 +616,7 @@ func possibleBondTypes(_ atomName1: String, _ atomName2: String) -> [ChemBondTyp
 /**
  A bond angle filter for AX2E2 type. (Experimental)
  */
-func ax2e2BondAngleFilter(center aAtom: Atom, attached xAtoms: [Atom], range: ClosedRange<Double> = 90.0...120.0) -> Bool {
+func ax2e2BondAngleFilter(center aAtom: Atom, attached xAtoms: [Atom], range: ClosedRange<Double> = 90.0...125.0) -> Bool {
     let theta = bondAngle(center: aAtom, attached: xAtoms, unit: UnitAngle.degrees)
     if theta == nil || !range.contains(theta!) {
         return false
@@ -775,13 +817,24 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
         }
     } else {
         for stMol in mList {
-            if pList.filter({$0 == stMol}).isEmpty {
-                pList.append(stMol)
-                print("Number of possible results: \(pList.count)", terminator: "")
-                if trueMol != nil && trueMol!.atoms == stMol.atoms {
-                    print("     ## The correct structure has been found.")
+            if pList.filter({ $0 == stMol }).isEmpty {
+                let saList = pList.filter { $0 ~= stMol }
+                if saList.isEmpty {
+                    pList.append(stMol)
+                    print("Current possible results: \(pList.count)", terminator: "")
+                    if trueMol != nil && trueMol!.atoms == stMol.atoms {
+                        print("     !!## <The correct structure> has been found.")
+                    } else {
+                        print()
+                    }
                 } else {
-                    print()
+                    var daList = pList.filter { $0 !~= stMol }
+                    let newStMol: StrcMolecule = saList.reduce(StrcMolecule(stMol.atoms), { $0.combined($1) ?? $0 })
+                    daList.append(newStMol)
+                    pList = daList
+                    
+                    print("Current possible results: \(pList.count)", terminator: "")
+                    print("     ## Duplicated atom set is detected.")
                 }
             }
         }

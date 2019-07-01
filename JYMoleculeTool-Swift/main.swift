@@ -61,6 +61,7 @@ if saveXYZ {
         }
     }
 
+    
 }
 
 var combAtoms: [Atom] = rawAtoms.removed(byName: "H")
