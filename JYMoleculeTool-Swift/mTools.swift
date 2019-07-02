@@ -284,13 +284,11 @@ struct ChemBondType {
      The bond code for the bond. For example, the single carbon-carbon bond is denoted as "CC1".
      */
     var bdCode: String {
-        var code = ""
         var atomNamesArray = atomNames
-        atomNamesArray.sort()
-        for a in atomNamesArray {
-            code.append(a)
+        if atomNamesArray[0] > atomNamesArray[1] {
+            atomNamesArray.swapAt(0, 1)
         }
-        code.append(String(order))
+        let code = atomNamesArray[0] + atomNamesArray[1] + String(order)
         return code
     }
     
@@ -298,11 +296,7 @@ struct ChemBondType {
      The bond length of this bond type.
      */
     var length: Double? {
-        if validate(){
-            return bondLengths[bdCode]
-        } else {
-            return nil
-        }
+        return bondLengths[bdCode]
     }
     
     /**
@@ -321,7 +315,7 @@ struct ChemBondType {
         }
         return true
     }
-
+    
 }
 
 extension ChemBondType: Hashable {
@@ -453,22 +447,19 @@ struct VSEPRGraph: SubChemBondGraph {
     }
     
     var center: Atom? {
-        let atomList = Array(bonds).flatMap { Array($0.atoms) }
+        let atomList = bonds.flatMap { Array($0.atoms) }
         var centerAtom: Atom? = nil
-        for atom in atoms {
+        for atom in atomList {
             if (atomList.filter { $0 == atom }).count == bonds.count {
                 centerAtom = atom
+                break
             }
         }
         return centerAtom
     }
     
-    private var atoms: Set<Atom> {
-        return Set(Array(bonds).flatMap { Array($0.atoms) })
-    }
-    
     var attached: [Atom] {
-        return Array(atoms).filter { $0 != center }
+        return bonds.flatMap({ Array($0.atoms) }).filter { $0 != center }
     }
     
     var degree: Int {
@@ -480,7 +471,7 @@ struct VSEPRGraph: SubChemBondGraph {
     }
     
     var valenceOccupied: Int {
-        return Array(bonds).reduce(0, { $0 + $1.type.order })
+        return bonds.reduce(0, { $0 + $1.type.order })
     }
     
     var valenceAvailable: Int {
@@ -488,9 +479,8 @@ struct VSEPRGraph: SubChemBondGraph {
     }
     
     private func determineType() -> Constants.Chem.VESPRType? {
-        let baseElectronPairs = 4 - valenceAllowed
-        let numOfLonePairs = valenceAvailable + baseElectronPairs
-        switch (degree, numOfLonePairs) {
+        let numOfLonePairsAndH = 4 - valenceOccupied
+        switch (degree, numOfLonePairsAndH) {
         case (2, 0):
             return .ax2e0
         case (2, 1):
@@ -515,10 +505,11 @@ struct VSEPRGraph: SubChemBondGraph {
         guard let cAtom: Atom = center else {
             return false
         }
-        switch type {
+        let vType = type
+        switch vType {
         case .ax2e1, .ax2e2:
             var range = 0.0...0.0
-            switch type {
+            switch vType {
             case .ax2e1:
                 range = 105.0...109.0
             case .ax2e2:
@@ -643,15 +634,14 @@ func atomDistance(_ atom1: Atom, _ atom2: Atom) -> Double?{
  Filtering by bond length with the reference of bond type
  */
 func bondTypeLengthFilter(_ atom1: Atom, _ atom2: Atom, _ bondType: ChemBondType, _ tolRange: Double = 0.1) -> Bool {
-    let d = atomDistance(atom1, atom2)
-    guard d != nil && bondType.validate() else {
+    guard let d = atomDistance(atom1, atom2), let length = bondType.length else {
         return false
     }
-    if d! > (bondType.length! - tolRange) && d! < (bondType.length! + tolRange) {
-        return true
+    if d < (length - tolRange) || d > (length + tolRange) {
+        return false
     }
     else {
-        return false
+        return true
     }
 }
 
@@ -706,7 +696,7 @@ func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<
  - Parameter tolRange: The tolerance level, unit in angstrom.
  
  */
-func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1) -> StrcMolecule {
+func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1) -> StrcMolecule {
     var mol = stMol
     let bondGraphs = mol.bondGraphs
     
@@ -718,20 +708,20 @@ func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange
         for vAtom in stMol.atoms {
             let possibleBts = possibleBondTypes(vAtom.name, atom.name)
             for bondType in possibleBts {
-                guard bondType.validate() else {
-                    continue
-                }
-                var dPass = false
+//                guard bondType.validate() else {
+//                    continue
+//                }
                 if bondTypeLengthFilter(vAtom, atom, bondType, tolRange) {
                     let vRemainingAtoms = stMol.atoms.filter({$0 != vAtom})
-                    dPass = true
+                    var dPass = true
                     for vRAtom in vRemainingAtoms {
                         guard let d: Double = atomDistance(vRAtom, atom) else {
                             dPass = false
-                            continue
+                            break
                         }
                         if d < (bondType.length! - tolRange) {
                             dPass = false
+                            break
                         }
                     }
                     if dPass {
@@ -739,8 +729,7 @@ func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange
                         mol.addAtom(atom)
                         if stMol.size == 1 {
                             mol.bondGraphs.insert(ChemBondGraph(Set([pBond])))
-                        }
-                        else if stMol.size > 1 {
+                        } else if stMol.size > 1 {
                             for bondGraph in bondGraphs {
                                 var pBondGraph = bondGraph
                                 pBondGraph.bonds.insert(pBond)
@@ -751,6 +740,7 @@ func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange
                                         let vseprGraph = pBondGraph.findVseprGraph(bAtom)
                                         if !vseprGraph.filter() {
                                             bPass = false
+                                            break
                                         }
                                     }
                                 }
@@ -863,7 +853,7 @@ func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1) -> 
     var possibleSMList: [StrcMolecule] = []
     
     for pAtom in possibleAtoms {
-        let sMol = bondLengthStrcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange)
+        let sMol = strcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange)
         
         if !sMol.bondGraphs.isEmpty {
             possibleSMList.append(sMol)
@@ -899,7 +889,7 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
                         print()
                     }
                 } else {
-                    var daList = pList.filter { $0 !~= stMol }
+                    var daList = pList.filter { !saList.contains($0) }
                     let newStMol: StrcMolecule = saList.reduce(StrcMolecule(stMol.atoms), { $0.combined($1) ?? $0 })
                     daList.append(newStMol)
                     pList = daList
