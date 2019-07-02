@@ -418,6 +418,11 @@ struct ChemBondGraph {
         }
         return (atomList, bondList)
     }
+    
+    func findVseprGraph(_ atom: Atom) -> VSEPRGraph {
+        let (_, bonds) = adjacenciesOfAtom(atom)
+        return VSEPRGraph(bonds: Set(bonds))
+    }
 }
 
 extension ChemBondGraph: Hashable {
@@ -440,10 +445,12 @@ protocol SubChemBondGraph {
 /**
  A subgraph of the bond graph that centered on one atom for VSEPR analysis. (Not finished)
  */
-struct VESPRGraph: SubChemBondGraph {
+struct VSEPRGraph: SubChemBondGraph {
     var bonds: Set<ChemBond>
     
-    var type: Constants.Chem.VESPRType
+    var type: Constants.Chem.VESPRType? {
+        return determineType()
+    }
     
     var center: Atom? {
         let atomList = Array(bonds).flatMap { Array($0.atoms) }
@@ -464,6 +471,10 @@ struct VESPRGraph: SubChemBondGraph {
         return Array(atoms).filter { $0 != center }
     }
     
+    var degree: Int {
+        return attached.count
+    }
+    
     var valenceAllowed: Int {
         return center?.valence ?? 0
     }
@@ -476,6 +487,51 @@ struct VESPRGraph: SubChemBondGraph {
         return valenceAllowed - valenceOccupied
     }
     
+    private func determineType() -> Constants.Chem.VESPRType? {
+        let baseElectronPairs = 4 - valenceAllowed
+        let numOfLonePairs = valenceAvailable + baseElectronPairs
+        switch (degree, numOfLonePairs) {
+        case (2, 0):
+            return .ax2e0
+        case (2, 1):
+            return .ax2e1
+        case (2, 2):
+            return .ax2e2
+        case (2, 3):
+            return .ax2e3
+        case (3, 0):
+            return .ax3e0
+        case (3, 1):
+            return .ax3e1
+        case (3, 2):
+            return .ax3e2
+        default:
+            break
+        }
+        return nil
+    }
+    
+    func filter(bondAngleTolRatio tolRatio: Double = 0.1) -> Bool {
+        guard let cAtom: Atom = center else {
+            return false
+        }
+        switch type {
+        case .ax2e1, .ax2e2:
+            var range = 0.0...0.0
+            switch type {
+            case .ax2e1:
+                range = 105.0...109.0
+            case .ax2e2:
+                range = 120.0...120.0
+            default:
+                break
+            }
+            return bondAnglesFilter(center: cAtom, bonds: Array(bonds), range: range)
+        default:
+            break
+        }
+        return true
+    }
 }
 
 /**
@@ -599,6 +655,7 @@ func bondTypeLengthFilter(_ atom1: Atom, _ atom2: Atom, _ bondType: ChemBondType
     }
 }
 
+
 /**
  Find possible bond types between two atom names
  */
@@ -616,13 +673,27 @@ func possibleBondTypes(_ atomName1: String, _ atomName2: String) -> [ChemBondTyp
 /**
  A bond angle filter for AX2E2 type. (Experimental)
  */
-func ax2e2BondAngleFilter(center aAtom: Atom, attached xAtoms: [Atom], range: ClosedRange<Double> = 90.0...125.0) -> Bool {
+func ax2e2BondAngleFilter(center aAtom: Atom, attached xAtoms: [Atom], range: ClosedRange<Double> = 100.0...125.0) -> Bool {
     let theta = bondAngle(center: aAtom, attached: xAtoms, unit: UnitAngle.degrees)
     if theta == nil || !range.contains(theta!) {
         return false
     } else {
         return true
     }
+}
+
+func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
+    let rList = bondAngles(center: aAtom, bonds: bonds, unit: UnitAngle.degrees)
+    let thetaList = rList.map { $0.0 }
+    let lowerBound = range.lowerBound * (1 - tolRatio)
+    let upperBound = range.upperBound * (1 + tolRatio)
+    let tRange: ClosedRange<Double> = lowerBound...upperBound
+    for theta in thetaList {
+        if theta == nil || !tRange.contains(theta!) {
+            return false
+        }
+    }
+    return true
 }
 
 /**
@@ -676,9 +747,9 @@ func bondLengthStrcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange
                                 var bPass = true
                                 // Experimental
                                 for bAtom in mol.atoms {
-                                    if pBondGraph.degreeOfAtom(bAtom) == 2 {
-                                        let (adjacentAtoms, _) = pBondGraph.adjacenciesOfAtom(bAtom)
-                                        if !ax2e2BondAngleFilter(center: bAtom, attached: adjacentAtoms) {
+                                    if pBondGraph.degreeOfAtom(bAtom) >= 2 {
+                                        let vseprGraph = pBondGraph.findVseprGraph(bAtom)
+                                        if !vseprGraph.filter() {
                                             bPass = false
                                         }
                                     }

@@ -114,7 +114,14 @@ for pMol in possibleList {
             print("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))", terminator: "")
         }
         let bAString: String = bondAngles(center: atom, attached: adjacentAtoms, unit: UnitAngle.degrees).map({ Array($0.1.map { $0.name }).joined(separator: atom.name) + ": " + String($0.0!.rounded(digitsAfterDecimal: 1)) + "°" }).joined(separator: ", ")
-        print("     BAs: [" + bAString + "]")
+        print("     BAs: [" + bAString + "]", terminator: "")
+        let vseprType = bondGraph.findVseprGraph(atom).type
+        print("     VSEPR Type: ", terminator: "")
+        if vseprType != nil {
+            print(vseprType!)
+        } else {
+            print("Invalid")
+        }
     }
     
     print("--Bond information--")
