@@ -110,18 +110,20 @@ for pMol in possibleList {
     for atom in atomList {
         print("\(atom.name)     \(atom.rvec!.dictVec)", terminator: "")
         let (adjacentAtoms, _) = bondGraph.adjacenciesOfAtom(atom)
-        if bondGraph.degreeOfAtom(atom) == 3 {
-            print("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))", terminator: "")
-        }
-        let bAString: String = bondAngles(center: atom, attached: adjacentAtoms, unit: UnitAngle.degrees).map({ Array($0.1.map { $0.name }).joined(separator: atom.name) + ": " + String($0.0!.rounded(digitsAfterDecimal: 1)) + "°" }).joined(separator: ", ")
-        print("     BAs: [" + bAString + "]", terminator: "")
+//        if bondGraph.degreeOfAtom(atom) == 3 {
+//            print("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))", terminator: "")
+//        }
         let vseprType = bondGraph.findVseprGraph(atom).type
         print("     VSEPR Type: ", terminator: "")
         if vseprType != nil {
-            print(vseprType!)
+            print(vseprType!, terminator: "")
         } else {
-            print("Invalid")
+            print("n/a  ", terminator: "")
         }
+        
+        let bAString: String = bondAngles(center: atom, attached: adjacentAtoms, unit: UnitAngle.degrees).map({ Array($0.1.map { $0.name }).joined(separator: atom.name) + ": " + String($0.0!.rounded(digitsAfterDecimal: 1)) + "°" }).joined(separator: ", ")
+        print("     BAs: [" + bAString + "]", terminator: "")
+        print()
     }
     
     print("--Bond information--")

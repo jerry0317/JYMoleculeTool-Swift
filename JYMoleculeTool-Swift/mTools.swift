@@ -507,13 +507,17 @@ struct VSEPRGraph: SubChemBondGraph {
         }
         let vType = type
         switch vType {
-        case .ax2e1, .ax2e2:
+        case .ax2e1, .ax2e2, .ax3e0, .ax3e1, .ax4e0:
             var range = 0.0...0.0
             switch vType {
             case .ax2e1:
                 range = 105.0...109.0
-            case .ax2e2:
+            case .ax2e2, .ax3e0:
                 range = 120.0...120.0
+            case .ax3e1:
+                range = 90...109.5
+            case .ax4e0:
+                range = 109.5...109.5
             default:
                 break
             }
@@ -658,18 +662,6 @@ func possibleBondTypes(_ atomName1: String, _ atomName2: String) -> [ChemBondTyp
         }
     }
     return possibleBondTypeList
-}
-
-/**
- A bond angle filter for AX2E2 type. (Experimental)
- */
-func ax2e2BondAngleFilter(center aAtom: Atom, attached xAtoms: [Atom], range: ClosedRange<Double> = 100.0...125.0) -> Bool {
-    let theta = bondAngle(center: aAtom, attached: xAtoms, unit: UnitAngle.degrees)
-    if theta == nil || !range.contains(theta!) {
-        return false
-    } else {
-        return true
-    }
 }
 
 func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
