@@ -27,13 +27,25 @@ enum Constants {
             "CC3": 1.183,
             "CO1": 1.3925,
             "CO2": 1.221,
-            "OO1": 1.480
+            "OO1": 1.480,
+            "CN1": 1.4365,
+            "CN2": 1.3205,
+            "CN3": 1.1455,
+            "NN1": 1.402,
+            "NN2": 1.1895,
+            "NO1": 1.3835,
+            "NO2": 1.2245,
+            "CF1": 1.374,
+            "FN1": 1.406,
+            "CCl1": 1.781,
+            "ClN1": 1.731,
+            "ClO1": 1.414
         ]
         
         /**
          Known atom mass. Unit in amu.
          
-         - **Source:** pbg.lbl.gov
+         - **Source:** pdg.lbl.gov
          */
         static let atomicMasses = [
             "H": 1.00794,
@@ -45,12 +57,26 @@ enum Constants {
             "N": 14.0067,
             "O": 15.9994,
             "F": 18.9984032,
-            "Ne": 20.1797
+            "Ne": 20.1797,
+            "Na": 22.98976928,
+            "Mg": 24.305,
+            "Al": 26.9815385,
+            "Si": 28.085,
+            "P": 30.973761998,
+            "S": 32.06,
+            "Cl": 35.45,
+            "Ar": 39.948
         ]
         
+        /**
+         Usual valence of an atom in organic compounds.
+         */
         static let valences = [
             "C": 4,
-            "O": 2
+            "O": 2,
+            "N": 3,
+            "F": 1,
+            "Cl": 1
         ]
         
         /**

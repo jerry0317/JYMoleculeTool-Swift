@@ -95,6 +95,7 @@ let initialSMol = StrcMolecule(Set([A1]))
 var possibleList: [StrcMolecule] = []
 
 let tInitial = Date()
+print("Computation started on \(displayTime(tInitial)).")
 
 rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, tolRatio: toleranceRatio, possibleList: &possibleList, trueMol: StrcMolecule(Set(combAtoms)))
 
@@ -207,5 +208,5 @@ if saveResults {
     }
 }
 
-print("*------------Results-------------*")
+print("**-----------Results------------**")
 log.print()

@@ -48,3 +48,22 @@ func input(name: String, type: String) -> Any {
     
     return inputResult
 }
+
+/**
+ Returns the string of current time.
+ */
+func timeNow() -> String {
+    return displayTime(Date())
+}
+
+/**
+ Returns the string discribing some time locally. *(More parameters to be added later)*
+ */
+func displayTime(_ time: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .long
+    formatter.timeStyle = .long
+    formatter.timeZone = TimeZone.current
+    formatter.locale = Locale(identifier: "en_US")
+    return formatter.string(from: time)
+}
