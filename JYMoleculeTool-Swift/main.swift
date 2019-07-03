@@ -25,7 +25,7 @@ let tolerenceLevel = 0.1
  */
 let roundDigits = 2
 
-let saveXYZ = false
+var saveXYZ = true
 var writePass = false
 var writePath = URL(fileURLWithPath: "")
 
@@ -52,12 +52,22 @@ guard let rawAtoms = xyzSet.atoms else {
 
 if saveXYZ {
     while !writePass {
-        let writePathUrl = URL(fileURLWithPath: String(describing: input(name: "XYZ exporting Path", type: "string")))
-        if writePathUrl.hasDirectoryPath {
-            writePath = writePathUrl
+        let writePathInput = String(describing: input(name: "XYZ exporting Path (leave empty if not to save)", type: "string"))
+        if writePathInput.isEmpty {
+            saveXYZ = false
             writePass = true
+            print("The results will not be saved.")
+            break
         } else {
-            print("Not a directory. Please try again.")
+            let writePathUrl = URL(fileURLWithPath: writePathInput)
+            if writePathUrl.hasDirectoryPath {
+                writePath = writePathUrl
+                writePass = true
+                print("The result will be saved in xyz files.")
+                break
+            } else {
+                print("Not a directory. Please try again.")
+            }
         }
     }
 
