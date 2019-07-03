@@ -8,15 +8,29 @@
 
 import Foundation
 
+/**
+ The protocol for a file.
+ 
+ - Provide ability to open the file from URL and save the file from URL.
+ */
 protocol File {
+    /**
+     The content (raw in string) of the file.
+     */
     var content: String { get set }
 }
 
 extension File {
+    /**
+     Open the file from a given URL with certain encoding.
+     */
     mutating func open(fromURL url: URL, encoding: String.Encoding = .utf8) throws {
         content = try String(contentsOf: url, encoding: encoding)
     }
     
+    /**
+     Save the file (or something else) to a certain URL with certain encoding.
+     */
     func save(_ content: String? = nil, asURL url: URL, encoding: String.Encoding = .utf8) throws {
         let str: String = content ?? self.content
         var data = str.data(using: encoding)
@@ -72,6 +86,9 @@ struct XYZFile: File {
         self.importFromAtoms(atoms)
     }
     
+    /**
+     The `File` protocol-compliant content.
+     */
     var content: String {
         get {
             return xyzString ?? ""
@@ -81,6 +98,9 @@ struct XYZFile: File {
         }
     }
     
+    /**
+     The xyz string.
+     */
     var xyzString: String? {
         guard count != nil && note != nil && atoms != nil else {
             return nil
@@ -98,6 +118,9 @@ struct XYZFile: File {
         return str
     }
     
+    /**
+     Import the xyz file from a string.
+     */
     private func importFromString(_ str: String) -> (Int?, String?, [Atom]?) {
         let lines = str.split(omittingEmptySubsequences: false, whereSeparator: {$0.isNewline})
         var countFromFile: Int? = nil
@@ -140,16 +163,25 @@ struct XYZFile: File {
         return (countFromFile, noteFromFile, atomsFromFile)
     }
     
+    /**
+     Import the xyz file from atoms.
+     */
     mutating func importFromAtoms(_ atomList: [Atom], note comment: String = "") {
         count = atomList.count
         note = comment
         atoms = atomList
     }
     
+    /**
+     Errors describing the xyz exporting process.
+     */
     enum xyzExportError: Error {
         case xyzStringIsNil
     }
     
+    /**
+     Export the xyz file to URL.
+     */
     func export(toFile path: URL) throws {
         guard xyzString != nil else {
             throw xyzExportError.xyzStringIsNil
@@ -158,7 +190,13 @@ struct XYZFile: File {
     }
 }
 
+/**
+ The structure of text file. Usually indicates `.txt` files.
+ */
 struct TextFile: File {
+    /**
+     The `File` protocol-compliant content.
+     */
     var content: String = ""
     
     init() {
@@ -169,21 +207,30 @@ struct TextFile: File {
         try open(fromURL: url, encoding: encoding)
     }
     
+    /**
+     Add anything to the file. Optional terminator with default for a new line.
+     
+     - The function is designed in this way to make it similar to the `Swift.print` function.
+     */
     mutating func add(_ item: Any = "", terminator: String = "\r\n") {
         let str = String(describing: item)
         content.append(str + terminator)
     }
     
-    mutating func newLine() {
-        content.append("\r\n")
-    }
-    
+    /**
+     Print the content of the text file with optional terminator.
+     */
     func print(terminator: String = "\n") {
         Swift.print(content, terminator: terminator)
     }
 }
 
 extension URL {
+    /**
+     The last path component name of the url.
+     
+     - For example, for `/folder/file.txt`, the function returns `file`.
+     */
     var lastPathComponentName: String {
         let lastPath = self.lastPathComponent
         var components = lastPath.components(separatedBy: ".")

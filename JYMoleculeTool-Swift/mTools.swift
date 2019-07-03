@@ -36,10 +36,16 @@ struct Vector3D {
         }
     }
     
+    /**
+     The magnitude of the vector.
+     */
     var magnitude: Double {
         return sqrt(self.*self)
     }
     
+    /**
+     The array form of the vector. Returns [x,y,z].
+     */
     var dictVec: [Double] {
         get {
             return [x, y, z]
@@ -162,7 +168,7 @@ extension Vector3D {
 
 extension Vector3D {
     /**
-     Resign the vector based on |x|, |y|, and |z|.
+     Re-sign the vector based on |x|, |y|, and |z|.
      */
     func resign() -> [Vector3D] {
         var possibleList: [Vector3D] = []
@@ -199,6 +205,9 @@ struct Atom {
         self.rvec = rvec
     }
     
+    /**
+     Possible atoms after re-signing it.
+     */
     var possibles: [Atom] {
         var possibleList: [Atom] = []
         if rvec == nil {
@@ -213,6 +222,9 @@ struct Atom {
         return possibleList
     }
     
+    /**
+     The valence of the atom.
+     */
     var valence: Int {
         return Constants.Chem.valences[name] ?? 0
     }
@@ -348,6 +360,9 @@ struct ChemBond {
         self.type = bondType
     }
     
+    /**
+     The interatomic distance between the two atoms in the bond.
+     */
     var distance: Double? {
         let atomList = Array(atoms)
         guard atomList.count == 2 else {
@@ -413,6 +428,9 @@ struct ChemBondGraph {
         return (atomList, bondList)
     }
     
+    /**
+     Find the VSEPR graph based on the given center atom in the bond graph.
+     */
     func findVseprGraph(_ atom: Atom) -> VSEPRGraph {
         let (_, bonds) = adjacenciesOfAtom(atom)
         return VSEPRGraph(bonds: Set(bonds))
@@ -433,6 +451,9 @@ extension ChemBondGraph: Hashable {
  A protocol to control the subgraphs of a bond graph.
  */
 protocol SubChemBondGraph {
+    /**
+     The bonds engaged in this sub bond graph.
+     */
     var bonds: Set<ChemBond> { get set }
 }
 
@@ -440,12 +461,21 @@ protocol SubChemBondGraph {
  A subgraph of the bond graph that centered on one atom for VSEPR analysis. (Not finished)
  */
 struct VSEPRGraph: SubChemBondGraph {
+    /**
+     The bonds engaged in this VSEPR graph.
+     */
     var bonds: Set<ChemBond>
     
+    /**
+     The VSEPR type of this graph. Automatically determined based on the information of bonds.
+     */
     var type: Constants.Chem.VESPRType? {
         return determineType()
     }
     
+    /**
+     The center atom. Automatically determined from the information of bonds. *(Computationally intensive, may be modified later)*
+     */
     var center: Atom? {
         guard bonds.count >= 2 else {
             return nil
@@ -461,26 +491,44 @@ struct VSEPRGraph: SubChemBondGraph {
         return centerAtom
     }
     
+    /**
+     The atoms attached to the center atom. *(Computationally intensive, may be modified later)*
+     */
     var attached: [Atom] {
         return bonds.flatMap({ Array($0.atoms) }).filter { $0 != center }
     }
     
+    /**
+     The degree of the center atom.
+     */
     var degree: Int {
-        return attached.count
+        return bonds.count
     }
     
+    /**
+     The valence of the center atom. *(Computationally intensive, may be modified later)*
+     */
     var valenceAllowed: Int {
         return center?.valence ?? 0
     }
     
+    /**
+     The valence occupied by the bonds attached to the center atom.
+     */
     var valenceOccupied: Int {
         return bonds.reduce(0, { $0 + $1.type.order })
     }
     
+    /**
+     The valence available on the center atom. *(Computationally intensive, may be modified later)*
+     */
     var valenceAvailable: Int {
         return valenceAllowed - valenceOccupied
     }
     
+    /**
+     To determine if the bond orders are all the same.
+     */
     var completelySymmetric: Bool {
         var bondList = Array(bonds)
         let fOrder = bondList[0].type.order
@@ -493,6 +541,9 @@ struct VSEPRGraph: SubChemBondGraph {
         return true
     }
     
+    /**
+     To determine the VESPR type of the graph.
+     */
     private func determineType() -> Constants.Chem.VESPRType? {
         guard bonds.count >= 2 else {
             return nil
@@ -525,11 +576,14 @@ struct VSEPRGraph: SubChemBondGraph {
         return nil
     }
     
+    /**
+     A filter to determine if this VSEPR graph is valid.
+     */
     func filter(bondAngleTolRatio tolRatio: Double = 0.1) -> Bool {
-        guard valenceAvailable >= 0 else {
+        guard let cAtom: Atom = center else {
             return false
         }
-        guard let cAtom: Atom = center else {
+        guard (cAtom.valence - valenceOccupied) >= 0 else {
             return false
         }
         let vType = type
@@ -587,10 +641,18 @@ struct StrcMolecule {
         return atoms.centerOfMass
     }
     
+    /**
+     Add an atom to the molecule.
+     */
     mutating func addAtom(_ atom: Atom){
         atoms.insert(atom)
     }
     
+    /**
+     Combine two molecules given they are 'atom match' (`~=`) to each other.
+     
+     - The function effectively joins the bondgraphs of two 'atom match' molecules.
+     */
     @discardableResult
     mutating func combine(_ stMol: StrcMolecule) -> Bool {
         if stMol ~= self {
@@ -601,6 +663,9 @@ struct StrcMolecule {
         }
     }
     
+    /**
+     Return the molecule after the combination of two 'atom match' molecules.
+     */
     func combined(_ stMol: StrcMolecule) -> StrcMolecule? {
         var result = stMol
         if result ~= self {
@@ -631,7 +696,7 @@ infix operator !~=: ComparisonPrecedence
 extension StrcMolecule {
     /**
      Atom Match
-     - Returns ture if the two molecules have the same set of atoms.
+     - Returns true if the two molecules have the same set of atoms.
      */
     static func ~= (lhs: StrcMolecule, rhs: StrcMolecule) -> Bool {
         return
@@ -640,7 +705,7 @@ extension StrcMolecule {
     
     /**
      Atom Not Match
-     - Returns ture if the two molecules does not the same set of atoms.
+     - Returns true if the two molecules does not the same set of atoms.
      */
     static func !~= (lhs: StrcMolecule, rhs: StrcMolecule) -> Bool {
         return !(lhs ~= rhs)
@@ -674,7 +739,6 @@ func bondTypeLengthFilter(_ atom1: Atom, _ atom2: Atom, _ bondType: ChemBondType
     }
 }
 
-
 /**
  Find possible bond types between two atom names
  */
@@ -689,9 +753,22 @@ func possibleBondTypes(_ atomName1: String, _ atomName2: String) -> [ChemBondTyp
     return possibleBondTypeList
 }
 
+/**
+ Filtering by bond angle with a given range.
+ */
 func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
-    let rList = bondAngles(center: aAtom, bonds: bonds, unit: UnitAngle.degrees)
-    let thetaList = rList.map { $0.0 }
+    var thetaList: [Double?] = []
+    if bonds.count == 2 {
+        thetaList = [bondAngle(center: aAtom, bonds: bonds, unit: UnitAngle.degrees)]
+    } else if bonds.count >= 2 {
+        let rList = bondAngles(center: aAtom, bonds: bonds, unit: UnitAngle.degrees)
+        thetaList = rList.map { $0.0 }
+    } else if bonds.count >= 0{
+        return true
+    } else {
+        return false
+    }
+    
     let lowerBound = range.lowerBound * (1 - tolRatio)
     let upperBound = range.upperBound * (1 + tolRatio)
     let tRange: ClosedRange<Double> = lowerBound...upperBound
@@ -712,7 +789,7 @@ func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<
  
  - Parameter tolRange: The tolerance level acting in bond length filters, unit in angstrom.
  
- - Parameter tolRatio: The tolerance ratio acting in bond angle filters.
+ - Parameter tolRatio: The tolerance ratio acting in bond angle filters. Reference with the VSEPR graph.
  
  */
 func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> StrcMolecule {
@@ -727,9 +804,6 @@ func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double =
         for vAtom in stMol.atoms {
             let possibleBts = possibleBondTypes(vAtom.name, atom.name)
             for bondType in possibleBts {
-//                guard bondType.validate() else {
-//                    continue
-//                }
                 if bondTypeLengthFilter(vAtom, atom, bondType, tolRange) {
                     let vRemainingAtoms = stMol.atoms.filter({$0 != vAtom})
                     var dPass = true

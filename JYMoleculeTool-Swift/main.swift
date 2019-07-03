@@ -65,14 +65,14 @@ if saveResults {
             break
         } else {
             let writePathUrl = URL(fileURLWithPath: writePathInput)
-            if writePathUrl.hasDirectoryPath {
-                writePath = writePathUrl
-                writePass = true
-                print("The result will be saved in xyz files.")
-                break
-            } else {
-                print("Not a directory. Please try again.")
+            guard writePathUrl.hasDirectoryPath else {
+                print("Not a valid directory. Please try again.")
+                continue
             }
+            writePath = writePathUrl
+            writePass = true
+            print("The result will be saved in xyz files.")
+            break
         }
     }
 
@@ -111,6 +111,16 @@ var log = TextFile()
 var iCode = 0
 var success = false
 let baseFileName = fileName + "_" + String(Int(tInitial.timeIntervalSince1970))
+
+if saveResults {
+    do {
+        let newDirectoryPath = writePath.appendingPathComponent(baseFileName, isDirectory: true)
+        try FileManager.default.createDirectory(at: newDirectoryPath, withIntermediateDirectories: false)
+        writePath = newDirectoryPath
+    } catch let error {
+        print("An error occured when creating a new directory: \(error).")
+    }
+}
 
 log.add("----------------------------------")
 // Printing results
