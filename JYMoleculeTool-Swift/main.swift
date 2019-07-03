@@ -86,6 +86,7 @@ rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
 
 var iCode = 0
+var success = false
 
 // Sort the possible List by CM deviation
 possibleList.sort(by: {
@@ -98,6 +99,7 @@ for pMol in possibleList {
     print("**** Molecule No.\(iCode) ****")
     if pMol.atoms == Set(combAtoms) {
         print("<Correct Molecule>")
+        success = true
     }
     let atomList = Array(pMol.atoms).sorted(by: {
         guard $0.rvec != nil && $1.rvec != nil else {
@@ -113,7 +115,8 @@ for pMol in possibleList {
 //        if bondGraph.degreeOfAtom(atom) == 3 {
 //            print("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))", terminator: "")
 //        }
-        let vseprType = bondGraph.findVseprGraph(atom).type
+        let vGraph = bondGraph.findVseprGraph(atom)
+        let vseprType = vGraph.type
         print("     VSEPR Type: ", terminator: "")
         if vseprType != nil {
             print(vseprType!, terminator: "")
@@ -151,7 +154,14 @@ for pMol in possibleList {
     }
 }
 
-print("=================")
+print("----------------------------------")
+print("[RESULT] ", terminator: "")
+if success {
+    print("Correct structure has been found.")
+} else {
+    print("Failed to find the correct structure.")
+}
+print("----------------------------------")
 print("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
 print("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
 print("Total number of possible results: \(possibleList.count).")

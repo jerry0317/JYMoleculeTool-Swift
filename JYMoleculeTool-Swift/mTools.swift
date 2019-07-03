@@ -447,6 +447,9 @@ struct VSEPRGraph: SubChemBondGraph {
     }
     
     var center: Atom? {
+        guard bonds.count >= 2 else {
+            return nil
+        }
         let atomList = bonds.flatMap { Array($0.atoms) }
         var centerAtom: Atom? = nil
         for atom in atomList {
@@ -478,7 +481,22 @@ struct VSEPRGraph: SubChemBondGraph {
         return valenceAllowed - valenceOccupied
     }
     
+    var completelySymmetric: Bool {
+        var bondList = Array(bonds)
+        let fOrder = bondList[0].type.order
+        bondList.removeFirst()
+        for bond in bondList {
+            if bond.type.order != fOrder {
+                return false
+            }
+        }
+        return true
+    }
+    
     private func determineType() -> Constants.Chem.VESPRType? {
+        guard bonds.count >= 2 else {
+            return nil
+        }
         let numOfLonePairsAndH = 4 - valenceOccupied
         switch (degree, numOfLonePairsAndH) {
         case (2, 0):
@@ -495,6 +513,12 @@ struct VSEPRGraph: SubChemBondGraph {
             return .ax3e1
         case (3, 2):
             return .ax3e2
+        case (4, 0):
+            return .ax4e0
+        case (4, 1):
+            return .ax4e1
+        case (4, 2):
+            return .ax4e2
         default:
             break
         }
@@ -502,22 +526,23 @@ struct VSEPRGraph: SubChemBondGraph {
     }
     
     func filter(bondAngleTolRatio tolRatio: Double = 0.1) -> Bool {
+        guard valenceAvailable >= 0 else {
+            return false
+        }
         guard let cAtom: Atom = center else {
             return false
         }
         let vType = type
         switch vType {
-        case .ax2e1, .ax2e2, .ax3e0, .ax3e1, .ax4e0:
+        case .ax2e0, .ax2e1, .ax2e2, .ax3e0, .ax3e1, .ax4e0:
             var range = 0.0...0.0
             switch vType {
-            case .ax2e1:
-                range = 105.0...109.0
-            case .ax2e2, .ax3e0:
+            case .ax2e0: // linear
+                range = 180.0...180.0
+            case .ax3e0, .ax2e1: // trigonal planar
                 range = 120.0...120.0
-            case .ax3e1:
+            case .ax4e0, .ax3e1, .ax2e2: // tetrahedral
                 range = 90...109.5
-            case .ax4e0:
-                range = 109.5...109.5
             default:
                 break
             }
@@ -726,7 +751,6 @@ func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double =
                                 var pBondGraph = bondGraph
                                 pBondGraph.bonds.insert(pBond)
                                 var bPass = true
-                                // Experimental
                                 for bAtom in mol.atoms {
                                     if pBondGraph.degreeOfAtom(bAtom) >= 2 {
                                         let vseprGraph = pBondGraph.findVseprGraph(bAtom)
@@ -887,7 +911,7 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
                     pList = daList
                     
                     print("Current possible results: \(pList.count)", terminator: "")
-                    print("     ## Duplicated atom set is detected.")
+                    print("     ## Duplicated")
                 }
             }
         }
