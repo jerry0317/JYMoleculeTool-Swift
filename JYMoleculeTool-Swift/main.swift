@@ -25,7 +25,7 @@ let tolerenceLevel = 0.1
  */
 let roundDigits = 2
 
-var saveXYZ = true
+var saveResults = true
 var writePass = false
 var writePath = URL(fileURLWithPath: "")
 
@@ -50,11 +50,11 @@ guard let rawAtoms = xyzSet.atoms else {
     exit(-1)
 }
 
-if saveXYZ {
+if saveResults {
     while !writePass {
         let writePathInput = String(describing: input(name: "XYZ exporting Path (leave empty if not to save)", type: "string"))
         if writePathInput.isEmpty {
-            saveXYZ = false
+            saveResults = false
             writePass = true
             print("The results will not be saved.")
             break
@@ -95,20 +95,24 @@ rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel
 
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
 
-var iCode = 0
-var success = false
-
 // Sort the possible List by CM deviation
 possibleList.sort(by: {
     ($0.centerOfMass - combAtoms.centerOfMass).magnitude < ($1.centerOfMass - combAtoms.centerOfMass).magnitude
 })
 
+var log = TextFile()
+var iCode = 0
+var success = false
+let baseFileName = fileName + "_" + String(Int(tInitial.timeIntervalSince1970))
+
+print("-------------Results--------------")
+log.add("----------------------------------")
 // Printing results
 for pMol in possibleList {
     iCode = iCode + 1
-    print("**** Molecule No.\(iCode) ****")
+    log.add("**** Molecule No.\(iCode) ****")
     if pMol.atoms == Set(combAtoms) {
-        print("<Correct Molecule>")
+        log.add("<Correct Molecule>")
         success = true
     }
     let atomList = Array(pMol.atoms).sorted(by: {
@@ -120,59 +124,71 @@ for pMol in possibleList {
     let bondGraph = Array(pMol.bondGraphs)[0]
     
     for atom in atomList {
-        print("\(atom.name)     \(atom.rvec!.dictVec)", terminator: "")
+        log.add("\(atom.name)     \(atom.rvec!.dictVec)", terminator: "")
         let (adjacentAtoms, _) = bondGraph.adjacenciesOfAtom(atom)
 //        if bondGraph.degreeOfAtom(atom) == 3 {
 //            print("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))", terminator: "")
 //        }
         let vGraph = bondGraph.findVseprGraph(atom)
         let vseprType = vGraph.type
-        print("     VSEPR Type: ", terminator: "")
+        log.add("     VSEPR Type: ", terminator: "")
         if vseprType != nil {
-            print(vseprType!, terminator: "")
+            log.add(vseprType!, terminator: "")
         } else {
-            print("n/a  ", terminator: "")
+            log.add("n/a  ", terminator: "")
         }
         
         let bAString: String = bondAngles(center: atom, attached: adjacentAtoms, unit: UnitAngle.degrees).map({ Array($0.1.map { $0.name }).joined(separator: atom.name) + ": " + String($0.0!.rounded(digitsAfterDecimal: 1)) + "°" }).joined(separator: ", ")
-        print("     BAs: [" + bAString + "]", terminator: "")
-        print()
+        log.add("     BAs: [" + bAString + "]", terminator: "")
+        log.add()
     }
     
-    print("--Bond information--")
-    print("The number of possible bond graphs: \(pMol.bondGraphs.count)")
-    print("====The first bond graph====")
+    log.add("--Bond information--")
+    log.add("The number of possible bond graphs: \(pMol.bondGraphs.count)")
+    log.add("====The first bond graph====")
     for bond in bondGraph.bonds {
-        print("Bond code: \(bond.type.bdCode)   Bond distance: \(bond.distance!.rounded(digitsAfterDecimal: 4))")
+        log.add("Bond code: \(bond.type.bdCode)   Bond distance: \(bond.distance!.rounded(digitsAfterDecimal: 4))")
     }
     
     let cmVec = pMol.centerOfMass
     let cmDevVec = cmVec - combAtoms.centerOfMass
-    print("- Center of Mass: \(cmVec.dictVec.rounded(digitsAfterDecimal: 4))")
-    print("- CM Deviation: \(cmDevVec.dictVec.rounded(digitsAfterDecimal: 4))")
-    print("- CM Deviation Magnitude: \(cmDevVec.magnitude.rounded(digitsAfterDecimal: 5))")
+    log.add("- Center of Mass: \(cmVec.dictVec.rounded(digitsAfterDecimal: 4))")
+    log.add("- CM Deviation: \(cmDevVec.dictVec.rounded(digitsAfterDecimal: 4))")
+    log.add("- CM Deviation Magnitude: \(cmDevVec.magnitude.rounded(digitsAfterDecimal: 5))")
     
-    if saveXYZ {
-        let xyzUrl = writePath.appendingPathComponent(fileName + "_" + String(Int(tInitial.timeIntervalSince1970)) + "_" + String(iCode) + ".xyz")
+    if saveResults {
+        let xyzUrl = writePath.appendingPathComponent(baseFileName + "_" + String(iCode) + ".xyz")
         let pMolXYZ = XYZFile(fromAtoms: atomList)
         do {
             try pMolXYZ.export(toFile: xyzUrl)
-            print("xyz file has been saved.")
+            // log.add("Results have been saved to xyz files.")
         } catch let error {
-            print("An error occured: \(error).")
+            print("An error occured when saving xyz file: \(error).")
         }
     }
 }
 
-print("----------------------------------")
-print("[RESULT] ", terminator: "")
+log.add("----------------------------------")
+log.add("[RESULT] ", terminator: "")
 if success {
-    print("Correct structure has been found.")
+    log.add("Correct structure has been found.")
 } else {
-    print("Failed to find the correct structure.")
+    log.add("Failed to find the correct structure.")
 }
-print("----------------------------------")
-print("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
-print("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
-print("Total number of possible results: \(possibleList.count).")
-print("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1))")
+log.add("----------------------------------")
+log.add("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
+log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
+log.add("Total number of possible results: \(possibleList.count).")
+log.add("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1))")
+
+if saveResults {
+    let txtUrl = writePath.appendingPathComponent(baseFileName + ".txt")
+    do {
+        try log.save(asURL: txtUrl)
+        print("Results have been saved to txt file.")
+    } catch let error {
+        print("An error occured: \(error).")
+    }
+}
+
+log.print()

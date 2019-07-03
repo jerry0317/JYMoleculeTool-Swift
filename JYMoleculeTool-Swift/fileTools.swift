@@ -9,7 +9,27 @@
 import Foundation
 
 protocol File {
+    var content: String { get set }
+}
+
+extension File {
+    mutating func open(fromURL url: URL, encoding: String.Encoding = .utf8) throws {
+        content = try String(contentsOf: url, encoding: encoding)
+    }
     
+    func save(_ content: String? = nil, asURL url: URL, encoding: String.Encoding = .utf8) throws {
+        let str: String = content ?? self.content
+        var data = str.data(using: encoding)
+        if data == nil {
+            data = str.data(using: .utf8)
+            print("Force encoding to utf8.")
+        }
+        do {
+            try data!.write(to: url)
+        } catch let error {
+            throw error
+        }
+    }
 }
 
 /**
@@ -40,17 +60,25 @@ struct XYZFile: File {
     }
     
     init(fromURL url: URL, encoding: String.Encoding = .utf8) throws {
-        let contents = try String(contentsOf: url, encoding: encoding)
-        self.init(fromString: contents)
+        try open(fromURL: url, encoding: encoding)
     }
     
     init(fromPath path: String, encoding: String.Encoding = .utf8) throws {
         let urlPath = URL(fileURLWithPath: path)
-        try self.init(fromURL: urlPath)
+        try open(fromURL: urlPath, encoding: encoding)
     }
     
     init(fromAtoms atoms: [Atom]) {
         self.importFromAtoms(atoms)
+    }
+    
+    var content: String {
+        get {
+            return xyzString ?? ""
+        }
+        set(newString) {
+            self = .init(fromString: newString)
+        }
     }
     
     var xyzString: String? {
@@ -126,12 +154,32 @@ struct XYZFile: File {
         guard xyzString != nil else {
             throw xyzExportError.xyzStringIsNil
         }
-        let data = Data(xyzString!.utf8)
-        do {
-            try data.write(to: path)
-        } catch let error {
-            throw error
-        }
+        try save(xyzString!, asURL: path)
+    }
+}
+
+struct TextFile: File {
+    var content: String = ""
+    
+    init() {
+        
+    }
+    
+    init(fromURL url: URL, encoding: String.Encoding = .utf8) throws {
+        try open(fromURL: url, encoding: encoding)
+    }
+    
+    mutating func add(_ item: Any = "", terminator: String = "\r\n") {
+        let str = String(item)
+        content.append(str + terminator)
+    }
+    
+    mutating func newLine() {
+        content.append("\r\n")
+    }
+    
+    func print(terminator: String = "\n") {
+        Swift.print(content, terminator: terminator)
     }
 }
 
