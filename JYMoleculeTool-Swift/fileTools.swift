@@ -170,7 +170,7 @@ struct TextFile: File {
     }
     
     mutating func add(_ item: Any = "", terminator: String = "\r\n") {
-        let str = String(item)
+        let str = String(describing: item)
         content.append(str + terminator)
     }
     

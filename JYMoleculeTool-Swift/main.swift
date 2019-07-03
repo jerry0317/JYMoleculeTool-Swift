@@ -13,6 +13,11 @@ import Foundation
  */
 let tolerenceLevel = 0.1
 
+/**
+ Tolerance ratio used in bond angle filter.
+ */
+let toleranceRatio = 0.1
+
 
 /**
  (Deprecated, may be invoked for future use)
@@ -91,9 +96,11 @@ var possibleList: [StrcMolecule] = []
 
 let tInitial = Date()
 
-rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, possibleList: &possibleList, trueMol: StrcMolecule(Set(combAtoms)))
+rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, tolRatio: toleranceRatio, possibleList: &possibleList, trueMol: StrcMolecule(Set(combAtoms)))
 
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
+
+print("Computation completed. Generating results...")
 
 // Sort the possible List by CM deviation
 possibleList.sort(by: {
@@ -105,7 +112,6 @@ var iCode = 0
 var success = false
 let baseFileName = fileName + "_" + String(Int(tInitial.timeIntervalSince1970))
 
-print("-------------Results--------------")
 log.add("----------------------------------")
 // Printing results
 for pMol in possibleList {
@@ -191,4 +197,5 @@ if saveResults {
     }
 }
 
+print("*------------Results-------------*")
 log.print()

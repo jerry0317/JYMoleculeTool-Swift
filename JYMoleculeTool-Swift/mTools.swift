@@ -710,10 +710,12 @@ func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<
  
  - Parameter atom: The atom to test with the structural molecule `stMol`.
  
- - Parameter tolRange: The tolerance level, unit in angstrom.
+ - Parameter tolRange: The tolerance level acting in bond length filters, unit in angstrom.
+ 
+ - Parameter tolRatio: The tolerance ratio acting in bond angle filters.
  
  */
-func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1) -> StrcMolecule {
+func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> StrcMolecule {
     var mol = stMol
     let bondGraphs = mol.bondGraphs
     
@@ -754,7 +756,7 @@ func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double =
                                 for bAtom in mol.atoms {
                                     if pBondGraph.degreeOfAtom(bAtom) >= 2 {
                                         let vseprGraph = pBondGraph.findVseprGraph(bAtom)
-                                        if !vseprGraph.filter() {
+                                        if !vseprGraph.filter(bondAngleTolRatio: tolRatio) {
                                             bPass = false
                                             break
                                         }
@@ -864,12 +866,12 @@ extension Collection where Iterator.Element == Atom {
 /**
  The recursion constructor. It takes a test atom and compared it with a valid structrual molecule. It will return the possible structural molecules as the atom and the molecule join together.
  */
-func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1) -> [StrcMolecule] {
+func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> [StrcMolecule] {
     let possibleAtoms = atom.possibles
     var possibleSMList: [StrcMolecule] = []
     
     for pAtom in possibleAtoms {
-        let sMol = strcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange)
+        let sMol = strcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange, tolRatio: tolRatio)
         
         if !sMol.bondGraphs.isEmpty {
             possibleSMList.append(sMol)
@@ -881,14 +883,14 @@ func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1) -> 
 /**
  The recursion action to perform recursion.
  */
-func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, possibleList pList: inout [StrcMolecule], trueMol: StrcMolecule? = nil) {
+func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, tolRatio: Double = 0.1, possibleList pList: inout [StrcMolecule], trueMol: StrcMolecule? = nil) {
     if !rAtoms.isEmpty {
         for stMol in mList {
             for rAtom in rAtoms {
-                let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange)
+                let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
                 if !newMList.isEmpty {
                     let newRAtoms = rAtoms.filter({$0 != rAtom})
-                    rcsAction(rAtoms: newRAtoms, stMolList: newMList, tolRange: tolRange, possibleList: &pList, trueMol: trueMol)
+                    rcsAction(rAtoms: newRAtoms, stMolList: newMList, tolRange: tolRange, tolRatio: tolRatio, possibleList: &pList, trueMol: trueMol)
                 }
             }
         }
