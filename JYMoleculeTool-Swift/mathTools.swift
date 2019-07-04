@@ -81,3 +81,17 @@ func combinations<T>(_ elements: ArraySlice<T>, _ k: Int) -> Set<Set<T>> {
     
     return result
 }
+
+func combinationsDynProgrammed<T>(_ elements: Array<T>, _ k: Int) -> Set<Set<T>> {
+    let n = elements.count
+    let indices = Array(0...(n - 1))
+    let combTuple = CombTuple(n,k)
+    var indexComb = globalCache.indexCombinations[combTuple]
+    
+    if indexComb == nil {
+        indexComb = combinations(indices, k)
+        globalCache.indexCombinations[combTuple] = indexComb
+    }
+    
+    return Set(indexComb!.map({ Set($0.map({ elements[$0] })) }))
+}

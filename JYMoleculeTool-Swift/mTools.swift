@@ -849,6 +849,70 @@ func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double =
     return mol
 }
 
+/**
+ The recursion constructor. It takes a test atom and compared it with a valid structrual molecule. It will return the possible structural molecules as the atom and the molecule join together.
+ */
+func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> [StrcMolecule] {
+    let possibleAtoms = atom.possibles
+    var possibleSMList: [StrcMolecule] = []
+    
+    for pAtom in possibleAtoms {
+        let sMol = strcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange, tolRatio: tolRatio)
+        
+        if !sMol.bondGraphs.isEmpty {
+            possibleSMList.append(sMol)
+        }
+    }
+    return possibleSMList
+}
+
+/**
+ The recursion action to perform recursion.
+ 
+ - TODO: Optimize with tail recursion.
+ */
+func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, tolRatio: Double = 0.1, possibleList pList: inout [StrcMolecule], trueMol: StrcMolecule? = nil) {
+    if rAtoms.isEmpty {
+        for stMol in mList {
+            if pList.filter({ $0 == stMol }).isEmpty {
+                let saList = pList.filter { $0 ~= stMol }
+                if saList.isEmpty {
+                    pList.append(stMol)
+                    print("Current possible results: \(pList.count)", terminator: "")
+                    if trueMol != nil && trueMol!.atoms == stMol.atoms {
+                        print("     !!## <The correct structure> has been found.")
+                    } else {
+                        print()
+                    }
+                } else {
+                    let daList = pList.filter { !saList.contains($0) }
+                    let newStMol: StrcMolecule = saList.reduce(StrcMolecule(stMol.atoms), { $0.combined($1) ?? $0 })
+                    pList = daList + [newStMol]
+                    
+                    print("Current possible results: \(pList.count)", terminator: "")
+                    print("     ## Duplicated")
+                }
+            }
+        }
+    } else {
+        for stMol in mList {
+            for rAtom in rAtoms {
+                let rcsTuple = rcsConstructorTuple(atom: rAtom, stMol: stMol)
+                if globalCache.rcsConstructorCache.contains(rcsTuple) {
+                    break
+                } else {
+                    globalCache.rcsConstructorCache.insert(rcsTuple)
+                }
+                let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
+                if !newMList.isEmpty {
+                    let newRAtoms = rAtoms.filter({$0 != rAtom})
+                    rcsAction(rAtoms: newRAtoms, stMolList: newMList, tolRange: tolRange, tolRatio: tolRatio, possibleList: &pList, trueMol: trueMol)
+                }
+            }
+        }
+    }
+}
+
 extension Array where Element == Atom {
     /**
      Extension of Atom array to be selected by name
@@ -938,65 +1002,6 @@ extension Collection where Iterator.Element == Atom {
 }
 
 /**
- The recursion constructor. It takes a test atom and compared it with a valid structrual molecule. It will return the possible structural molecules as the atom and the molecule join together.
- */
-func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> [StrcMolecule] {
-    let possibleAtoms = atom.possibles
-    var possibleSMList: [StrcMolecule] = []
-    
-    for pAtom in possibleAtoms {
-        let sMol = strcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange, tolRatio: tolRatio)
-        
-        if !sMol.bondGraphs.isEmpty {
-            possibleSMList.append(sMol)
-        }
-    }
-    return possibleSMList
-}
-
-/**
- The recursion action to perform recursion.
- 
- - TODO: Optimize with tail recursion.
- */
-func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, tolRatio: Double = 0.1, possibleList pList: inout [StrcMolecule], trueMol: StrcMolecule? = nil) {
-    if rAtoms.isEmpty {
-        for stMol in mList {
-            if pList.filter({ $0 == stMol }).isEmpty {
-                let saList = pList.filter { $0 ~= stMol }
-                if saList.isEmpty {
-                    pList.append(stMol)
-                    print("Current possible results: \(pList.count)", terminator: "")
-                    if trueMol != nil && trueMol!.atoms == stMol.atoms {
-                        print("     !!## <The correct structure> has been found.")
-                    } else {
-                        print()
-                    }
-                } else {
-                    var daList = pList.filter { !saList.contains($0) }
-                    let newStMol: StrcMolecule = saList.reduce(StrcMolecule(stMol.atoms), { $0.combined($1) ?? $0 })
-                    daList.append(newStMol)
-                    pList = daList
-                    
-                    print("Current possible results: \(pList.count)", terminator: "")
-                    print("     ## Duplicated")
-                }
-            }
-        }
-    } else {
-        for stMol in mList {
-            for rAtom in rAtoms {
-                let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
-                if !newMList.isEmpty {
-                    let newRAtoms = rAtoms.filter({$0 != rAtom})
-                    rcsAction(rAtoms: newRAtoms, stMolList: newMList, tolRange: tolRange, tolRatio: tolRatio, possibleList: &pList, trueMol: trueMol)
-                }
-            }
-        }
-    }
-}
-
-/**
  (D3APD) The distance between a degree-3 atom and the co-plane of its three adjacent atom.
  */
 func degreeThreeAtomPlanarDistance(center: Atom, attached: [Atom]) -> Double? {
@@ -1041,7 +1046,7 @@ func bondAngle(center: Atom, bonds: [ChemBond]) -> Measurement<UnitAngle>? {
  The bond angle of any number of bonds of an atom. Returns tuple of angle and the set of the adjacent atoms involved in the two bonds of the bond angle.
  */
 func bondAngles(center: Atom, attached: [Atom]) -> [(Measurement<UnitAngle>?, Set<Atom>)] {
-    let attachedAtomsList = combinations(attached, 2)
+    let attachedAtomsList = combinationsDynProgrammed(attached, 2)
     return attachedAtomsList.map { (bondAngle(center: center, attached: Array($0)), $0) }
 }
 
@@ -1049,7 +1054,7 @@ func bondAngles(center: Atom, attached: [Atom]) -> [(Measurement<UnitAngle>?, Se
  The bond angle of any number of bonds of an atom. Returns tuple of angle and the set of the adjacent atoms involved in the two bonds of the bond angle.
  */
 func bondAngles(center: Atom, bonds: [ChemBond]) -> [(Measurement<UnitAngle>?, Set<ChemBond>)] {
-    let attachedAtomsList = combinations(bonds, 2)
+    let attachedAtomsList = combinationsDynProgrammed(bonds, 2)
     return attachedAtomsList.map { (bondAngle(center: center, bonds: Array($0)), $0) }
 }
 
@@ -1071,7 +1076,7 @@ func bondAngle(center: Atom, bonds: [ChemBond], unit: UnitAngle) -> Double? {
  The bond angle of any number of bonds of an atom. Returns tuple of the value of the angle given provided unit and the set of the adjacent atoms involved in the two bonds of the bond angle.
  */
 func bondAngles(center: Atom, attached: [Atom], unit: UnitAngle) -> [(Double?, Set<Atom>)] {
-    let attachedAtomsList = combinations(attached, 2)
+    let attachedAtomsList = combinationsDynProgrammed(attached, 2)
     return attachedAtomsList.map { (bondAngle(center: center, attached: Array($0), unit: unit), $0) }
 }
 
@@ -1079,6 +1084,6 @@ func bondAngles(center: Atom, attached: [Atom], unit: UnitAngle) -> [(Double?, S
  The bond angle of any number of bonds of an atom. Returns tuple of the value of the angle given provided unit and the set of the adjacent atoms involved in the two bonds of the bond angle.
  */
 func bondAngles(center: Atom, bonds: [ChemBond], unit: UnitAngle) -> [(Double?, Set<ChemBond>)] {
-    let attachedAtomsList = combinations(bonds, 2)
+    let attachedAtomsList = combinationsDynProgrammed(bonds, 2)
     return attachedAtomsList.map { (bondAngle(center: center, bonds: Array($0), unit: unit), $0) }
 }
