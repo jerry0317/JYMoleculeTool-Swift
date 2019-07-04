@@ -196,6 +196,7 @@ if success {
 }
 log.add("-----------------------------------")
 log.add("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
+log.add("Total number of non-Hydrogen atoms: \(combAtoms.count).")
 log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
 log.add("Total number of possible results: \(possibleList.count).")
 log.add("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1))")

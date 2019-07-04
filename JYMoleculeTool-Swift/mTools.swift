@@ -753,6 +753,18 @@ func possibleBondTypes(_ atomName1: String, _ atomName2: String) -> [ChemBondTyp
     return possibleBondTypeList
 }
 
+func possibleBondTypesDynProgrammed(_ atomName1: String, _ atomName2: String) -> [ChemBondType] {
+    let btTuple = BondTypeTuple(atomName1, atomName2)
+    var bondTypes = globalCache.possibleBondTypes[btTuple]
+    
+    if bondTypes == nil {
+        bondTypes = possibleBondTypes(atomName1, atomName2)
+        globalCache.possibleBondTypes[btTuple] = bondTypes!
+    }
+    
+    return bondTypes!
+}
+
 /**
  Filtering by bond angle with a given range.
  */
@@ -802,7 +814,7 @@ func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double =
     else {
         mol.bondGraphs.removeAll()
         for vAtom in stMol.atoms {
-            let possibleBts = possibleBondTypes(vAtom.name, atom.name)
+            let possibleBts = possibleBondTypesDynProgrammed(vAtom.name, atom.name)
             for bondType in possibleBts {
                 if bondTypeLengthFilter(vAtom, atom, bondType, tolRange) {
                     let vRemainingAtoms = stMol.atoms.filter({$0 != vAtom})
