@@ -956,19 +956,11 @@ func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tol
 
 /**
  The recursion action to perform recursion.
+ 
+ - TODO: Optimize with tail recursion.
  */
 func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, tolRatio: Double = 0.1, possibleList pList: inout [StrcMolecule], trueMol: StrcMolecule? = nil) {
-    if !rAtoms.isEmpty {
-        for stMol in mList {
-            for rAtom in rAtoms {
-                let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
-                if !newMList.isEmpty {
-                    let newRAtoms = rAtoms.filter({$0 != rAtom})
-                    rcsAction(rAtoms: newRAtoms, stMolList: newMList, tolRange: tolRange, tolRatio: tolRatio, possibleList: &pList, trueMol: trueMol)
-                }
-            }
-        }
-    } else {
+    if rAtoms.isEmpty {
         for stMol in mList {
             if pList.filter({ $0 == stMol }).isEmpty {
                 let saList = pList.filter { $0 ~= stMol }
@@ -988,6 +980,16 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
                     
                     print("Current possible results: \(pList.count)", terminator: "")
                     print("     ## Duplicated")
+                }
+            }
+        }
+    } else {
+        for stMol in mList {
+            for rAtom in rAtoms {
+                let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
+                if !newMList.isEmpty {
+                    let newRAtoms = rAtoms.filter({$0 != rAtom})
+                    rcsAction(rAtoms: newRAtoms, stMolList: newMList, tolRange: tolRange, tolRatio: tolRatio, possibleList: &pList, trueMol: trueMol)
                 }
             }
         }

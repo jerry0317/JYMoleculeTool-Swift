@@ -185,14 +185,16 @@ for pMol in possibleList {
     }
 }
 
-log.add("----------------------------------")
-log.add("[RESULT] ", terminator: "")
+log.add("-----------------------------------")
+log.add("[Molecule name] \(fileName)")
+log.add("-- -- -- -- -- -- -- -- -- -- -- --")
+log.add("[Result] ", terminator: "")
 if success {
     log.add("Correct structure has been found.")
 } else {
     log.add("Failed to find the correct structure.")
 }
-log.add("----------------------------------")
+log.add("-----------------------------------")
 log.add("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
 log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
 log.add("Total number of possible results: \(possibleList.count).")
@@ -208,5 +210,5 @@ if saveResults {
     }
 }
 
-print("**-----------Results------------**")
+print("**------------Results------------**")
 log.print()
