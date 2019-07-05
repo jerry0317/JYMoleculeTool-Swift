@@ -911,7 +911,7 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
             for rAtom in rAtoms {
                 let rcsTuple = rcsConstructorTuple(atom: rAtom, stMol: stMol)
                 if globalCache.rcsConstructorCache.contains(rcsTuple) {
-                    break
+                    continue
                 } else {
                     globalCache.rcsConstructorCache.insert(rcsTuple)
                 }

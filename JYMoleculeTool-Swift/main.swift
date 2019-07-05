@@ -85,11 +85,13 @@ combAtoms.roundRVecs(digitsAfterDecimal: roundDigits)
 
 print("Total number of non-Hydrogen atoms: \(combAtoms.count)")
 
+combAtoms.sort(by: { $0.rvec!.magnitude > $1.rvec!.magnitude })
+
 // Fix the first atom
 let A1 = combAtoms[0]
 print("The first atom has been fixed.")
 
-let combrAtoms = combAtoms.filter({$0 != A1})
+let combrAtoms = combAtoms.removed(A1)
 let initialSMol = StrcMolecule(Set([A1]))
 
 var possibleList: [StrcMolecule] = []
