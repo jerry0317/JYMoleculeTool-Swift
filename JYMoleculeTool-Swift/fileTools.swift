@@ -156,7 +156,8 @@ struct XYZFile: File {
                     }
                 rvec.dictVec[j - 1] = r
                 }
-                let atom = Atom(atomName, rvec)
+                var atom = Atom(atomName, rvec)
+                atom.setIdentifier()
                 atomsFromFile!.append(atom)
             }
         }

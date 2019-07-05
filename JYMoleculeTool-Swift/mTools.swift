@@ -200,9 +200,15 @@ struct Atom {
      */
     var rvec: Vector3D?
     
-    init(_ name: String, _ rvec: Vector3D? = nil){
+    /**
+     The optional identifier of the atom to trace it down after making the eight possible atoms from re-sigining. Does not effect the hash value.
+     */
+    var identifier: Int?
+    
+    init(_ name: String, _ rvec: Vector3D? = nil, _ identifier: Int? = nil){
         self.name = name
         self.rvec = rvec
+        self.identifier = identifier
     }
     
     /**
@@ -215,7 +221,7 @@ struct Atom {
         } else {
             let possibleRvecList = rvec!.resign()
             for possibleRvec in possibleRvecList {
-                let newAtom = Atom(name, possibleRvec)
+                let newAtom = Atom(name, possibleRvec, identifier)
                 possibleList.append(newAtom)
             }
         }
@@ -258,6 +264,13 @@ struct Atom {
         }
         return true
     }
+    
+    mutating func setIdentifier() {
+        var hasher = Hasher()
+        hasher.combine(name)
+        hasher.combine(rvec)
+        identifier = hasher.finalize()
+    }
 }
 
 extension Atom: Hashable {
@@ -270,6 +283,18 @@ extension Atom: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(name)
         hasher.combine(rvec)
+    }
+}
+
+infix operator .=: ComparisonPrecedence
+extension Atom {
+    /**
+     With the same identifier
+     
+     - Returns true if the two atoms have the same identifier
+     */
+    static func .= (lhs: Atom, rhs: Atom) -> Bool {
+        return lhs.identifier == rhs.identifier
     }
 }
 
@@ -675,6 +700,11 @@ struct StrcMolecule {
             return nil
         }
     }
+    
+    func containsById(_ atom: Atom) -> Bool {
+        let cFiltered = atoms.filter({ $0 .= atom })
+        return !cFiltered.isEmpty
+    }
 }
 
 extension StrcMolecule: Hashable {
@@ -898,7 +928,7 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
                     }
                 } else {
                     let daList = pList.filter { !saList.contains($0) }
-                    let newStMol: StrcMolecule = saList.reduce(StrcMolecule(stMol.atoms), { $0.combined($1) ?? $0 })
+                    let newStMol: StrcMolecule = saList.reduce(stMol, { $0.combined($1) ?? $0 })
                     pList = daList + [newStMol]
                     
                     print("Current possible results: \(pList.count)", terminator: "")
@@ -923,6 +953,58 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
             }
         }
     }
+}
+
+func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, tolRatio: Double = 0.1, trueMol: StrcMolecule? = nil) -> [StrcMolecule] {
+    guard !rAtoms.isEmpty else {
+        return []
+    }
+    
+    let rCount = rAtoms.count
+    var mDict: [Int: Set<StrcMolecule>] = [:]
+    
+    mDict[0] = Set(mList)
+    
+    for i in 1...rCount {
+        mDict[i] = []
+    }
+    
+    for j in 0...(rCount - 1) {
+        for stMol in mDict[j]! {
+            let rList = rAtoms.filter { !stMol.containsById($0) }
+            for rAtom in rList {
+                let rcsTuple = rcsConstructorTuple(atom: rAtom, stMol: stMol)
+                if globalCache.rcsConstructorCache.contains(rcsTuple) {
+                    continue
+                } else {
+                    globalCache.rcsConstructorCache.insert(rcsTuple)
+                }
+                let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
+                guard !newMList.isEmpty else {
+                    continue
+                }
+                if j == rCount - 1 {
+                    for newStMol in newMList {
+                        let cmList = mDict[j + 1]!
+                        let saList = cmList.filter { $0 ~= newStMol }
+                        if saList.isEmpty {
+                            mDict[j + 1]!.insert(newStMol)
+                        } else {
+                            let daList = cmList.subtracting(saList)
+                            let combinedStMol: StrcMolecule = saList.reduce(newStMol, { $0.combined($1) ?? $0 })
+                            mDict[j + 1]! = daList.union([combinedStMol])
+                        }
+                    }
+                } else {
+                    mDict[j + 1]! = mDict[j + 1]!.union(newMList)
+                }
+            }
+        }
+        mDict[j] = nil
+        print("Computed atoms: \(j + 1)")
+    }
+    
+    return Array(mDict[rCount]!)
 }
 
 extension Array where Element == Atom {
@@ -1047,11 +1129,9 @@ func bondAngle(center: Atom, attached: [Atom]) -> Measurement<UnitAngle>? {
  The bond angle of the two bonds of an atom. Takes the two attached bonds as parameter.
  */
 func bondAngle(center: Atom, bonds: [ChemBond]) -> Measurement<UnitAngle>? {
-    var attachedAtoms = bonds.flatMap { $0.atoms }
-    attachedAtoms.remove(center)
-    attachedAtoms = Array(Set(attachedAtoms))
-    
-    return bondAngle(center: center, attached: attachedAtoms)
+    let attachedMap = bonds.map({ $0.atoms.subtracting([center])})
+    let attachedAtoms = attachedMap.reduce(Set<Atom>(), {$0.union($1)})
+    return bondAngle(center: center, attached: Array(attachedAtoms))
 }
 
 /**

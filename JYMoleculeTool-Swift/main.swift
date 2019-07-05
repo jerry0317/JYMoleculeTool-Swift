@@ -99,7 +99,9 @@ var possibleList: [StrcMolecule] = []
 let tInitial = Date()
 print("Computation started on \(displayTime(tInitial)).")
 
-rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, tolRatio: toleranceRatio, possibleList: &possibleList, trueMol: StrcMolecule(Set(combAtoms)))
+//rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, tolRatio: toleranceRatio, possibleList: &possibleList, trueMol: StrcMolecule(Set(combAtoms)))
+
+possibleList = rcsActionDynProgrammed(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, tolRatio: toleranceRatio, trueMol: StrcMolecule(Set(combAtoms)))
 
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
 
