@@ -969,7 +969,14 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
         mDict[i] = []
     }
     
+    
+    func loopDisplayString(_ j: Int, _ tIJ: Date) -> String {
+        let timeTaken = String(-(Double(tIJ.timeIntervalSinceNow).rounded(digitsAfterDecimal: 1))) + "s"
+        return "Computed atoms: \(toPrintWithSpace(j + 1, 4)) Intermediate possibles: \(toPrintWithSpace(mDict[j + 1]!.count, 9)) Time: \(toPrintWithSpace(timeTaken, 0))"
+    }
+    
     for j in 0...(rCount - 1) {
+        let tIJ = Date()
         for stMol in mDict[j]! {
             let rList = rAtoms.filter { !stMol.containsById($0) }
             for rAtom in rList {
@@ -998,10 +1005,30 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
                 } else {
                     mDict[j + 1]! = mDict[j + 1]!.union(newMList)
                 }
+                
+                #if DEBUG
+                #else
+                print(loopDisplayString(j, tIJ), terminator: "\r")
+                fflush(__stdoutp)
+                #endif
+                
+// TODO: Optimize the logic
+//
+//                for newStMol in newMList {
+//                    let cmList = mDict[j + 1]!
+//                    let saList = cmList.filter { $0 ~= newStMol }
+//                    if saList.isEmpty {
+//                        mDict[j + 1]!.insert(newStMol)
+//                    } else {
+//                        let daList = cmList.subtracting(saList)
+//                        let combinedStMol: StrcMolecule = saList.reduce(newStMol, { $0.combined($1) ?? $0 })
+//                        mDict[j + 1]! = daList.union([combinedStMol])
+//                    }
+//                }
             }
         }
+        print(loopDisplayString(j, tIJ))
         mDict[j] = nil
-        print("Computed atoms: \(j + 1)")
     }
     
     return Array(mDict[rCount]!)

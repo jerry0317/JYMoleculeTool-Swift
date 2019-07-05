@@ -67,3 +67,15 @@ func displayTime(_ time: Date) -> String {
     formatter.locale = Locale(identifier: "en_US")
     return formatter.string(from: time)
 }
+
+func stringWithSpace(_ str: String, _ totSpace: Int) -> String {
+    guard totSpace >= str.count else {
+        return str
+    }
+    
+    return str + String(repeating: "\u{0020}", count: totSpace - str.count)
+}
+
+func toPrintWithSpace(_ item: Any, _ totSpace: Int) -> String {
+    return stringWithSpace(String(describing: item), totSpace)
+}
