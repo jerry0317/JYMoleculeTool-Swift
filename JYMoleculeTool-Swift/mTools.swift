@@ -992,18 +992,17 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
                 }
                 if j == rCount - 1 {
                     for newStMol in newMList {
-                        let cmList = mDict[j + 1]!
-                        let saList = cmList.filter { $0 ~= newStMol }
+                        let saList = mDict[j + 1]!.filter { $0 ~= newStMol }
                         if saList.isEmpty {
                             mDict[j + 1]!.insert(newStMol)
                         } else {
-                            let daList = cmList.subtracting(saList)
+                            let daList = mDict[j + 1]!.subtracting(saList)
                             let combinedStMol: StrcMolecule = saList.reduce(newStMol, { $0.combined($1) ?? $0 })
                             mDict[j + 1]! = daList.union([combinedStMol])
                         }
                     }
                 } else {
-                    mDict[j + 1]! = mDict[j + 1]!.union(newMList)
+                    mDict[j + 1]!.formUnion(newMList)
                 }
                 
                 #if DEBUG
