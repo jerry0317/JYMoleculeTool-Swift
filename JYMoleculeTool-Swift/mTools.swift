@@ -215,6 +215,10 @@ struct Atom {
      Possible atoms after re-signing it.
      */
     var possibles: [Atom] {
+        return findPossiblesDynProgrammed()
+    }
+    
+    private func findPossibles() -> [Atom] {
         var possibleList: [Atom] = []
         if rvec == nil {
             return []
@@ -226,6 +230,16 @@ struct Atom {
             }
         }
         return possibleList
+    }
+    
+    private func findPossiblesDynProgrammed() -> [Atom] {
+        if globalCache.atomPossibles[self] != nil {
+            return globalCache.atomPossibles[self]!
+        } else {
+            let possibles = findPossibles()
+            globalCache.atomPossibles[self] = possibles
+            return possibles
+        }
     }
     
     /**
@@ -681,7 +695,7 @@ struct StrcMolecule {
     @discardableResult
     mutating func combine(_ stMol: StrcMolecule) -> Bool {
         if stMol ~= self {
-            bondGraphs = bondGraphs.union(stMol.bondGraphs)
+            bondGraphs.formUnion(stMol.bondGraphs)
             return true
         } else {
             return false
@@ -846,41 +860,43 @@ func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double =
         for vAtom in stMol.atoms {
             let possibleBts = possibleBondTypesDynProgrammed(vAtom.name, atom.name)
             for bondType in possibleBts {
-                if bondTypeLengthFilter(vAtom, atom, bondType, tolRange) {
-                    let vRemainingAtoms = stMol.atoms.filter({$0 != vAtom})
-                    var dPass = true
-                    for vRAtom in vRemainingAtoms {
-                        guard let d: Double = atomDistance(vRAtom, atom) else {
-                            dPass = false
-                            break
-                        }
-                        if d < (bondType.length! - tolRange) {
-                            dPass = false
-                            break
-                        }
+                guard bondTypeLengthFilter(vAtom, atom, bondType, tolRange) else {
+                    continue
+                }
+                
+                let vRemainingAtoms = stMol.atoms.filter({$0 != vAtom})
+                var dPass = true
+                for vRAtom in vRemainingAtoms {
+                    guard let d: Double = atomDistance(vRAtom, atom) else {
+                        dPass = false
+                        break
                     }
-                    if dPass {
-                        let pBond = ChemBond(vAtom, atom, bondType)
-                        mol.addAtom(atom)
-                        if stMol.size == 1 {
-                            mol.bondGraphs.insert(ChemBondGraph(Set([pBond])))
-                        } else if stMol.size > 1 {
-                            for bondGraph in bondGraphs {
-                                var pBondGraph = bondGraph
-                                pBondGraph.bonds.insert(pBond)
-                                var bPass = true
-                                for bAtom in mol.atoms {
-                                    if pBondGraph.degreeOfAtom(bAtom) >= 2 {
-                                        let vseprGraph = pBondGraph.findVseprGraph(bAtom)
-                                        if !vseprGraph.filter(bondAngleTolRatio: tolRatio) {
-                                            bPass = false
-                                            break
-                                        }
+                    if d < (bondType.length! - tolRange) {
+                        dPass = false
+                        break
+                    }
+                }
+                if dPass {
+                    let pBond = ChemBond(vAtom, atom, bondType)
+                    mol.addAtom(atom)
+                    if stMol.size == 1 {
+                        mol.bondGraphs.insert(ChemBondGraph(Set([pBond])))
+                    } else if stMol.size > 1 {
+                        for bondGraph in bondGraphs {
+                            var pBondGraph = bondGraph
+                            pBondGraph.bonds.insert(pBond)
+                            var bPass = true
+                            for bAtom in mol.atoms {
+                                if pBondGraph.degreeOfAtom(bAtom) >= 2 {
+                                    let vseprGraph = pBondGraph.findVseprGraph(bAtom)
+                                    if !vseprGraph.filter(bondAngleTolRatio: tolRatio) {
+                                        bPass = false
+                                        break
                                     }
                                 }
-                                if bPass {
-                                    mol.bondGraphs.insert(pBondGraph)
-                                }
+                            }
+                            if bPass {
+                                mol.bondGraphs.insert(pBondGraph)
                             }
                         }
                     }
@@ -961,76 +977,91 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
     }
     
     let rCount = rAtoms.count
-    var mDict: [Int: Set<StrcMolecule>] = [:]
     
-    mDict[0] = Set(mList)
+    var mDynDict: [Int: [Set<Atom>: Set<StrcMolecule>]] = [Int: [Set<Atom>: Set<StrcMolecule>]]()
     
-    for i in 1...rCount {
-        mDict[i] = []
+    for i in 0...rCount {
+        mDynDict[i] = [:]
+    }
+    
+    func addStMolToMDynDict(_ j: Int, _ stMol: StrcMolecule) {
+        if mDynDict[j]![stMol.atoms] == nil {
+            mDynDict[j]![stMol.atoms] = Set([stMol])
+        } else {
+            mDynDict[j]![stMol.atoms]!.insert(stMol)
+        }
     }
     
     
-    func loopDisplayString(_ j: Int, _ tIJ: Date) -> String {
+    for stMol in mList {
+        addStMolToMDynDict(0, stMol)
+    }
+    
+    func loopDisplayString(_ j1: Int, _ j2: Int, _ tIJ: Date) -> String {
         let timeTaken = String(-(Double(tIJ.timeIntervalSinceNow).rounded(digitsAfterDecimal: 1))) + "s"
-        return "Computed atoms: \(toPrintWithSpace(j + 1, 4)) Intermediate possibles: \(toPrintWithSpace(mDict[j + 1]!.count, 9)) Time: \(toPrintWithSpace(timeTaken, 0))"
+        return "Atoms: \(toPrintWithSpace(j1 + 1, 4)) Interm. possibles: \(toPrintWithSpace(mDynDict[j2 + 1]!.count, 9)) Time: \(toPrintWithSpace(timeTaken, 10)) "
     }
+    
+    print(loopDisplayString(0, -1, Date()))
     
     for j in 0...(rCount - 1) {
         let tIJ = Date()
-        for stMol in mDict[j]! {
-            let rList = rAtoms.filter { !stMol.containsById($0) }
-            for rAtom in rList {
-                let rcsTuple = rcsConstructorTuple(atom: rAtom, stMol: stMol)
-                if globalCache.rcsConstructorCache.contains(rcsTuple) {
-                    continue
-                } else {
-                    globalCache.rcsConstructorCache.insert(rcsTuple)
-                }
-                let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
-                guard !newMList.isEmpty else {
-                    continue
-                }
-                if j == rCount - 1 {
-                    for newStMol in newMList {
-                        let saList = mDict[j + 1]!.filter { $0 ~= newStMol }
-                        if saList.isEmpty {
-                            mDict[j + 1]!.insert(newStMol)
-                        } else {
-                            let daList = mDict[j + 1]!.subtracting(saList)
-                            let combinedStMol: StrcMolecule = saList.reduce(newStMol, { $0.combined($1) ?? $0 })
-                            mDict[j + 1]! = daList.union([combinedStMol])
-                        }
+        for (_, stMols) in mDynDict[j]! {
+            for stMol in stMols {
+                let rList = rAtoms.filter { !stMol.containsById($0) }
+                for rAtom in rList {
+                    let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
+                    guard !newMList.isEmpty else {
+                        continue
                     }
-                } else {
-                    mDict[j + 1]!.formUnion(newMList)
+                    
+                    for newStMol in newMList {
+                        if globalCache.stMolMatched.0.contains(newStMol.atoms) {
+                            globalCache.stMolMatched.0.remove(newStMol.atoms)
+                            globalCache.stMolMatched.1.insert(newStMol.atoms)
+                        } else if globalCache.stMolMatched.1.contains(newStMol.atoms) {
+                            // Do nothing
+                        } else {
+                            globalCache.stMolMatched.0.insert(newStMol.atoms)
+                        }
+                        
+                        addStMolToMDynDict(j + 1, newStMol)
+                    }
+                    
+                    
+                    #if DEBUG
+                    #else
+                    print(loopDisplayString(j + 1, j, tIJ) + "Computing..", terminator: "\r")
+                    fflush(__stdoutp)
+                    #endif
                 }
-                
-                #if DEBUG
-                #else
-                print(loopDisplayString(j, tIJ), terminator: "\r")
-                fflush(__stdoutp)
-                #endif
-                
-// TODO: Optimize the logic
-//
-//                for newStMol in newMList {
-//                    let cmList = mDict[j + 1]!
-//                    let saList = cmList.filter { $0 ~= newStMol }
-//                    if saList.isEmpty {
-//                        mDict[j + 1]!.insert(newStMol)
-//                    } else {
-//                        let daList = cmList.subtracting(saList)
-//                        let combinedStMol: StrcMolecule = saList.reduce(newStMol, { $0.combined($1) ?? $0 })
-//                        mDict[j + 1]! = daList.union([combinedStMol])
-//                    }
-//                }
             }
         }
-        print(loopDisplayString(j, tIJ))
-        mDict[j] = nil
+        
+        for atoms in globalCache.stMolMatched.1 {
+            let saList = mDynDict[j + 1]![atoms]
+            guard saList != nil && saList!.isEmpty == false else {
+                continue
+            }
+            let combinedStMol: StrcMolecule = saList!.reduce(StrcMolecule(atoms), { $0.combined($1) ?? $0 })
+            mDynDict[j + 1]![atoms] = [combinedStMol]
+
+            #if DEBUG
+            #else
+            print(loopDisplayString(j + 1, j, tIJ) + "Deduplicating..", terminator: "\r")
+            fflush(__stdoutp)
+            #endif
+        }
+        
+        print(toPrintWithSpace(loopDisplayString(j + 1, j, tIJ), 79))
+        
+        mDynDict[j]!.removeAll()
+        globalCache.stMolMatched = ([], [])
     }
     
-    return Array(mDict[rCount]!)
+    let result = mDynDict[rCount]!.flatMap({ $0.value })
+    
+    return result
 }
 
 extension Array where Element == Atom {

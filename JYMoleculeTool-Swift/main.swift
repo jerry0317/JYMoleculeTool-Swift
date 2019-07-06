@@ -71,7 +71,7 @@ if saveResults {
             }
             writePath = writePathUrl
             writePass = true
-            print("The result will be saved in xyz files.")
+            print("The result will be saved in \(writePath.absoluteString).")
             break
         }
     }
@@ -127,7 +127,7 @@ if saveResults {
     }
 }
 
-log.add("----------------------------------")
+log.add("-----------------------------------")
 // Printing results
 for pMol in possibleList {
     iCode = iCode + 1
@@ -204,6 +204,7 @@ log.add("Total number of non-Hydrogen atoms: \(combAtoms.count).")
 log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
 log.add("Total number of possible results: \(possibleList.count).")
 log.add("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1))")
+log.add("-----------------------------------")
 
 if saveResults {
     let txtUrl = writePath.appendingPathComponent(baseFileName + ".txt")
@@ -214,6 +215,9 @@ if saveResults {
         print("An error occured: \(error).")
     }
 }
-
+print()
 print("**------------Results------------**")
 log.print()
+
+print("Exited on \(displayTime(Date())).")
+print()

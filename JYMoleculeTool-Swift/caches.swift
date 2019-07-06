@@ -22,6 +22,10 @@ struct GlobalCache {
     var rcsConstructorCache: Set<rcsConstructorTuple> = []
     
     var possibleBondTypes: [BondTypeTuple: [ChemBondType]] = [:]
+    
+    var stMolMatched: (Set<Set<Atom>>, Set<Set<Atom>>) = ([], [])
+    
+    var atomPossibles: [Atom: [Atom]] = [Atom: [Atom]]()
 }
 
 struct CombTuple {
@@ -73,7 +77,7 @@ struct BondTypeTuple {
 
 extension BondTypeTuple: Hashable {
     static func == (lhs: BondTypeTuple, rhs: BondTypeTuple) -> Bool {
-        return lhs.atomName1 == rhs.atomName1 && lhs.atomName2 == rhs.atomName2
+        return (lhs.atomName1 == rhs.atomName1 && lhs.atomName2 == rhs.atomName2) || (lhs.atomName1 == rhs.atomName2 && lhs.atomName2 == rhs.atomName1)
     }
     
     func hash(into hasher: inout Hasher) {
