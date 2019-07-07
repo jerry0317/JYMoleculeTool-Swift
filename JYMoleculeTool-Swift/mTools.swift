@@ -193,7 +193,16 @@ struct Atom {
     /**
      The name of the atom.
      */
-    var name: String
+    var name: String {
+        get {
+            return element?.rawValue ?? ""
+        }
+        set(newName) {
+            element = ChemElement(rawValue: newName)
+        }
+    }
+    
+    var element: ChemElement?
     
     /**
      The position vector of the atom.
@@ -206,7 +215,13 @@ struct Atom {
     var identifier: Int?
     
     init(_ name: String, _ rvec: Vector3D? = nil, _ identifier: Int? = nil){
-        self.name = name
+        self.element = ChemElement(rawValue: name)
+        self.rvec = rvec
+        self.identifier = identifier
+    }
+    
+    init(_ element: ChemElement?, _ rvec: Vector3D? = nil, _ identifier: Int? = nil){
+        self.element = element
         self.rvec = rvec
         self.identifier = identifier
     }
@@ -225,7 +240,7 @@ struct Atom {
         } else {
             let possibleRvecList = rvec!.resign()
             for possibleRvec in possibleRvecList {
-                let newAtom = Atom(name, possibleRvec, identifier)
+                let newAtom = Atom(element, possibleRvec, identifier)
                 possibleList.append(newAtom)
             }
         }
@@ -246,7 +261,10 @@ struct Atom {
      The valence of the atom.
      */
     var valence: Int {
-        return Constants.Chem.valences[name] ?? 0
+        guard let e = element else {
+            return 0
+        }
+        return Constants.Chem.valences[e] ?? 0
     }
     
     /**
@@ -281,7 +299,7 @@ struct Atom {
     
     mutating func setIdentifier() {
         var hasher = Hasher()
-        hasher.combine(name)
+        hasher.combine(element)
         hasher.combine(rvec)
         identifier = hasher.finalize()
     }
@@ -290,12 +308,12 @@ struct Atom {
 extension Atom: Hashable {
     static func == (lhs: Atom, rhs: Atom) -> Bool {
         return
-            lhs.name == rhs.name &&
+            lhs.element == rhs.element &&
             lhs.rvec == rhs.rvec
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(name)
+        hasher.combine(element)
         hasher.combine(rvec)
     }
 }
@@ -319,7 +337,23 @@ struct ChemBondType {
     /**
      The names of the two atoms in the chemical bond.
      */
-    var atomNames: Array<String>
+    var atomNames: Array<String> {
+        get {
+            return atomElements.map({ $0.rawValue })
+        }
+        set(newValue) {
+            var eList: [ChemElement] = []
+            for newName in newValue {
+                guard let newElement = ChemElement(rawValue: newName) else {
+                    return
+                }
+                eList.append(newElement)
+            }
+            atomElements = eList
+        }
+    }
+    
+    var atomElements: Array<ChemElement>
     
     /**
      The order of the bond.
@@ -327,7 +361,13 @@ struct ChemBondType {
     var order: Int
     
     init(_ atom1: String, _ atom2: String, _ bondOrder: Int = 1){
+        self.atomElements = []
+        self.order = bondOrder
         self.atomNames = [atom1, atom2]
+    }
+    
+    init(_ element1: ChemElement, _ element2: ChemElement, _ bondOrder: Int = 1){
+        self.atomElements = [element1, element2]
         self.order = bondOrder
     }
     
@@ -716,8 +756,12 @@ struct StrcMolecule {
     }
     
     func containsById(_ atom: Atom) -> Bool {
-        let cFiltered = atoms.filter({ $0 .= atom })
-        return !cFiltered.isEmpty
+        for a in atoms {
+            if a .= atom {
+                return true
+            }
+        }
+        return false
     }
 }
 
@@ -786,7 +830,7 @@ func bondTypeLengthFilter(_ atom1: Atom, _ atom2: Atom, _ bondType: ChemBondType
 /**
  Find possible bond types between two atom names
  */
-func possibleBondTypes(_ atomName1: String, _ atomName2: String) -> [ChemBondType] {
+func possibleBondTypes(_ atomName1: ChemElement, _ atomName2: ChemElement) -> [ChemBondType] {
     var possibleBondTypeList: [ChemBondType] = []
     for order in 1...4 {
         let bond = ChemBondType(atomName1, atomName2, order)
@@ -797,12 +841,15 @@ func possibleBondTypes(_ atomName1: String, _ atomName2: String) -> [ChemBondTyp
     return possibleBondTypeList
 }
 
-func possibleBondTypesDynProgrammed(_ atomName1: String, _ atomName2: String) -> [ChemBondType] {
-    let btTuple = BondTypeTuple(atomName1, atomName2)
+func possibleBondTypesDynProgrammed(_ atomName1: ChemElement?, _ atomName2: ChemElement?) -> [ChemBondType] {
+    guard let element1 = atomName1, let element2 = atomName2 else {
+        return []
+    }
+    let btTuple = BondTypeTuple(element1, element2)
     var bondTypes = globalCache.possibleBondTypes[btTuple]
     
     if bondTypes == nil {
-        bondTypes = possibleBondTypes(atomName1, atomName2)
+        bondTypes = possibleBondTypes(element1, element1)
         globalCache.possibleBondTypes[btTuple] = bondTypes!
     }
     
@@ -858,7 +905,7 @@ func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double =
     else {
         mol.bondGraphs.removeAll()
         for vAtom in stMol.atoms {
-            let possibleBts = possibleBondTypesDynProgrammed(vAtom.name, atom.name)
+            let possibleBts = possibleBondTypesDynProgrammed(vAtom.element, atom.element)
             for bondType in possibleBts {
                 guard bondTypeLengthFilter(vAtom, atom, bondType, tolRange) else {
                     continue
@@ -1011,9 +1058,6 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
                 let rList = rAtoms.filter { !stMol.containsById($0) }
                 for rAtom in rList {
                     let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
-                    guard !newMList.isEmpty else {
-                        continue
-                    }
                     
                     for newStMol in newMList {
                         if globalCache.stMolMatched.0.contains(newStMol.atoms) {
@@ -1072,6 +1116,10 @@ extension Array where Element == Atom {
         return filter({$0.name == name})
     }
     
+    func select(byElement element: ChemElement) -> [Atom] {
+        return filter({$0.element == element})
+    }
+    
     /**
      Extension of Atom array to be removed by name
      */
@@ -1079,11 +1127,19 @@ extension Array where Element == Atom {
         return filter({$0.name != name})
     }
     
+    func removed(byElement element: ChemElement) -> [Atom] {
+        return filter({$0.element != element})
+    }
+    
     /**
      Extension of Atom array to remove atoms by name
      */
     mutating func remove(byName name: String) {
         self = removed(byName: name)
+    }
+    
+    mutating func remove(byElement element: ChemElement) {
+        self = removed(byElement: element)
     }
     
     /**
@@ -1140,7 +1196,7 @@ extension Collection where Iterator.Element == Atom {
                 guard let rvec: Vector3D = atom.rvec else {
                     continue
                 }
-                guard let mass: Double = Constants.Chem.atomicMasses[atom.name] else {
+                guard let e = atom.element, let mass: Double = Constants.Chem.atomicMasses[e] else {
                     continue
                 }
                 totalMass = totalMass + mass

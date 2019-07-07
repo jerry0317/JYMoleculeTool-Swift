@@ -66,10 +66,10 @@ extension rcsConstructorTuple: Hashable {
 }
 
 struct BondTypeTuple {
-    var atomName1: String
-    var atomName2: String
+    var atomName1: ChemElement
+    var atomName2: ChemElement
     
-    init(_ atom1: String, _ atom2: String) {
+    init(_ atom1: ChemElement, _ atom2: ChemElement) {
         atomName1 = atom1
         atomName2 = atom2
     }

@@ -8,6 +8,8 @@
 
 import Foundation
 
+typealias ChemElement = Constants.Chem.Element
+
 /**
  Generic constants used in the program.
  */
@@ -16,6 +18,7 @@ enum Constants {
      Constants in chemistry area.
      */
     enum Chem {
+        
         /**
          Known bond lengths of chemical bonds. Unit in Angstrom. **(Currently simplified list)**
          
@@ -47,36 +50,36 @@ enum Constants {
          
          - **Source:** pdg.lbl.gov
          */
-        static let atomicMasses = [
-            "H": 1.00794,
-            "He": 4.002602,
-            "Li": 6.941,
-            "Be": 9.012182,
-            "B": 10.811,
-            "C": 12.0107,
-            "N": 14.0067,
-            "O": 15.9994,
-            "F": 18.9984032,
-            "Ne": 20.1797,
-            "Na": 22.98976928,
-            "Mg": 24.305,
-            "Al": 26.9815385,
-            "Si": 28.085,
-            "P": 30.973761998,
-            "S": 32.06,
-            "Cl": 35.45,
-            "Ar": 39.948
+        static let atomicMasses:  [ChemElement: Double] = [
+            .hydrogen: 1.00794,
+            .helium: 4.002602,
+            .lithium: 6.941,
+            .beryllium: 9.012182,
+            .boron: 10.811,
+            .carbon: 12.0107,
+            .nitrogen: 14.0067,
+            .oxygen: 15.9994,
+            .fluorine: 18.9984032,
+            .neon: 20.1797,
+            .sodium: 22.98976928,
+            .magnesium: 24.305,
+            .aluminum: 26.9815385,
+            .silicon: 28.085,
+            .phosphorus: 30.973761998,
+            .sulfur: 32.06,
+            .chlorine: 35.45,
+            .argon: 39.948
         ]
         
         /**
          Usual valence of an atom in organic compounds.
          */
-        static let valences = [
-            "C": 4,
-            "O": 2,
-            "N": 3,
-            "F": 1,
-            "Cl": 1
+        static let valences: [ChemElement: Int] = [
+            .carbon: 4,
+            .oxygen: 2,
+            .nitrogen: 3,
+            .fluorine: 1,
+            .chlorine: 1
         ]
         
         /**
@@ -101,6 +104,30 @@ enum Constants {
             case ax7e0
             case ax8e0
             case ax9e0
+        }
+        
+        /**
+         Chemical Element.
+         */
+        enum Element: String {
+            case hydrogen = "H"
+            case helium = "He"
+            case lithium = "Li"
+            case beryllium = "Be"
+            case boron = "B"
+            case carbon = "C"
+            case nitrogen = "N"
+            case oxygen = "O"
+            case fluorine = "F"
+            case neon = "Ne"
+            case sodium = "Na"
+            case magnesium = "Mg"
+            case aluminum = "Al"
+            case silicon = "Si"
+            case phosphorus = "P"
+            case sulfur = "S"
+            case chlorine = "Cl"
+            case argon = "Ar"
         }
     }
 }

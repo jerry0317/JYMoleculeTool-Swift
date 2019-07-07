@@ -71,7 +71,7 @@ if saveResults {
             }
             writePath = writePathUrl
             writePass = true
-            print("The result will be saved in \(writePath.absoluteString).")
+            print("The result will be saved in \(writePath.relativeString).")
             break
         }
     }
@@ -79,7 +79,7 @@ if saveResults {
     
 }
 
-var combAtoms: [Atom] = rawAtoms.removed(byName: "H")
+var combAtoms: [Atom] = rawAtoms.removed(byElement: .hydrogen)
 //combAtoms.trimDownRVecs(level: trimLevel)
 combAtoms.roundRVecs(digitsAfterDecimal: roundDigits)
 
