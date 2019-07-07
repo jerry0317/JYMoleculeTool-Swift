@@ -845,11 +845,11 @@ func possibleBondTypesDynProgrammed(_ atomName1: ChemElement?, _ atomName2: Chem
     guard let element1 = atomName1, let element2 = atomName2 else {
         return []
     }
-    let btTuple = BondTypeTuple(element1, element2)
+    let btTuple = Set([element1, element2])
     var bondTypes = globalCache.possibleBondTypes[btTuple]
     
     if bondTypes == nil {
-        bondTypes = possibleBondTypes(element1, element1)
+        bondTypes = possibleBondTypes(element1, element2)
         globalCache.possibleBondTypes[btTuple] = bondTypes!
     }
     
