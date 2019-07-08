@@ -720,7 +720,7 @@ struct VSEPRGraph: SubChemBondGraph {
             default:
                 break
             }
-            return bondAnglesFilter(center: center, bonds: Array(bonds), range: range)
+            return bondAnglesFilter(center: center, attached: attached, range: range)
         default:
             break
         }
@@ -897,6 +897,18 @@ func possibleBondTypesDynProgrammed(_ atomName1: ChemElement?, _ atomName2: Chem
     return bondTypes!
 }
 
+func bondAnglesFilter(_ angles: [Double?], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
+    let lowerBound = range.lowerBound * (1 - tolRatio)
+    let upperBound = range.upperBound * (1 + tolRatio)
+    let tRange: ClosedRange<Double> = lowerBound...upperBound
+    for theta in angles {
+        if theta == nil || !tRange.contains(theta!) {
+            return false
+        }
+    }
+    return true
+}
+
 /**
  Filtering by bond angle with a given range.
  */
@@ -913,15 +925,23 @@ func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<
         return false
     }
     
-    let lowerBound = range.lowerBound * (1 - tolRatio)
-    let upperBound = range.upperBound * (1 + tolRatio)
-    let tRange: ClosedRange<Double> = lowerBound...upperBound
-    for theta in thetaList {
-        if theta == nil || !tRange.contains(theta!) {
-            return false
-        }
+    return bondAnglesFilter(thetaList, range: range, tolRatio: tolRatio)
+}
+
+func bondAnglesFilter(center aAtom: Atom, attached: [Atom], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
+    var thetaList: [Double?] = []
+    if attached.count == 2 {
+        thetaList = [bondAngleInDeg(center: aAtom, attached: attached)]
+    } else if attached.count >= 2 {
+        let rList = bondAnglesInDeg(center: aAtom, attached: attached)
+        thetaList = rList.map { $0.0 }
+    } else if attached.count >= 0{
+        return true
+    } else {
+        return false
     }
-    return true
+    
+    return bondAnglesFilter(thetaList, range: range, tolRatio: tolRatio)
 }
 
 /**
@@ -1287,7 +1307,25 @@ func bondAngle(center: Atom, bonds: [ChemBond]) -> Measurement<UnitAngle>? {
     return Measurement<UnitAngle>(value: theta, unit: UnitAngle.degrees)
 }
 
+// Dynamically progammed
 func bondAngleInDeg(center: Atom, attached: [Atom]) -> Double? {
+    guard let theta = globalCache.bondAngles[attached] else {
+        let attachedRVecs = attached.compactMap { $0.rvec }
+        guard center.rvec != nil && attachedRVecs.count == 2 else {
+            return nil
+        }
+        let dVec1 = center.rvec! - attachedRVecs[0]
+        let dVec2 = center.rvec! - attachedRVecs[1]
+        let newTheta = dVec1.angleInDeg(to: dVec2)
+        globalCache.bondAngles[attached] = newTheta
+        return newTheta
+    }
+    
+    return theta
+}
+
+//Pre dynamically progammed
+func bondAngleInDegOriginal(center: Atom, attached: [Atom]) -> Double? {
     let attachedRVecs = attached.compactMap { $0.rvec }
     guard center.rvec != nil && attachedRVecs.count == 2 else {
         return nil

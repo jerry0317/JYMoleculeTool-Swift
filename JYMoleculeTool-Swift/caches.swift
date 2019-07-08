@@ -28,6 +28,8 @@ struct GlobalCache {
     var atomPossibles: [Atom: [Atom]] = [Atom: [Atom]]()
     
     var bdCodes: [ChemBondType: String] = [ChemBondType: String]()
+    
+    var bondAngles: [Array<Atom>: Double] = [Array<Atom>: Double]()
 }
 
 struct CombTuple {
