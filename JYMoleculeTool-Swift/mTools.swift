@@ -361,7 +361,7 @@ struct ChemBondType {
     }
     
     var atomElements: Array<ChemElement>
-    
+
     /**
      The order of the bond.
      */
@@ -382,12 +382,7 @@ struct ChemBondType {
      The bond code for the bond. For example, the single carbon-carbon bond is denoted as "CC1".
      */
     var bdCode: String {
-        var atomNamesArray = atomNames
-        if atomNamesArray[0] > atomNamesArray[1] {
-            atomNamesArray.swapAt(0, 1)
-        }
-        let code = atomNamesArray[0] + atomNamesArray[1] + String(order)
-        return code
+        return findBdCodeDynProgrammed()
     }
     
     /**
@@ -412,6 +407,25 @@ struct ChemBondType {
             return false
         }
         return true
+    }
+    
+    func findBdCodeDynProgrammed() -> String {
+        let bondTypeTuple = BondTypeTuple(elements: atomElements, order: order)
+        guard let bdCodeInCache = globalCache.bdCodes[bondTypeTuple] else {
+            let newBdCode = findBdCode()
+            globalCache.bdCodes[bondTypeTuple] = newBdCode
+            return newBdCode
+        }
+        return bdCodeInCache
+    }
+    
+    func findBdCode() -> String {
+        var atomNamesArray = atomNames
+        if atomNamesArray[0] > atomNamesArray[1] {
+            atomNamesArray.swapAt(0, 1)
+        }
+        let code = atomNamesArray[0] + atomNamesArray[1] + String(order)
+        return code
     }
     
 }
@@ -506,8 +520,12 @@ struct ChemBondGraph {
         var bondList: [ChemBond] = []
         for bond in bonds {
             if bond.atoms.contains(atom) {
-                let rAtoms = Array(bond.atoms).filter({$0 != atom})
-                atomList.append(rAtoms[0])
+                var rAtoms = bond.atoms
+                rAtoms.remove(atom)
+                guard let rAtom = rAtoms.first else {
+                    continue
+                }
+                atomList.append(rAtom)
                 bondList.append(bond)
             }
         }
@@ -518,8 +536,8 @@ struct ChemBondGraph {
      Find the VSEPR graph based on the given center atom in the bond graph.
      */
     func findVseprGraph(_ atom: Atom) -> VSEPRGraph {
-        let (_, bonds) = adjacenciesOfAtom(atom)
-        return VSEPRGraph(bonds: Set(bonds))
+        let (attached, bonds) = adjacenciesOfAtom(atom)
+        return VSEPRGraph(center: atom, attached: attached, bonds: Set(bonds))
     }
 }
 
@@ -547,6 +565,11 @@ protocol SubChemBondGraph {
  A subgraph of the bond graph that centered on one atom for VSEPR analysis. (Not finished)
  */
 struct VSEPRGraph: SubChemBondGraph {
+    
+    var center: Atom
+    
+    var attached: [Atom]
+    
     /**
      The bonds engaged in this VSEPR graph.
      */
@@ -559,10 +582,11 @@ struct VSEPRGraph: SubChemBondGraph {
         return determineType()
     }
     
+    
     /**
-     The center atom. Automatically determined from the information of bonds. *(Computationally intensive, may be modified later)*
+     Find the center atom. Automatically determined from the information of bonds. *(Computationally intensive, may be modified later)*
      */
-    var center: Atom? {
+    func findCenter() -> Atom? {
         guard bonds.count >= 2 else {
             return nil
         }
@@ -578,9 +602,9 @@ struct VSEPRGraph: SubChemBondGraph {
     }
     
     /**
-     The atoms attached to the center atom. *(Computationally intensive, may be modified later)*
+     Find the atoms attached to the center atom. *(Computationally intensive, may be modified later)*
      */
-    var attached: [Atom] {
+    func findAttached() -> [Atom] {
         return bonds.flatMap({ Array($0.atoms) }).filter { $0 != center }
     }
     
@@ -595,7 +619,7 @@ struct VSEPRGraph: SubChemBondGraph {
      The valence of the center atom. *(Computationally intensive, may be modified later)*
      */
     var valenceAllowed: Int {
-        return center?.valence ?? 0
+        return center.valence
     }
     
     /**
@@ -666,10 +690,7 @@ struct VSEPRGraph: SubChemBondGraph {
      A filter to determine if this VSEPR graph is valid.
      */
     func filter(bondAngleTolRatio tolRatio: Double = 0.1) -> Bool {
-        guard let cAtom: Atom = center else {
-            return false
-        }
-        guard (cAtom.valence - valenceOccupied) >= 0 else {
+        guard (center.valence - valenceOccupied) >= 0 else {
             return false
         }
         let vType = type
@@ -686,7 +707,7 @@ struct VSEPRGraph: SubChemBondGraph {
             default:
                 break
             }
-            return bondAnglesFilter(center: cAtom, bonds: Array(bonds), range: range)
+            return bondAnglesFilter(center: center, bonds: Array(bonds), range: range)
         default:
             break
         }
