@@ -159,7 +159,7 @@ for pMol in possibleList {
             log.add("n/a  ", terminator: "")
         }
         
-        let bAString: String = bondAngles(center: atom, attached: adjacentAtoms, unit: UnitAngle.degrees).map({ Array($0.1.map { $0.name }).joined(separator: atom.name) + ": " + String($0.0!.rounded(digitsAfterDecimal: 1)) + "°" }).joined(separator: ", ")
+        let bAString: String = bondAnglesInDeg(center: atom, attached: adjacentAtoms).map({ Array($0.1.map { $0.name }).joined(separator: atom.name) + ": " + String($0.0!.rounded(digitsAfterDecimal: 1)) + "°" }).joined(separator: ", ")
         log.add("     BAs: [" + bAString + "]", terminator: "")
         log.add()
     }

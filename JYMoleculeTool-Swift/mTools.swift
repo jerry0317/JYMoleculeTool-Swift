@@ -71,13 +71,20 @@ struct Vector3D {
         return (scalarProject(on: bVec) / bVec.magnitude) * bVec
     }
     
+    func angleInRad(to bVec: Vector3D) -> Double {
+        let cosTheta = (self .* bVec) / (magnitude * bVec.magnitude)
+        return acos(cosTheta)
+    }
+    
+    func angleInDeg(to bVec: Vector3D) -> Double {
+        return angleInRad(to: bVec) * 180.0 / Double.pi
+    }
+    
     /**
      The angle between the self vector and another vector. Returns a measurement with unit in UnitAngle.
      */
     func angle(to bVec: Vector3D) -> Measurement<UnitAngle> {
-        let cosTheta = (self .* bVec) / (magnitude * bVec.magnitude)
-        let theta = acos(cosTheta)
-        return Measurement(value: theta, unit: UnitAngle.radians)
+        return Measurement(value: angleInRad(to: bVec), unit: UnitAngle.radians)
     }
     
     /**
@@ -862,9 +869,9 @@ func possibleBondTypesDynProgrammed(_ atomName1: ChemElement?, _ atomName2: Chem
 func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
     var thetaList: [Double?] = []
     if bonds.count == 2 {
-        thetaList = [bondAngle(center: aAtom, bonds: bonds, unit: UnitAngle.degrees)]
+        thetaList = [bondAngleInDeg(center: aAtom, bonds: bonds)]
     } else if bonds.count >= 2 {
-        let rList = bondAngles(center: aAtom, bonds: bonds, unit: UnitAngle.degrees)
+        let rList = bondAnglesInDeg(center: aAtom, bonds: bonds)
         thetaList = rList.map { $0.0 }
     } else if bonds.count >= 0{
         return true
@@ -1054,6 +1061,9 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
     for j in 0...(rCount - 1) {
         let tIJ = Date()
         for (_, stMols) in mDynDict[j]! {
+            if mDynDict[j] != nil {
+                mDynDict[j] = nil
+            }
             for stMol in stMols {
                 let rList = rAtoms.filter { !stMol.containsById($0) }
                 for rAtom in rList {
@@ -1099,7 +1109,6 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
         
         print(toPrintWithSpace(loopDisplayString(j + 1, j, tIJ), 79))
         
-        mDynDict[j]!.removeAll()
         globalCache.stMolMatched = ([], [])
     }
     
@@ -1228,6 +1237,23 @@ func degreeThreeAtomPlanarDistance(center: Atom, attached: [Atom]) -> Double? {
  The bond angle of the two bonds of an atom. Takes the two attached atoms as parameter.
  */
 func bondAngle(center: Atom, attached: [Atom]) -> Measurement<UnitAngle>? {
+    guard let theta = bondAngleInDeg(center: center, attached: attached) else {
+        return nil
+    }
+    return Measurement<UnitAngle>(value: theta, unit: UnitAngle.degrees)
+}
+
+/**
+ The bond angle of the two bonds of an atom. Takes the two attached bonds as parameter.
+ */
+func bondAngle(center: Atom, bonds: [ChemBond]) -> Measurement<UnitAngle>? {
+    guard let theta = bondAngleInDeg(center: center, bonds: bonds) else {
+        return nil
+    }
+    return Measurement<UnitAngle>(value: theta, unit: UnitAngle.degrees)
+}
+
+func bondAngleInDeg(center: Atom, attached: [Atom]) -> Double? {
     let attachedRVecs = attached.compactMap { $0.rvec }
     guard center.rvec != nil && attachedRVecs.count == 2 else {
         return nil
@@ -1235,17 +1261,15 @@ func bondAngle(center: Atom, attached: [Atom]) -> Measurement<UnitAngle>? {
     let dVec1 = center.rvec! - attachedRVecs[0]
     let dVec2 = center.rvec! - attachedRVecs[1]
     
-    return dVec1.angle(to: dVec2)
+    return dVec1.angleInDeg(to: dVec2)
 }
 
-/**
- The bond angle of the two bonds of an atom. Takes the two attached bonds as parameter.
- */
-func bondAngle(center: Atom, bonds: [ChemBond]) -> Measurement<UnitAngle>? {
+func bondAngleInDeg(center: Atom, bonds: [ChemBond]) -> Double? {
     let attachedMap = bonds.map({ $0.atoms.subtracting([center])})
     let attachedAtoms = attachedMap.reduce(Set<Atom>(), {$0.union($1)})
-    return bondAngle(center: center, attached: Array(attachedAtoms))
+    return bondAngleInDeg(center: center, attached: Array(attachedAtoms))
 }
+
 
 /**
  The bond angle of any number of bonds of an atom. Returns tuple of angle and the set of the adjacent atoms involved in the two bonds of the bond angle.
@@ -1291,4 +1315,14 @@ func bondAngles(center: Atom, attached: [Atom], unit: UnitAngle) -> [(Double?, S
 func bondAngles(center: Atom, bonds: [ChemBond], unit: UnitAngle) -> [(Double?, Set<ChemBond>)] {
     let attachedAtomsList = combinationsDynProgrammed(bonds, 2)
     return attachedAtomsList.map { (bondAngle(center: center, bonds: Array($0), unit: unit), $0) }
+}
+
+func bondAnglesInDeg(center: Atom, attached: [Atom]) -> [(Double?, Set<Atom>)] {
+    let attachedAtomsList = combinationsDynProgrammed(attached, 2)
+    return attachedAtomsList.map { (bondAngleInDeg(center: center, attached: Array($0)), $0) }
+}
+
+func bondAnglesInDeg(center: Atom, bonds: [ChemBond]) -> [(Double?, Set<ChemBond>)] {
+    let attachedAtomsList = combinationsDynProgrammed(bonds, 2)
+    return attachedAtomsList.map { (bondAngleInDeg(center: center, bonds: Array($0)), $0) }
 }
