@@ -346,21 +346,33 @@ struct ChemBondType {
      */
     var atomNames: Array<String> {
         get {
-            return atomElements.map({ $0.rawValue })
+            let atomList = atomElementArray
+            switch atomList.count {
+            case 1:
+                return [atomList[0].rawValue, atomList[0].rawValue]
+            case 2:
+                return [atomList[0].rawValue, atomList[1].rawValue]
+            default:
+                return []
+            }
         }
         set(newValue) {
-            var eList: [ChemElement] = []
+            var eList: Set<ChemElement> = []
             for newName in newValue {
                 guard let newElement = ChemElement(rawValue: newName) else {
                     return
                 }
-                eList.append(newElement)
+                eList.insert(newElement)
             }
             atomElements = eList
         }
     }
     
-    var atomElements: Array<ChemElement>
+    var atomElements: Set<ChemElement>
+    
+    private var atomElementArray: [ChemElement] {
+        return Array(atomElements)
+    }
 
     /**
      The order of the bond.
@@ -410,10 +422,9 @@ struct ChemBondType {
     }
     
     func findBdCodeDynProgrammed() -> String {
-        let bondTypeTuple = BondTypeTuple(elements: atomElements, order: order)
-        guard let bdCodeInCache = globalCache.bdCodes[bondTypeTuple] else {
+        guard let bdCodeInCache = globalCache.bdCodes[self] else {
             let newBdCode = findBdCode()
-            globalCache.bdCodes[bondTypeTuple] = newBdCode
+            globalCache.bdCodes[self] = newBdCode
             return newBdCode
         }
         return bdCodeInCache
@@ -433,11 +444,13 @@ struct ChemBondType {
 extension ChemBondType: Hashable {
     static func == (lhs: ChemBondType, rhs: ChemBondType) -> Bool {
         return
-            lhs.bdCode == rhs.bdCode
+            lhs.atomElements == rhs.atomElements &&
+            lhs.order == rhs.order
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(bdCode)
+        hasher.combine(atomElements)
+        hasher.combine(order)
     }
 }
 
