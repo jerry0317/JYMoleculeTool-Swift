@@ -9,6 +9,7 @@
 import Foundation
 
 typealias ChemElement = Constants.Chem.Element
+typealias BondCode = Constants.Chem.BondCode
 
 /**
  Generic constants used in the program.
@@ -24,25 +25,25 @@ enum Constants {
          
          - **Source:** Allen, F. H., Kennard, O., Watson, D. G., Brammer, L., Orpen, A. G., & Taylor, R. (1987). Tables of bond lengths determined by X-ray and neutron diffraction. Part 1. Bond lengths in organic compounds. Journal of the Chemical Society, Perkin Transactions 2, (12), S1-S19.
          */
-        static let bondLengths = [
-            "CC1": 1.4825,
-            "CC2": 1.343,
-            "CC3": 1.183,
-            "CO1": 1.3925,
-            "CO2": 1.221,
-            "OO1": 1.480,
-            "CN1": 1.4365,
-            "CN2": 1.3205,
-            "CN3": 1.1455,
-            "NN1": 1.402,
-            "NN2": 1.1895,
-            "NO1": 1.3835,
-            "NO2": 1.2245,
-            "CF1": 1.374,
-            "FN1": 1.406,
-            "CCl1": 1.781,
-            "ClN1": 1.731,
-            "ClO1": 1.414
+        static let bondLengths: [BondCode: Double] = [
+            .CC1: 1.4825,
+            .CC2: 1.343,
+            .CC3: 1.183,
+            .CO1: 1.3925,
+            .CO2: 1.221,
+            .OO1: 1.480,
+            .CN1: 1.4365,
+            .CN2: 1.3205,
+            .CN3: 1.1455,
+            .NN1: 1.402,
+            .NN2: 1.1895,
+            .NO1: 1.3835,
+            .NO2: 1.2245,
+            .CF1: 1.374,
+            .FN1: 1.406,
+            .CCl1: 1.781,
+            .ClN1: 1.731,
+            .ClO1: 1.414
         ]
         
         /**
@@ -50,7 +51,7 @@ enum Constants {
          
          - **Source:** pdg.lbl.gov
          */
-        static let atomicMasses:  [ChemElement: Double] = [
+        static let atomicMasses: [ChemElement: Double] = [
             .hydrogen: 1.00794,
             .helium: 4.002602,
             .lithium: 6.941,
@@ -128,6 +129,27 @@ enum Constants {
             case sulfur = "S"
             case chlorine = "Cl"
             case argon = "Ar"
+        }
+        
+        enum BondCode: String {
+            case CC1
+            case CC2
+            case CC3
+            case CO1
+            case CO2
+            case OO1
+            case CN1
+            case CN2
+            case CN3
+            case NN1
+            case NN2
+            case NO1
+            case NO2
+            case CF1
+            case FN1
+            case CCl1
+            case ClN1
+            case ClO1
         }
     }
 }

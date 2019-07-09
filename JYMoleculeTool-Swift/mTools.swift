@@ -393,7 +393,7 @@ struct ChemBondType {
     /**
      The bond code for the bond. For example, the single carbon-carbon bond is denoted as "CC1".
      */
-    var bdCode: String {
+    var bdCode: BondCode? {
         return findBdCodeDynProgrammed()
     }
     
@@ -401,13 +401,16 @@ struct ChemBondType {
      The bond length of this bond type.
      */
     var length: Double? {
-        return bondLengths[bdCode]
+        guard let bd = bdCode else {
+            return nil
+        }
+        return bondLengths[bd]
     }
     
     /**
      The dictionary storing the known bond lengths.
      */
-    private var bondLengths: [String: Double] {
+    private var bondLengths: [BondCode: Double] {
         return Constants.Chem.bondLengths
     }
     
@@ -415,13 +418,10 @@ struct ChemBondType {
      Tells if a bond type is valid.
      */
     func validate() -> Bool{
-        guard let _ = bondLengths[bdCode] else {
-            return false
-        }
-        return true
+        return bdCode != nil
     }
     
-    func findBdCodeDynProgrammed() -> String {
+    func findBdCodeDynProgrammed() -> BondCode? {
         guard let bdCodeInCache = globalCache.bdCodes[self] else {
             let newBdCode = findBdCode()
             globalCache.bdCodes[self] = newBdCode
@@ -430,7 +430,11 @@ struct ChemBondType {
         return bdCodeInCache
     }
     
-    func findBdCode() -> String {
+    func findBdCode() -> BondCode? {
+        return BondCode(rawValue: findBdCodeString())
+    }
+    
+    func findBdCodeString() -> String {
         var atomNamesArray = atomNames
         if atomNamesArray[0] > atomNamesArray[1] {
             atomNamesArray.swapAt(0, 1)

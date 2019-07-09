@@ -27,9 +27,9 @@ struct GlobalCache {
     
     var atomPossibles: [Atom: [Atom]] = [Atom: [Atom]]()
     
-    var bdCodes: [ChemBondType: String] = [ChemBondType: String]()
+    var bdCodes: [ChemBondType: BondCode] = [:]
     
-    var bondAngles: [BondAngleTuple: Double] = [BondAngleTuple: Double]()
+    var bondAngles: [BondAngleTuple: Double] = [:]
     
     var atomNeighbors: [AtomNeighborTuple: (Bool, Atom)] = [:]
 }

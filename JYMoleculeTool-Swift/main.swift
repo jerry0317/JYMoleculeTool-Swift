@@ -168,7 +168,7 @@ for pMol in possibleList {
     log.add("The number of possible bond graphs: \(pMol.bondGraphs.count)")
     log.add("====The first bond graph====")
     for bond in bondGraph.bonds {
-        log.add("Bond code: \(bond.type.bdCode)   Bond distance: \(bond.distance!.rounded(digitsAfterDecimal: 4))")
+        log.add("Bond code: \(bond.type.bdCode?.rawValue ?? "N/A")   Bond distance: \(bond.distance!.rounded(digitsAfterDecimal: 4))")
     }
     
     let cmVec = pMol.centerOfMass
@@ -202,8 +202,9 @@ log.add("-----------------------------------")
 log.add("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
 log.add("Total number of non-Hydrogen atoms: \(combAtoms.count).")
 log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
-log.add("Total number of possible results: \(possibleList.count).")
-log.add("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1))")
+log.add("Total number of possible structures: \(possibleList.count).")
+log.add("Total number of possible bond graphs: \(possibleList.reduce(0, { $0 + $1.bondGraphs.count })).")
+log.add("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1)).")
 log.add("-----------------------------------")
 
 if saveResults {
