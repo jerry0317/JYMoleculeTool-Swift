@@ -463,6 +463,9 @@ struct ChemBond {
      */
     var atoms: Set<Atom>
     
+    private var atom1: Atom
+    private var atom2: Atom
+    
     /**
      The type of the chemical bond.
      */
@@ -471,6 +474,8 @@ struct ChemBond {
     init(_ atom1: Atom, _ atom2: Atom, _ bondType: ChemBondType){
         self.atoms = [atom1, atom2]
         self.type = bondType
+        self.atom1 = atom1
+        self.atom2 = atom2
     }
     
     /**
@@ -482,6 +487,46 @@ struct ChemBond {
             return nil
         }
         return atomDistance(atomList[0], atomList[1])
+    }
+    
+    func findNeighbor(_ atom: Atom) -> Atom? {
+        var rAtoms = atoms
+        rAtoms.remove(atom)
+        guard rAtoms.count == 1, let rAtom = rAtoms.first else {
+            return nil
+        }
+        return rAtom
+    }
+    
+    func findNeighborViaStatic(_ atom: Atom) -> Atom? {
+        if atom1 == atom {
+            return atom2
+        } else if atom2 == atom {
+            return atom1
+        } else {
+            return nil
+        }
+    }
+    
+    func findNeighborDynProgammed(_ atom: Atom) -> Atom? {
+        let nbTuple = AtomNeighborTuple(atoms, atom)
+        let neighborInCache = globalCache.atomNeighbors[nbTuple]
+        
+        if neighborInCache == nil {
+            let newNeighbor = findNeighbor(atom)
+            if newNeighbor == nil {
+                globalCache.atomNeighbors[nbTuple] = (false, atom)
+            } else {
+                globalCache.atomNeighbors[nbTuple] = (true, newNeighbor!)
+            }
+            return newNeighbor
+        } else {
+            if neighborInCache!.0 {
+                return neighborInCache!.1
+            } else {
+                return nil
+            }
+        }
     }
     
 }
@@ -518,7 +563,7 @@ struct ChemBondGraph {
     func degreeOfAtom(_ atom: Atom) -> Int{
         var deg = 0
         for bond in bonds {
-            if bond.atoms.contains(atom) {
+            if bond.findNeighborViaStatic(atom) != nil {
                 deg = deg + 1
             }
         }
@@ -531,26 +576,25 @@ struct ChemBondGraph {
     func adjacenciesOfAtom(_ atom: Atom) -> ([Atom], [ChemBond]) {
         var atomList: [Atom] = []
         var bondList: [ChemBond] = []
+        atomList.reserveCapacity(atom.valence)
+        bondList.reserveCapacity(atom.valence)
         for bond in bonds {
-            if bond.atoms.contains(atom) {
-                var rAtoms = bond.atoms
-                rAtoms.remove(atom)
-                guard let rAtom = rAtoms.first else {
-                    continue
-                }
-                atomList.append(rAtom)
-                bondList.append(bond)
+            guard let rAtom = bond.findNeighborViaStatic(atom) else {
+                continue
             }
+            atomList.append(rAtom)
+            bondList.append(bond)
         }
         return (atomList, bondList)
     }
+
     
     /**
      Find the VSEPR graph based on the given center atom in the bond graph.
      */
     func findVseprGraph(_ atom: Atom) -> VSEPRGraph {
         let (attached, bonds) = adjacenciesOfAtom(atom)
-        return VSEPRGraph(center: atom, attached: attached, bonds: Set(bonds))
+        return VSEPRGraph(center: atom, attached: attached, bonds: bonds)
     }
 }
 
@@ -571,7 +615,7 @@ protocol SubChemBondGraph {
     /**
      The bonds engaged in this sub bond graph.
      */
-    var bonds: Set<ChemBond> { get set }
+    var bonds: [ChemBond] { get set }
 }
 
 /**
@@ -586,7 +630,7 @@ struct VSEPRGraph: SubChemBondGraph {
     /**
      The bonds engaged in this VSEPR graph.
      */
-    var bonds: Set<ChemBond>
+    var bonds: [ChemBond]
     
     /**
      The VSEPR type of this graph. Automatically determined based on the information of bonds.
@@ -886,8 +930,8 @@ func possibleBondTypesDynProgrammed(_ atomName1: ChemElement?, _ atomName2: Chem
     guard let element1 = atomName1, let element2 = atomName2 else {
         return []
     }
-    let btTuple = Set([element1, element2])
-    var bondTypes = globalCache.possibleBondTypes[btTuple]
+    let btTuple = [element1, element2]
+    var bondTypes = globalCache.possibleBondTypes[[element1, element2]]
     
     if bondTypes == nil {
         bondTypes = possibleBondTypes(element1, element2)
@@ -1063,7 +1107,7 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
     } else {
         for stMol in mList {
             for rAtom in rAtoms {
-                let rcsTuple = rcsConstructorTuple(atom: rAtom, stMol: stMol)
+                let rcsTuple = RcsConstructorTuple(atom: rAtom, stMol: stMol)
                 if globalCache.rcsConstructorCache.contains(rcsTuple) {
                     continue
                 } else {
@@ -1308,20 +1352,24 @@ func bondAngle(center: Atom, bonds: [ChemBond]) -> Measurement<UnitAngle>? {
 }
 
 // Dynamically progammed
-func bondAngleInDeg(center: Atom, attached: [Atom]) -> Double? {
-    guard let theta = globalCache.bondAngles[attached] else {
-        let attachedRVecs = attached.compactMap { $0.rvec }
-        guard center.rvec != nil && attachedRVecs.count == 2 else {
+func bondAngleInDeg(center: Atom, attached: [Atom], dynProgammed: Bool = false) -> Double? {
+    if dynProgammed {
+        guard let baTuple = BondAngleTuple(center, attached: attached) else {
             return nil
         }
-        let dVec1 = center.rvec! - attachedRVecs[0]
-        let dVec2 = center.rvec! - attachedRVecs[1]
-        let newTheta = dVec1.angleInDeg(to: dVec2)
-        globalCache.bondAngles[attached] = newTheta
-        return newTheta
+        guard let theta = globalCache.bondAngles[baTuple] else {
+            guard let newTheta = bondAngleInDegOriginal(center: center, attached: attached) else {
+                return nil
+            }
+            
+            globalCache.bondAngles[baTuple] = newTheta
+            return newTheta
+        }
+        return theta
+    } else {
+        return bondAngleInDegOriginal(center: center, attached: attached)
     }
     
-    return theta
 }
 
 //Pre dynamically progammed

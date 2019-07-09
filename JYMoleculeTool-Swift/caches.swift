@@ -19,9 +19,9 @@ var globalCache = GlobalCache()
 struct GlobalCache {
     var indexCombinations: [CombTuple: Set<Set<Int>>] = [:]
     
-    var rcsConstructorCache: Set<rcsConstructorTuple> = []
+    var rcsConstructorCache: Set<RcsConstructorTuple> = []
     
-    var possibleBondTypes: [Set<ChemElement>: [ChemBondType]] = [:]
+    var possibleBondTypes: [Array<ChemElement>: [ChemBondType]] = [:]
     
     var stMolMatched: (Set<Set<Atom>>, Set<Set<Atom>>) = ([], [])
     
@@ -29,7 +29,9 @@ struct GlobalCache {
     
     var bdCodes: [ChemBondType: String] = [ChemBondType: String]()
     
-    var bondAngles: [Array<Atom>: Double] = [Array<Atom>: Double]()
+    var bondAngles: [BondAngleTuple: Double] = [BondAngleTuple: Double]()
+    
+    var atomNeighbors: [AtomNeighborTuple: (Bool, Atom)] = [:]
 }
 
 struct CombTuple {
@@ -53,18 +55,71 @@ extension CombTuple: Hashable {
     }
 }
 
-struct rcsConstructorTuple {
+struct RcsConstructorTuple {
     var atom: Atom
     var stMol: StrcMolecule
 }
 
-extension rcsConstructorTuple: Hashable {
-    static func == (lhs: rcsConstructorTuple, rhs: rcsConstructorTuple) -> Bool {
+extension RcsConstructorTuple: Hashable {
+    static func == (lhs: RcsConstructorTuple, rhs: RcsConstructorTuple) -> Bool {
         return lhs.atom == rhs.atom && lhs.stMol == rhs.stMol
     }
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(atom)
         hasher.combine(stMol)
+    }
+}
+
+struct AtomNeighborTuple {
+    var atoms: Set<Atom>
+    var atom: Atom
+    
+    init(_ atoms: Set<Atom>, _ atom: Atom) {
+        self.atoms = atoms
+        self.atom = atom
+    }
+}
+
+extension AtomNeighborTuple: Hashable {
+    static func == (lhs: AtomNeighborTuple, rhs: AtomNeighborTuple) -> Bool {
+        return lhs.atom == rhs.atom && lhs.atoms == rhs.atoms
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(atom)
+        hasher.combine(atoms)
+    }
+}
+
+struct BondAngleTuple {
+    var center: Atom
+    var atom1: Atom
+    var atom2: Atom
+    
+    init(_ center: Atom, _ atom1: Atom, _ atom2: Atom) {
+        self.center = center
+        self.atom1 = atom1
+        self.atom2 = atom2
+    }
+    
+    init?(_ center: Atom, attached: [Atom]) {
+        guard attached.count == 2 else {
+            return nil
+        }
+        
+        self.init(center, attached[0], attached[1])
+    }
+}
+
+extension BondAngleTuple: Hashable {
+    static func == (lhs: BondAngleTuple, rhs: BondAngleTuple) -> Bool {
+        return lhs.center == rhs.center && lhs.atom1 == rhs.atom1 && lhs.atom2 == rhs.atom2
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(center)
+        hasher.combine(atom1)
+        hasher.combine(atom2)
     }
 }
