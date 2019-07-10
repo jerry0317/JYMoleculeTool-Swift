@@ -468,7 +468,7 @@ extension ChemBondType: Hashable {
 /**
  Chemical bond between two atoms.
  */
-struct ChemBond {
+final class ChemBond {
     /**
      The atoms engaged in the chemical bond.
      */
