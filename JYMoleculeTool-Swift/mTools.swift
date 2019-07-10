@@ -8,6 +8,11 @@
 
 import Foundation
 
+#if os(Linux)
+import Glibc
+#else
+#endif
+
 // TODO: Implement Copy-on-write
 
 /**
@@ -1190,7 +1195,11 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
                     #if DEBUG
                     #else
                     print(loopDisplayString(j + 1, j, tIJ) + "Computing..", terminator: "\r")
+                    #if os(Linux)
+                    fflush(stdout)
+                    #else
                     fflush(__stdoutp)
+                    #endif
                     #endif
                 }
             }
@@ -1207,7 +1216,11 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
             #if DEBUG
             #else
             print(loopDisplayString(j + 1, j, tIJ) + "Deduplicating..", terminator: "\r")
+            #if os(Linux)
+            fflush(stdout)
+            #else
             fflush(__stdoutp)
+            #endif
             #endif
         }
         
