@@ -68,6 +68,13 @@ func displayTime(_ time: Date) -> String {
     return formatter.string(from: time)
 }
 
+/**
+ Returns a string with given total space `totSpace` filled by empty space after the given string `str`. If the length of the given string is larger than the given total space, it will directly return the string.
+ 
+ - Parameter str: The string to be added empty space after.
+ - Parameter totSpace: The total number of space (including the string itself) the string needed to be fitted in.
+ 
+ */
 func stringWithSpace(_ str: String, _ totSpace: Int) -> String {
     guard totSpace >= str.count else {
         return str
@@ -76,6 +83,9 @@ func stringWithSpace(_ str: String, _ totSpace: Int) -> String {
     return str + String(repeating: "\u{0020}", count: totSpace - str.count)
 }
 
+/**
+ The same as `stringWithSpace`, but it takes `Any` type as the input.
+ */
 func toPrintWithSpace(_ item: Any, _ totSpace: Int) -> String {
     return stringWithSpace(String(describing: item), totSpace)
 }

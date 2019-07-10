@@ -9,7 +9,7 @@
 import Foundation
 
 #if os(Linux)
-import Glibc
+import Glibc // Linux optimization for updated printing behavior
 #else
 #endif
 
@@ -78,24 +78,30 @@ struct Vector3D {
         return (scalarProject(on: bVec) / bVec.magnitude) * bVec
     }
     
+    /**
+     The angle between the self vector and another vector in radian.
+     */
     func angleInRad(to bVec: Vector3D) -> Double {
         let cosTheta = (self .* bVec) / (magnitude * bVec.magnitude)
         return acos(cosTheta)
     }
     
+    /**
+     The angle bewteen the self vector and another vector in degree.
+     */
     func angleInDeg(to bVec: Vector3D) -> Double {
         return angleInRad(to: bVec) * 180.0 / Double.pi
     }
     
     /**
-     The angle between the self vector and another vector. Returns a measurement with unit in UnitAngle.
+     The angle between the self vector and another vector. Returns a measurement with unit in UnitAngle *(Beta)*.
      */
     func angle(to bVec: Vector3D) -> Measurement<UnitAngle> {
         return Measurement(value: angleInRad(to: bVec), unit: UnitAngle.radians)
     }
     
     /**
-     The angle between the self vector and another vector. Provided with the desired unit, the function will return the value of the angle.
+     The angle between the self vector and another vector. Provided with the desired unit, the function will return the value of the angle. *(Beta)*
      */
     func angle(to bVec: Vector3D, unit: UnitAngle) -> Double {
         return angle(to: bVec).converted(to: unit).value
@@ -202,6 +208,8 @@ extension Vector3D {
 
 /**
  Atom
+ 
+ - Designed to be a final class (access through reference) for memory optimization.
  */
 final class Atom {
     /**
@@ -211,12 +219,15 @@ final class Atom {
         get {
             return element?.rawValue ?? ""
         }
-//        set(newName) {
-//            element = ChemElement(rawValue: newName)
-//        }
+        set(newName) {
+            element = ChemElement(rawValue: newName)
+        }
     }
     
-    let element: ChemElement?
+    /**
+     The chemical element of the atom.
+     */
+    var element: ChemElement?
     
     /**
      The position vector of the atom.
@@ -247,20 +258,21 @@ final class Atom {
         return findPossiblesDynProgrammed()
     }
     
+    /**
+     Find the eight possible atom (differ in rvec) after re-signing.
+     */
     private func findPossibles() -> [Atom] {
-        var possibleList: [Atom] = []
         if rvec == nil {
             return []
         } else {
             let possibleRvecList = rvec!.resign()
-            for possibleRvec in possibleRvecList {
-                let newAtom = Atom(element, possibleRvec, identifier)
-                possibleList.append(newAtom)
-            }
+            return possibleRvecList.map { Atom(element, $0, identifier) }
         }
-        return possibleList
     }
     
+    /**
+     Use cache to implement memoized dynamic programming to find possibles.
+     */
     private func findPossiblesDynProgrammed() -> [Atom] {
         if globalCache.atomPossibles[self] != nil {
             return globalCache.atomPossibles[self]!
@@ -272,7 +284,7 @@ final class Atom {
     }
     
     /**
-     The valence of the atom.
+     The valence of the atom. If there's no known valence, then it returns 0.
      */
     var valence: Int {
         guard let e = element else {
@@ -311,6 +323,9 @@ final class Atom {
         return true
     }
     
+    /**
+     Set the identifier of the atom based on the hash value of the element and rvec.
+     */
     func setIdentifier() {
         var hasher = Hasher()
         hasher.combine(element)
@@ -337,15 +352,22 @@ extension Atom {
     /**
      With the same identifier
      
-     - Returns true if the two atoms have the same identifier
+     - Returns:
+        - `true` if the two atoms have the same identifier.
+        -  `false` if any of the two identifiers is `nil` or the two atoms have the different identifier.
      */
     static func .= (lhs: Atom, rhs: Atom) -> Bool {
-        return lhs.identifier == rhs.identifier
+        guard let lid = lhs.identifier, let rid = rhs.identifier else {
+            return false
+        }
+        return lid == rid
     }
 }
 
 /**
  Chemical bond type (between two atoms)
+ 
+- Designed to be a final class (access through reference) for memory optimization.
  */
 final class ChemBondType {
     /**
@@ -375,8 +397,14 @@ final class ChemBondType {
         }
     }
     
+    /**
+     The **set** of elements of the two atoms in the chemical bond.
+     */
     var atomElements: Set<ChemElement>
     
+    /**
+     The **array** of elements of the two atoms in the chemical bond. Not accessible from outside.
+     */
     private var atomElementArray: [ChemElement] {
         return Array(atomElements)
     }
@@ -398,7 +426,7 @@ final class ChemBondType {
     }
     
     /**
-     The bond code for the bond. For example, the single carbon-carbon bond is denoted as "CC1".
+     The bond code for the bond. For example, the single carbon-carbon bond is denoted as .CC1.
      */
     var bdCode: BondCode? {
         return findBdCodeDynProgrammed()
@@ -428,6 +456,9 @@ final class ChemBondType {
         return bdCode != nil
     }
     
+    /**
+     Use cache to implement the memoized dynamic programming to find the bond code of the type.
+     */
     func findBdCodeDynProgrammed() -> BondCode? {
         guard let bdCodeInCache = globalCache.bdCodes[self] else {
             let newBdCode = findBdCode()
@@ -437,10 +468,16 @@ final class ChemBondType {
         return bdCodeInCache
     }
     
+    /**
+     Find the bond code of the bond type.
+     */
     func findBdCode() -> BondCode? {
         return BondCode(rawValue: findBdCodeString())
     }
     
+    /**
+     Find the string of the bond code of the bond type.
+     */
     func findBdCodeString() -> String {
         var atomNamesArray = atomNames
         if atomNamesArray[0] > atomNamesArray[1] {
@@ -467,6 +504,8 @@ extension ChemBondType: Hashable {
 
 /**
  Chemical bond between two atoms.
+ 
+ - Designed to be a final class (access through reference) for memory optimization.
  */
 final class ChemBond {
     /**
@@ -474,6 +513,9 @@ final class ChemBond {
      */
     var atoms: Set<Atom>
     
+    /**
+     Privately saved for faster determination of the neighbor of an atom.
+     */
     private var atom1: Atom
     private var atom2: Atom
     
@@ -500,6 +542,9 @@ final class ChemBond {
         return atomDistance(atomList[0], atomList[1])
     }
     
+    /**
+     Original algorithm to find the neighbor of an atom in the bond via the `atoms`. *(Computationally intensive)*
+     */
     func findNeighbor(_ atom: Atom) -> Atom? {
         var rAtoms = atoms
         rAtoms.remove(atom)
@@ -509,6 +554,9 @@ final class ChemBond {
         return rAtom
     }
     
+    /**
+     To find the neighbor via the static private properties `atom1` and `atom2`.
+     */
     func findNeighborViaStatic(_ atom: Atom) -> Atom? {
         if atom1 == atom {
             return atom2
@@ -519,6 +567,9 @@ final class ChemBond {
         }
     }
     
+    /**
+     A memoized implementation of dynamic programming for the original algorithm `findNeighbor`.
+     */
     func findNeighborDynProgammed(_ atom: Atom) -> Atom? {
         let nbTuple = AtomNeighborTuple(atoms, atom)
         let neighborInCache = globalCache.atomNeighbors[nbTuple]
@@ -631,11 +682,19 @@ protocol SubChemBondGraph {
 
 /**
  A subgraph of the bond graph that centered on one atom for VSEPR analysis. (Not finished)
+ 
+ - TODO: Monitoring changes for `center`, `attached`, and `bonds` for dynamic updating.
  */
 struct VSEPRGraph: SubChemBondGraph {
     
+    /**
+     The center atom of the graph.
+     */
     var center: Atom
     
+    /**
+     The atoms attached to the center atom in the graph.
+     */
     var attached: [Atom]
     
     /**
@@ -649,7 +708,6 @@ struct VSEPRGraph: SubChemBondGraph {
     var type: Constants.Chem.VESPRType? {
         return determineType()
     }
-    
     
     /**
      Find the center atom. Automatically determined from the information of bonds. *(Computationally intensive, may be modified later)*
@@ -684,7 +742,7 @@ struct VSEPRGraph: SubChemBondGraph {
     }
     
     /**
-     The valence of the center atom. *(Computationally intensive, may be modified later)*
+     The valence of the center atom.
      */
     var valenceAllowed: Int {
         return center.valence
@@ -698,7 +756,7 @@ struct VSEPRGraph: SubChemBondGraph {
     }
     
     /**
-     The valence available on the center atom. *(Computationally intensive, may be modified later)*
+     The valence available on the center atom.
      */
     var valenceAvailable: Int {
         return valenceAllowed - valenceOccupied
@@ -851,6 +909,9 @@ struct StrcMolecule {
         }
     }
     
+    /**
+     To determine if the `StrcMolecule` contains an original atom by its identifier.
+     */
     func containsById(_ atom: Atom) -> Bool {
         for a in atoms {
             if a .= atom {
@@ -937,6 +998,9 @@ func possibleBondTypes(_ atomName1: ChemElement, _ atomName2: ChemElement) -> [C
     return possibleBondTypeList
 }
 
+/**
+ Use cache to implement the memoized dynamic programming for determination of possible bond types between two atoms.
+ */
 func possibleBondTypesDynProgrammed(_ atomName1: ChemElement?, _ atomName2: ChemElement?) -> [ChemBondType] {
     guard let element1 = atomName1, let element2 = atomName2 else {
         return []
@@ -952,6 +1016,9 @@ func possibleBondTypesDynProgrammed(_ atomName1: ChemElement?, _ atomName2: Chem
     return bondTypes!
 }
 
+/**
+ Filtering by bond angle with a given range. Given a list of angles in degrees.
+ */
 func bondAnglesFilter(_ angles: [Double?], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
     let lowerBound = range.lowerBound * (1 - tolRatio)
     let upperBound = range.upperBound * (1 + tolRatio)
@@ -965,7 +1032,7 @@ func bondAnglesFilter(_ angles: [Double?], range: ClosedRange<Double>, tolRatio:
 }
 
 /**
- Filtering by bond angle with a given range.
+ Filtering by bond angle with a given range. Takes the center atom and attached bonds as parameters.
  */
 func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
     var thetaList: [Double?] = []
@@ -983,6 +1050,9 @@ func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<
     return bondAnglesFilter(thetaList, range: range, tolRatio: tolRatio)
 }
 
+/**
+ Filtering by bond angle with a given range. Takes the center atom and attached atoms as parameters.
+ */
 func bondAnglesFilter(center aAtom: Atom, attached: [Atom], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
     var thetaList: [Double?] = []
     if attached.count == 2 {
@@ -1088,7 +1158,7 @@ func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tol
 }
 
 /**
- The recursion action to perform recursion.
+ The recursion action to perform recursion. *(Currently deprecated)*
  
  - TODO: Optimize with tail recursion.
  */
@@ -1134,6 +1204,9 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
     }
 }
 
+/**
+ The iteration version of the `rcsAction` for faster and clearer computations. Memoized dynamic progamming is implemented for utilization.
+ */
 func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, tolRatio: Double = 0.1, trueMol: StrcMolecule? = nil) -> [StrcMolecule] {
     guard !rAtoms.isEmpty else {
         return []
@@ -1242,6 +1315,9 @@ extension Array where Element == Atom {
         return filter({$0.name == name})
     }
     
+    /**
+     Extension of Atom array to be selected by element
+     */
     func select(byElement element: ChemElement) -> [Atom] {
         return filter({$0.element == element})
     }
@@ -1253,6 +1329,9 @@ extension Array where Element == Atom {
         return filter({$0.name != name})
     }
     
+    /**
+     Extension of Atom array to be removed by element
+     */
     func removed(byElement element: ChemElement) -> [Atom] {
         return filter({$0.element != element})
     }
@@ -1264,6 +1343,9 @@ extension Array where Element == Atom {
         self = removed(byName: name)
     }
     
+    /**
+     Extension of Atom array to remove atoms by element
+     */
     mutating func remove(byElement element: ChemElement) {
         self = removed(byElement: element)
     }
@@ -1351,7 +1433,7 @@ func degreeThreeAtomPlanarDistance(center: Atom, attached: [Atom]) -> Double? {
 }
 
 /**
- The bond angle of the two bonds of an atom. Takes the two attached atoms as parameter.
+ The bond angle of the two bonds of an atom. Takes the two attached atoms as parameter. *(Beta)*
  */
 func bondAngle(center: Atom, attached: [Atom]) -> Measurement<UnitAngle>? {
     guard let theta = bondAngleInDeg(center: center, attached: attached) else {
@@ -1361,7 +1443,7 @@ func bondAngle(center: Atom, attached: [Atom]) -> Measurement<UnitAngle>? {
 }
 
 /**
- The bond angle of the two bonds of an atom. Takes the two attached bonds as parameter.
+ The bond angle of the two bonds of an atom. Takes the two attached bonds as parameter. *(Beta)*
  */
 func bondAngle(center: Atom, bonds: [ChemBond]) -> Measurement<UnitAngle>? {
     guard let theta = bondAngleInDeg(center: center, bonds: bonds) else {
@@ -1370,7 +1452,9 @@ func bondAngle(center: Atom, bonds: [ChemBond]) -> Measurement<UnitAngle>? {
     return Measurement<UnitAngle>(value: theta, unit: UnitAngle.degrees)
 }
 
-// Dynamically progammed
+/**
+ The bond angle of the two bonds of an atom. Takes the two attached atoms as parameter. Returns the angle in degree. Has an option to turn on/off of the memoized dynamic programming (off by default).
+ */
 func bondAngleInDeg(center: Atom, attached: [Atom], dynProgammed: Bool = false) -> Double? {
     if dynProgammed {
         guard let baTuple = BondAngleTuple(center, attached: attached) else {
@@ -1391,7 +1475,9 @@ func bondAngleInDeg(center: Atom, attached: [Atom], dynProgammed: Bool = false) 
     
 }
 
-//Pre dynamically progammed
+/**
+ The original implementation of `bondAngleInDeg`.
+ */
 func bondAngleInDegOriginal(center: Atom, attached: [Atom]) -> Double? {
     let attachedRVecs = attached.compactMap { $0.rvec }
     guard center.rvec != nil && attachedRVecs.count == 2 else {
@@ -1403,6 +1489,9 @@ func bondAngleInDegOriginal(center: Atom, attached: [Atom]) -> Double? {
     return dVec1.angleInDeg(to: dVec2)
 }
 
+/**
+ The bond angle of the two bonds of an atom. Takes the two attached bonds as parameter. Returns the angle in degree.
+ */
 func bondAngleInDeg(center: Atom, bonds: [ChemBond]) -> Double? {
     let attachedMap = bonds.map({ $0.atoms.subtracting([center])})
     let attachedAtoms = attachedMap.reduce(Set<Atom>(), {$0.union($1)})
@@ -1449,18 +1538,23 @@ func bondAngles(center: Atom, attached: [Atom], unit: UnitAngle) -> [(Double?, S
 }
 
 /**
- The bond angle of any number of bonds of an atom. Returns tuple of the value of the angle given provided unit and the set of the adjacent atoms involved in the two bonds of the bond angle.
+ The bond angle of any number of bonds of an atom. Returns tuple of the value of the angle given provided unit and the set of the two bonds of the bond angle.
  */
 func bondAngles(center: Atom, bonds: [ChemBond], unit: UnitAngle) -> [(Double?, Set<ChemBond>)] {
     let attachedAtomsList = combinationsDynProgrammed(bonds, 2)
     return attachedAtomsList.map { (bondAngle(center: center, bonds: Array($0), unit: unit), $0) }
 }
-
+/**
+ The bond angle of any number of bonds of an atom. Returns tuple of the value of the angle in degrees and the set of the adjacent atoms involved in the two bonds of the bond angle.
+ */
 func bondAnglesInDeg(center: Atom, attached: [Atom]) -> [(Double?, Set<Atom>)] {
     let attachedAtomsList = combinationsDynProgrammed(attached, 2)
     return attachedAtomsList.map { (bondAngleInDeg(center: center, attached: Array($0)), $0) }
 }
 
+/**
+ The bond angle of any number of bonds of an atom. Returns tuple of the value of the angle in degrees and the set of the two bonds of the bond angle.
+ */
 func bondAnglesInDeg(center: Atom, bonds: [ChemBond]) -> [(Double?, Set<ChemBond>)] {
     let attachedAtomsList = combinationsDynProgrammed(bonds, 2)
     return attachedAtomsList.map { (bondAngleInDeg(center: center, bonds: Array($0)), $0) }

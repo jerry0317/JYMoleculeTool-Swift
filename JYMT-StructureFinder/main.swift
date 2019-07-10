@@ -133,7 +133,7 @@ for pMol in possibleList {
     iCode = iCode + 1
     log.add("**** Molecule No.\(iCode) ****")
     if pMol.atoms == Set(combAtoms) {
-        log.add("<Correct Molecule>")
+        log.add("<Original Structure>")
         success = true
     }
     let atomList = Array(pMol.atoms).sorted(by: {
@@ -192,11 +192,11 @@ for pMol in possibleList {
 log.add("-----------------------------------")
 log.add("[Molecule name] \(fileName)")
 log.add("-- -- -- -- -- -- -- -- -- -- -- --")
-log.add("[Result] ", terminator: "")
+log.add("[Note] ", terminator: "")
 if success {
-    log.add("Correct structure has been found.")
+    log.add("The original structure is in the results.")
 } else {
-    log.add("Failed to find the correct structure.")
+    log.add("The original structure is not in the results.")
 }
 log.add("-----------------------------------")
 log.add("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")

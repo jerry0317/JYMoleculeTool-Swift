@@ -82,6 +82,9 @@ func combinations<T>(_ elements: ArraySlice<T>, _ k: Int) -> Set<Set<T>> {
     return result
 }
 
+/**
+ Utilize the cache to implement the memoized dynamic programming of combinations. Stores the combinations of indices in to the cache.
+ */
 func combinationsDynProgrammed<T>(_ elements: Array<T>, _ k: Int) -> Set<Set<T>> {
     let n = elements.count
     let indices = Array(0...(n - 1))

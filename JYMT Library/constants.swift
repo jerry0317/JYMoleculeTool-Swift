@@ -8,8 +8,20 @@
 
 import Foundation
 
+/**
+ Chemical Elements.
+ */
 typealias ChemElement = Constants.Chem.Element
+
+/**
+ Bond codes used by chemical bond types.
+ */
 typealias BondCode = Constants.Chem.BondCode
+
+/**
+ Physical constants.
+ */
+typealias PhysConst = Constants.Phys
 
 /**
  Generic constants used in the program.
@@ -131,6 +143,9 @@ enum Constants {
             case argon = "Ar"
         }
         
+        /**
+         Known bond code.
+         */
         enum BondCode: String {
             case CC1
             case CC2
@@ -152,4 +167,67 @@ enum Constants {
             case ClO1
         }
     }
+    
+    /**
+     Constants in chemistry area.
+     */
+    enum Phys {
+        /**
+         Speed of light. In SI unit `m/s`.
+         */
+        static let speedOfLight = 299792458.0
+        
+        /**
+         Shorthand of the speed of light.
+         */
+        static var c: Double {
+            return speedOfLight
+        }
+        
+        /**
+         Returns the measurement of the speed of light. *(Beta)*
+         */
+        static var cMeasurement: Measurement<UnitSpeed> {
+            return Measurement(value: c, unit: UnitSpeed.metersPerSecond)
+        }
+        
+        /**
+         Planck constant. In SI unit `J·s`
+         */
+        static let planckConstant = 6.626070040e-34
+        
+        /**
+         Shorthand of Planck constant.
+         */
+        static var h: Double {
+            return planckConstant
+        }
+        
+        /**
+         Reduced Planck constant. In SI unit `J·s`
+         */
+        static let planckConstantReduced = 1.054571800e-34
+        
+        /**
+         Shorthand of reduced Planck constant.
+         */
+        static var hbar: Double {
+            return planckConstantReduced
+        }
+        
+        /**
+         Electron charge magnitude. In SI unit `C`.
+         */
+        static let electronChargeMagnitude = 1.6021766208e-19
+        
+        /**
+         Shorthand of electron charge magnitude.
+         */
+        static var e: Double {
+            return electronChargeMagnitude
+        }
+        
+    }
 }
+
+

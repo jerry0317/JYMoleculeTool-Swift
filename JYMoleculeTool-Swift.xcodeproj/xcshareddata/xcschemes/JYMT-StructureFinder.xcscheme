@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "9C12549022BC167100411356"
-               BuildableName = "JYMoleculeTool-Swift"
-               BlueprintName = "JYMoleculeTool-Swift"
+               BuildableName = "JYMT-StructureFinder"
+               BlueprintName = "JYMT-StructureFinder"
                ReferencedContainer = "container:JYMoleculeTool-Swift.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,8 +45,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "9C12549022BC167100411356"
-            BuildableName = "JYMoleculeTool-Swift"
-            BlueprintName = "JYMoleculeTool-Swift"
+            BuildableName = "JYMT-StructureFinder"
+            BlueprintName = "JYMT-StructureFinder"
             ReferencedContainer = "container:JYMoleculeTool-Swift.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -62,8 +62,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "9C12549022BC167100411356"
-            BuildableName = "JYMoleculeTool-Swift"
-            BlueprintName = "JYMoleculeTool-Swift"
+            BuildableName = "JYMT-StructureFinder"
+            BlueprintName = "JYMT-StructureFinder"
             ReferencedContainer = "container:JYMoleculeTool-Swift.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

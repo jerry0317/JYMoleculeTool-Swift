@@ -14,6 +14,13 @@
 		9D2A500322BD7AD100EEB2CD /* basicTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D2A500222BD7AD100EEB2CD /* basicTools.swift */; };
 		9D49100822C15EEC0026B068 /* constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D49100722C15EEC0026B068 /* constants.swift */; };
 		9D49100A22C168C10026B068 /* mathTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D49100922C168C10026B068 /* mathTools.swift */; };
+		9D6912AA22D67BD0005CA273 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6912A922D67BD0005CA273 /* main.swift */; };
+		9D6912B022D67D1E005CA273 /* basicTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D2A500222BD7AD100EEB2CD /* basicTools.swift */; };
+		9D6912B122D67D1E005CA273 /* constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D49100722C15EEC0026B068 /* constants.swift */; };
+		9D6912B222D67D1E005CA273 /* mathTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D49100922C168C10026B068 /* mathTools.swift */; };
+		9D6912B322D67D1E005CA273 /* fileTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D2A500022BD6C0900EEB2CD /* fileTools.swift */; };
+		9D6912B422D67E36005CA273 /* mTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C12549B22BC176D00411356 /* mTools.swift */; };
+		9DE5D6E122D68611006656FC /* caches.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C9B118622CE6EC600A9221E /* caches.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,10 +33,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		9D6912A522D67BD0005CA273 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		9C12549122BC167100411356 /* JYMoleculeTool-Swift */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "JYMoleculeTool-Swift"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C12549122BC167100411356 /* JYMT-StructureFinder */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "JYMT-StructureFinder"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C12549422BC167100411356 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		9C12549B22BC176D00411356 /* mTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mTools.swift; sourceTree = "<group>"; };
 		9C9B118622CE6EC600A9221E /* caches.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = caches.swift; sourceTree = "<group>"; };
@@ -37,10 +53,19 @@
 		9D2A500222BD7AD100EEB2CD /* basicTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = basicTools.swift; sourceTree = "<group>"; };
 		9D49100722C15EEC0026B068 /* constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = constants.swift; sourceTree = "<group>"; };
 		9D49100922C168C10026B068 /* mathTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mathTools.swift; sourceTree = "<group>"; };
+		9D6912A722D67BD0005CA273 /* JYMT-ABCTool */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "JYMT-ABCTool"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D6912A922D67BD0005CA273 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		9C12548E22BC167100411356 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9D6912A422D67BD0005CA273 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -53,7 +78,9 @@
 		9C12548822BC167100411356 = {
 			isa = PBXGroup;
 			children = (
-				9C12549322BC167100411356 /* JYMoleculeTool-Swift */,
+				9D6912AF22D67CDD005CA273 /* JYMT Library */,
+				9C12549322BC167100411356 /* JYMT-StructureFinder */,
+				9D6912A822D67BD0005CA273 /* JYMT-ABCTool */,
 				9C12549222BC167100411356 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -61,31 +88,47 @@
 		9C12549222BC167100411356 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9C12549122BC167100411356 /* JYMoleculeTool-Swift */,
+				9C12549122BC167100411356 /* JYMT-StructureFinder */,
+				9D6912A722D67BD0005CA273 /* JYMT-ABCTool */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		9C12549322BC167100411356 /* JYMoleculeTool-Swift */ = {
+		9C12549322BC167100411356 /* JYMT-StructureFinder */ = {
 			isa = PBXGroup;
 			children = (
 				9C12549422BC167100411356 /* main.swift */,
+			);
+			path = "JYMT-StructureFinder";
+			sourceTree = "<group>";
+		};
+		9D6912A822D67BD0005CA273 /* JYMT-ABCTool */ = {
+			isa = PBXGroup;
+			children = (
+				9D6912A922D67BD0005CA273 /* main.swift */,
+			);
+			path = "JYMT-ABCTool";
+			sourceTree = "<group>";
+		};
+		9D6912AF22D67CDD005CA273 /* JYMT Library */ = {
+			isa = PBXGroup;
+			children = (
 				9D2A500222BD7AD100EEB2CD /* basicTools.swift */,
+				9D49100722C15EEC0026B068 /* constants.swift */,
+				9D49100922C168C10026B068 /* mathTools.swift */,
 				9D2A500022BD6C0900EEB2CD /* fileTools.swift */,
 				9C12549B22BC176D00411356 /* mTools.swift */,
-				9D49100922C168C10026B068 /* mathTools.swift */,
-				9D49100722C15EEC0026B068 /* constants.swift */,
 				9C9B118622CE6EC600A9221E /* caches.swift */,
 			);
-			path = "JYMoleculeTool-Swift";
+			path = "JYMT Library";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		9C12549022BC167100411356 /* JYMoleculeTool-Swift */ = {
+		9C12549022BC167100411356 /* JYMT-StructureFinder */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9C12549822BC167100411356 /* Build configuration list for PBXNativeTarget "JYMoleculeTool-Swift" */;
+			buildConfigurationList = 9C12549822BC167100411356 /* Build configuration list for PBXNativeTarget "JYMT-StructureFinder" */;
 			buildPhases = (
 				9C12548D22BC167100411356 /* Sources */,
 				9C12548E22BC167100411356 /* Frameworks */,
@@ -95,9 +138,26 @@
 			);
 			dependencies = (
 			);
-			name = "JYMoleculeTool-Swift";
+			name = "JYMT-StructureFinder";
 			productName = "JYMoleculeTool-Swift";
-			productReference = 9C12549122BC167100411356 /* JYMoleculeTool-Swift */;
+			productReference = 9C12549122BC167100411356 /* JYMT-StructureFinder */;
+			productType = "com.apple.product-type.tool";
+		};
+		9D6912A622D67BD0005CA273 /* JYMT-ABCTool */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9D6912AB22D67BD0005CA273 /* Build configuration list for PBXNativeTarget "JYMT-ABCTool" */;
+			buildPhases = (
+				9D6912A322D67BD0005CA273 /* Sources */,
+				9D6912A422D67BD0005CA273 /* Frameworks */,
+				9D6912A522D67BD0005CA273 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "JYMT-ABCTool";
+			productName = "JYMT-ABCTool";
+			productReference = 9D6912A722D67BD0005CA273 /* JYMT-ABCTool */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -106,12 +166,15 @@
 		9C12548922BC167100411356 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1020;
+				LastSwiftUpdateCheck = 1100;
 				LastUpgradeCheck = 1100;
 				ORGANIZATIONNAME = "Jerry Yan";
 				TargetAttributes = {
 					9C12549022BC167100411356 = {
 						CreatedOnToolsVersion = 10.2.1;
+					};
+					9D6912A622D67BD0005CA273 = {
+						CreatedOnToolsVersion = 11.0;
 					};
 				};
 			};
@@ -128,7 +191,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				9C12549022BC167100411356 /* JYMoleculeTool-Swift */,
+				9C12549022BC167100411356 /* JYMT-StructureFinder */,
+				9D6912A622D67BD0005CA273 /* JYMT-ABCTool */,
 			);
 		};
 /* End PBXProject section */
@@ -145,6 +209,20 @@
 				9D49100822C15EEC0026B068 /* constants.swift in Sources */,
 				9C9B118722CE6EC600A9221E /* caches.swift in Sources */,
 				9C12549C22BC176D00411356 /* mTools.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9D6912A322D67BD0005CA273 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9D6912B022D67D1E005CA273 /* basicTools.swift in Sources */,
+				9D6912B222D67D1E005CA273 /* mathTools.swift in Sources */,
+				9D6912AA22D67BD0005CA273 /* main.swift in Sources */,
+				9D6912B422D67E36005CA273 /* mTools.swift in Sources */,
+				9D6912B122D67D1E005CA273 /* constants.swift in Sources */,
+				9DE5D6E122D68611006656FC /* caches.swift in Sources */,
+				9D6912B322D67D1E005CA273 /* fileTools.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -272,6 +350,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = EM8VE646TZ;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
@@ -283,6 +362,31 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = EM8VE646TZ;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9D6912AC22D67BD0005CA273 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = EM8VE646TZ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		9D6912AD22D67BD0005CA273 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = EM8VE646TZ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
@@ -300,11 +404,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9C12549822BC167100411356 /* Build configuration list for PBXNativeTarget "JYMoleculeTool-Swift" */ = {
+		9C12549822BC167100411356 /* Build configuration list for PBXNativeTarget "JYMT-StructureFinder" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9C12549922BC167100411356 /* Debug */,
 				9C12549A22BC167100411356 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9D6912AB22D67BD0005CA273 /* Build configuration list for PBXNativeTarget "JYMT-ABCTool" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9D6912AC22D67BD0005CA273 /* Debug */,
+				9D6912AD22D67BD0005CA273 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
