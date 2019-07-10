@@ -8,6 +8,8 @@
 
 import Foundation
 
+// TODO: Implement Copy-on-write
+
 /**
  Position vector (three-dimensional)
  */
@@ -196,7 +198,7 @@ extension Vector3D {
 /**
  Atom
  */
-struct Atom {
+final class Atom {
     /**
      The name of the atom.
      */
@@ -204,12 +206,12 @@ struct Atom {
         get {
             return element?.rawValue ?? ""
         }
-        set(newName) {
-            element = ChemElement(rawValue: newName)
-        }
+//        set(newName) {
+//            element = ChemElement(rawValue: newName)
+//        }
     }
     
-    var element: ChemElement?
+    let element: ChemElement?
     
     /**
      The position vector of the atom.
@@ -278,7 +280,7 @@ struct Atom {
      Trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level.
      */
     @discardableResult
-    mutating func trimDownRVec(level trimLevel: Double = 0.01) -> Bool {
+    func trimDownRVec(level trimLevel: Double = 0.01) -> Bool {
         guard rvec != nil else {
             return false
         }
@@ -294,7 +296,7 @@ struct Atom {
      Round the component of the position vector to provided digits after decimal.
      */
     @discardableResult
-    mutating func roundRVec(digitsAfterDecimal digit: Int) -> Bool {
+    func roundRVec(digitsAfterDecimal digit: Int) -> Bool {
         guard rvec != nil else {
             return false
         }
@@ -304,7 +306,7 @@ struct Atom {
         return true
     }
     
-    mutating func setIdentifier() {
+    func setIdentifier() {
         var hasher = Hasher()
         hasher.combine(element)
         hasher.combine(rvec)
@@ -340,7 +342,7 @@ extension Atom {
 /**
  Chemical bond type (between two atoms)
  */
-struct ChemBondType {
+final class ChemBondType {
     /**
      The names of the two atoms in the chemical bond.
      */
