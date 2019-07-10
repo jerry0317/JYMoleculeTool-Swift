@@ -203,7 +203,7 @@ extension Vector3D {
 /**
  Atom
  */
-final class Atom {
+struct Atom {
     /**
      The name of the atom.
      */
@@ -285,7 +285,7 @@ final class Atom {
      Trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level.
      */
     @discardableResult
-    func trimDownRVec(level trimLevel: Double = 0.01) -> Bool {
+    mutating func trimDownRVec(level trimLevel: Double = 0.01) -> Bool {
         guard rvec != nil else {
             return false
         }
@@ -301,7 +301,7 @@ final class Atom {
      Round the component of the position vector to provided digits after decimal.
      */
     @discardableResult
-    func roundRVec(digitsAfterDecimal digit: Int) -> Bool {
+    mutating func roundRVec(digitsAfterDecimal digit: Int) -> Bool {
         guard rvec != nil else {
             return false
         }
@@ -311,7 +311,7 @@ final class Atom {
         return true
     }
     
-    func setIdentifier() {
+    mutating func setIdentifier() {
         var hasher = Hasher()
         hasher.combine(element)
         hasher.combine(rvec)
@@ -347,7 +347,7 @@ extension Atom {
 /**
  Chemical bond type (between two atoms)
  */
-final class ChemBondType {
+struct ChemBondType {
     /**
      The names of the two atoms in the chemical bond.
      */
@@ -1169,41 +1169,155 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
     
     for j in 0...(rCount - 1) {
         let tIJ = Date()
-        for (_, stMols) in mDynDict[j]! {
-            if mDynDict[j] != nil {
-                mDynDict[j] = nil
-            }
-            for stMol in stMols {
-                let rList = rAtoms.filter { !stMol.containsById($0) }
-                for rAtom in rList {
-                    let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
-                    
-                    for newStMol in newMList {
-                        if globalCache.stMolMatched.0.contains(newStMol.atoms) {
-                            globalCache.stMolMatched.0.remove(newStMol.atoms)
-                            globalCache.stMolMatched.1.insert(newStMol.atoms)
-                        } else if globalCache.stMolMatched.1.contains(newStMol.atoms) {
-                            // Do nothing
-                        } else {
-                            globalCache.stMolMatched.0.insert(newStMol.atoms)
-                        }
-                        
-                        addStMolToMDynDict(j + 1, newStMol)
-                    }
-                    
-                    
-                    #if DEBUG
-                    #else
-                    print(loopDisplayString(j + 1, j, tIJ) + "Computing..", terminator: "\r")
-                    #if os(Linux)
-                    fflush(stdout)
-                    #else
-                    fflush(__stdoutp)
-                    #endif
-                    #endif
-                }
+        
+        let n = mDynDict[j]!.count
+        var dynDict1 = [Set<Atom>: Set<StrcMolecule>]()
+        dynDict1.reserveCapacity(Int(n / 2))
+        var dynDict2 = [Set<Atom>: Set<StrcMolecule>]()
+        dynDict2.reserveCapacity(Int(n / 2))
+        var newDict1 = [Set<Atom>: Set<StrcMolecule>]()
+        var newDict2 = [Set<Atom>: Set<StrcMolecule>]()
+        let queue1 = DispatchQueue(label: "T-1")
+        let queue2 = DispatchQueue(label: "T-2")
+        let semaphore1 = DispatchSemaphore(value: 0)
+        let semaphore2 = DispatchSemaphore(value: 0)
+        
+        var i = 0
+        for (k, v) in mDynDict[j]! {
+            i += 1
+            if i <= n / 2 {
+                dynDict1[k] = v
+            } else {
+                dynDict2[k] = v
             }
         }
+        
+        queue1.async {
+            for (_, stMols) in dynDict1 {
+                for stMol in stMols {
+                    let rList = rAtoms.filter { !stMol.containsById($0) }
+                    for rAtom in rList {
+                        let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
+                        
+                        for newStMol in newMList {
+//                            if globalCache.stMolMatched.0.contains(newStMol.atoms) {
+//                                globalCache.stMolMatched.0.remove(newStMol.atoms)
+//                                globalCache.stMolMatched.1.insert(newStMol.atoms)
+//                            } else if globalCache.stMolMatched.1.contains(newStMol.atoms) {
+//                                // Do nothing
+//                            } else {
+//                                globalCache.stMolMatched.0.insert(newStMol.atoms)
+//                            }
+                            
+                            if newDict1[newStMol.atoms] == nil {
+                                newDict1[newStMol.atoms] = Set([newStMol])
+                            } else {
+                                newDict1[newStMol.atoms]!.insert(newStMol)
+                            }
+                        }
+                        
+                        
+//                        #if DEBUG
+//                        #else
+//                        let timeTaken = String(-(Double(tIJ.timeIntervalSinceNow).rounded(digitsAfterDecimal: 1))) + "s"
+//                        let displayStr = "Atoms: \(toPrintWithSpace(j + 1, 4)) Time: \(toPrintWithSpace(timeTaken, 10)) "
+//                        print(displayStr + "Computing..", terminator: "\r")
+//                        #if os(Linux)
+//                        fflush(stdout)
+//                        #else
+//                        fflush(__stdoutp)
+//                        #endif
+//                        #endif
+                    }
+                }
+            }
+            
+            semaphore1.signal()
+        }
+        
+        queue2.async {
+            for (_, stMols) in dynDict2 {
+                for stMol in stMols {
+                    let rList = rAtoms.filter { !stMol.containsById($0) }
+                    for rAtom in rList {
+                        let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
+                        
+                        for newStMol in newMList {
+//                            if globalCache.stMolMatched.0.contains(newStMol.atoms) {
+//                                globalCache.stMolMatched.0.remove(newStMol.atoms)
+//                                globalCache.stMolMatched.1.insert(newStMol.atoms)
+//                            } else if globalCache.stMolMatched.1.contains(newStMol.atoms) {
+//                                // Do nothing
+//                            } else {
+//                                globalCache.stMolMatched.0.insert(newStMol.atoms)
+//                            }
+                            
+                            if newDict2[newStMol.atoms] == nil {
+                                newDict2[newStMol.atoms] = Set([newStMol])
+                            } else {
+                                newDict2[newStMol.atoms]!.insert(newStMol)
+                            }
+                        }
+                        
+                        
+//                        #if DEBUG
+//                        #else
+//                        let timeTaken = String(-(Double(tIJ.timeIntervalSinceNow).rounded(digitsAfterDecimal: 1))) + "s"
+//                        let displayStr = "Atoms: \(toPrintWithSpace(j + 1, 4)) Time: \(toPrintWithSpace(timeTaken, 10)) "
+//                        print(displayStr + "Computing..", terminator: "\r")
+//                        #if os(Linux)
+//                        fflush(stdout)
+//                        #else
+//                        fflush(__stdoutp)
+//                        #endif
+//                        #endif
+                    }
+                }
+            }
+            
+            semaphore2.signal()
+        }
+        
+        semaphore1.wait()
+        semaphore2.wait()
+        
+        mDynDict[j + 1] = newDict1.merging(newDict2, uniquingKeysWith: { $0.union($1) })
+        
+//        for (_, stMols) in mDynDict[j]! {
+//            if mDynDict[j] != nil {
+//                mDynDict[j] = nil
+//            }
+//            for stMol in stMols {
+//                let rList = rAtoms.filter { !stMol.containsById($0) }
+//                for rAtom in rList {
+//                    let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
+//
+//                    for newStMol in newMList {
+//                        if globalCache.stMolMatched.0.contains(newStMol.atoms) {
+//                            globalCache.stMolMatched.0.remove(newStMol.atoms)
+//                            globalCache.stMolMatched.1.insert(newStMol.atoms)
+//                        } else if globalCache.stMolMatched.1.contains(newStMol.atoms) {
+//                            // Do nothing
+//                        } else {
+//                            globalCache.stMolMatched.0.insert(newStMol.atoms)
+//                        }
+//
+//                        addStMolToMDynDict(j + 1, newStMol)
+//                    }
+//
+//
+//                    #if DEBUG
+//                    #else
+//                    print(loopDisplayString(j + 1, j, tIJ) + "Computing..", terminator: "\r")
+//                    #if os(Linux)
+//                    fflush(stdout)
+//                    #else
+//                    fflush(__stdoutp)
+//                    #endif
+//                    #endif
+//                }
+//            }
+//        }
         
         for atoms in globalCache.stMolMatched.1 {
             let saList = mDynDict[j + 1]![atoms]
