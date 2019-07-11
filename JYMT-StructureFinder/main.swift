@@ -8,28 +8,6 @@
 
 import Foundation
 
-/**
- Tolerence level used in bond length filter. Unit in angstrom.
- */
-let tolerenceLevel = 0.1
-
-/**
- Tolerance ratio used in bond angle filter.
- */
-let toleranceRatio = 0.1
-
-
-/**
- (Deprecated, may be invoked for future use)
- Trim level used to trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level. Unit in angstrom. Suggested to be siginificantly smaller than the major component(s) of the position vector.
- */
-//let trimLevel = 0.05
-
-/**
- The number of digits preserved after rounding the position vector of the atoms. The rounding level is suggested to be siginificantly smaller than the major component(s) of the position vector.
- */
-let roundDigits = 2
-
 var saveResults = true
 var writePass = false
 var writePath = URL(fileURLWithPath: "")
@@ -40,7 +18,7 @@ var fileName = ""
 
 while !filePass {
     do {
-        let filePath: String = String(describing: input(name: "XYZ file Path", type: "string"))
+        let filePath: String = input(name: "XYZ file Path", type: "string").trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "\\", with: "")
         xyzSet = try XYZFile(fromPath: filePath)
         fileName = URL(fileURLWithPath: filePath).lastPathComponentName
         filePass = true
@@ -51,13 +29,15 @@ while !filePass {
 }
 
 guard let rawAtoms = xyzSet.atoms else {
-    print("No Atoms. Fatal Error.")
+    print("No Atoms. Exit with fatal Error.")
     exit(-1)
 }
 
+print()
+
 if saveResults {
     while !writePass {
-        let writePathInput = String(describing: input(name: "XYZ exporting Path (leave empty if not to save)", type: "string"))
+        let writePathInput = input(name: "XYZ exporting Path (leave empty if not to save)", type: "string").trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "\\", with: "")
         if writePathInput.isEmpty {
             saveResults = false
             writePass = true
@@ -75,21 +55,46 @@ if saveResults {
             break
         }
     }
-
-    
 }
+print()
+
+/**
+ Tolerence level used in bond length filter. Unit in angstrom.
+ */
+let tolerenceLevel = Double(input(name: "Bond length tolerence level in angstrom", type: "double", defaultValue: 0.1, doubleRange: 0...1, printAfterSec: true)) ?? 0.1
+print()
+
+/**
+ Tolerance ratio used in bond angle filter.
+ */
+let toleranceRatio = Double(input(name: "Bond angle tolerence ratio", type: "double", defaultValue: 0.1, doubleRange: 0...1, printAfterSec: true)) ?? 0.1
+print()
+
+
+/**
+ (Deprecated, may be invoked for future use)
+ Trim level used to trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level. Unit in angstrom. Suggested to be siginificantly smaller than the major component(s) of the position vector.
+ */
+//let trimLevel = 0.05
+
+/**
+ The number of digits preserved after rounding the position vector of the atoms. The rounding level is suggested to be siginificantly smaller than the major component(s) of the position vector.
+ */
+let roundDigits = Int(input(name: "Rounded digits (of position) after decimal", type: "int", defaultValue: 2, doubleRange: 0...10, printAfterSec: true)) ?? 2
+print()
 
 var combAtoms: [Atom] = rawAtoms.removed(byElement: .hydrogen)
 //combAtoms.trimDownRVecs(level: trimLevel)
 combAtoms.roundRVecs(digitsAfterDecimal: roundDigits)
 
-print("Total number of non-Hydrogen atoms: \(combAtoms.count)")
+print("Total number of non-hydrogen atoms: \(combAtoms.count).")
 
 combAtoms.sort(by: { $0.rvec!.magnitude > $1.rvec!.magnitude })
 
 // Fix the first atom
 let A1 = combAtoms[0]
-print("The first atom has been fixed.")
+print("The first atom has been located.")
+print()
 
 let combrAtoms = combAtoms.removed(A1)
 let initialSMol = StrcMolecule(Set([A1]))
@@ -98,14 +103,14 @@ var possibleList: [StrcMolecule] = []
 
 let tInitial = Date()
 print("Computation started on \(displayTime(tInitial)).")
-
-//rcsAction(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, tolRatio: toleranceRatio, possibleList: &possibleList, trueMol: StrcMolecule(Set(combAtoms)))
+print()
 
 possibleList = rcsActionDynProgrammed(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, tolRatio: toleranceRatio, trueMol: StrcMolecule(Set(combAtoms)))
 
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
 
 print("Computation completed. Generating results...")
+print()
 
 // Sort the possible List by CM deviation
 possibleList.sort(by: {
@@ -128,6 +133,11 @@ if saveResults {
 }
 
 log.add("-----------------------------------")
+log.add("[Basic Settings]")
+log.add("Bond length tolerence level: \(tolerenceLevel)")
+log.add("Bond angle tolerence ratio: \(toleranceRatio)")
+log.add("Rounded digits after decimal: \(roundDigits)")
+log.add("-----------------------------------")
 // Printing results
 for pMol in possibleList {
     iCode = iCode + 1
@@ -147,9 +157,6 @@ for pMol in possibleList {
     for atom in atomList {
         log.add("\(atom.name)     \(atom.rvec!.dictVec)", terminator: "")
         let (adjacentAtoms, _) = bondGraph.adjacenciesOfAtom(atom)
-//        if bondGraph.degreeOfAtom(atom) == 3 {
-//            print("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))", terminator: "")
-//        }
         let vGraph = bondGraph.findVseprGraph(atom)
         let vseprType = vGraph.type
         log.add("     VSEPR Type: ", terminator: "")
@@ -182,7 +189,6 @@ for pMol in possibleList {
         let pMolXYZ = XYZFile(fromAtoms: atomList)
         do {
             try pMolXYZ.export(toFile: xyzUrl)
-            // log.add("Results have been saved to xyz files.")
         } catch let error {
             print("An error occured when saving xyz file: \(error).")
         }
@@ -200,7 +206,7 @@ if success {
 }
 log.add("-----------------------------------")
 log.add("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
-log.add("Total number of non-Hydrogen atoms: \(combAtoms.count).")
+log.add("Total number of non-hydrogen atoms: \(combAtoms.count).")
 log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
 log.add("Total number of possible structures: \(possibleList.count).")
 log.add("Total number of possible bond graphs: \(possibleList.reduce(0, { $0 + $1.bondGraphs.count })).")
@@ -213,7 +219,8 @@ if saveResults {
         try log.save(asURL: txtUrl)
         print("Results have been saved to txt file.")
     } catch let error {
-        print("An error occured: \(error).")
+        print("Failed to save the results. An error occured: \(error).")
+        print("Note: You may save the console log for further reference of the results.")
     }
 }
 print()

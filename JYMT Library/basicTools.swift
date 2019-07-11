@@ -11,20 +11,30 @@ import Foundation
 /**
  User-friendly input
  */
-func input(name: String, type: String) -> Any {
+func input(name: String, type: String, defaultValue: Any? = nil, intRange:ClosedRange<Int>? = nil, doubleRange: ClosedRange<Double>? = nil, printAfterSec: Bool = false) -> String {
     let typeCode = type.lowercased()
 
     var pass = false
-    var inputResult: Any = ""
+    var inputResult: String = ""
     
     while !pass {
-        print("Please enter \(name): ", terminator: "")
+        if defaultValue == nil {
+            print("Please enter \(name): ", terminator: "")
+        } else {
+            print("Please enter \(name) [\(defaultValue!) by default]: ", terminator: "")
+        }
         let response = readLine()
         var inputConverted: Any?
         guard let r: String = response else {
             print("Error: got nil response.")
             continue
         }
+        
+        if defaultValue != nil && r.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
+            inputResult = String(describing: defaultValue!)
+            break
+        }
+        
         switch typeCode {
         case "string":
             inputConverted = r
@@ -41,9 +51,26 @@ func input(name: String, type: String) -> Any {
             print("Wrong format. Please try again.")
             continue
         } else {
+            if doubleRange != nil && typeCode == "double" {
+                guard let inputDouble = Double(String(describing: inputConverted!)), doubleRange!.contains(inputDouble) else {
+                    pass = false
+                    print("Out of range. Please try again.")
+                    continue
+                }
+            } else if intRange != nil && typeCode == "int" {
+                guard let inputInt = Int(String(describing: inputConverted!)), intRange!.contains(inputInt) else {
+                    pass = false
+                    print("Out of range. Please try again.")
+                    continue
+                }
+            }
             pass = true
-            inputResult = inputConverted!
+            inputResult = String(describing: inputConverted!)
         }
+    }
+    
+    if printAfterSec {
+        print("\(name) is set as \(inputResult).")
     }
     
     return inputResult

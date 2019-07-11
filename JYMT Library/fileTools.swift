@@ -208,6 +208,8 @@ struct TextFile: File {
         try open(fromURL: url, encoding: encoding)
     }
     
+    // TODO: Choose to print or not when adding
+    
     /**
      Add anything to the file. Optional terminator with default for a new line.
      
