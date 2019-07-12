@@ -116,3 +116,15 @@ func stringWithSpace(_ str: String, _ totSpace: Int) -> String {
 func toPrintWithSpace(_ item: Any, _ totSpace: Int) -> String {
     return stringWithSpace(String(describing: item), totSpace)
 }
+
+/**
+ To print string from the start of the console line.
+ */
+func printStringInLine(_ str: String) {
+    print(str, terminator: "\r")
+    #if os(Linux)
+    fflush(stdout)
+    #else
+    fflush(__stdoutp)
+    #endif
+}

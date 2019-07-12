@@ -1081,9 +1081,14 @@ func bondAnglesFilter(center aAtom: Atom, attached: [Atom], range: ClosedRange<D
  - Parameter tolRatio: The tolerance ratio acting in bond angle filters. Reference with the VSEPR graph.
  
  */
-func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> StrcMolecule {
+func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1, tolRatio: Double = 0.1, queue: DispatchQueue? = nil) -> StrcMolecule {
     var mol = stMol
     let bondGraphs = mol.bondGraphs
+    
+    //let auxQueue = queue ?? DispatchQueue(label: "auxillary-insideStrcConstructor")
+    //let completionSemaphore = DispatchSemaphore(value: 0)
+    
+    var atomAdded = false
     
     if mol.size <= 0 {
         mol.addAtom(atom)
@@ -1111,15 +1116,27 @@ func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double =
                 }
                 if dPass {
                     let pBond = ChemBond(vAtom, atom, bondType)
-                    mol.addAtom(atom)
+                    if !atomAdded {
+                        mol.addAtom(atom)
+                        atomAdded = true
+                    }
+//                    auxQueue.async {
+//                        if !atomAdded {
+//                            mol.addAtom(atom)
+//                            atomAdded = true
+//                        }
+//                    }
                     if stMol.size == 1 {
                         mol.bondGraphs.insert(ChemBondGraph(Set([pBond])))
+//                        auxQueue.async {
+//                           mol.bondGraphs.insert(ChemBondGraph(Set([pBond])))
+//                        }
                     } else if stMol.size > 1 {
                         for bondGraph in bondGraphs {
                             var pBondGraph = bondGraph
                             pBondGraph.bonds.insert(pBond)
                             var bPass = true
-                            for bAtom in mol.atoms {
+                            for bAtom in stMol.atoms {
                                 if pBondGraph.degreeOfAtom(bAtom) >= 2 {
                                     let vseprGraph = pBondGraph.findVseprGraph(bAtom)
                                     if !vseprGraph.filter(bondAngleTolRatio: tolRatio) {
@@ -1128,27 +1145,38 @@ func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double =
                                     }
                                 }
                             }
+                            
                             if bPass {
                                 mol.bondGraphs.insert(pBondGraph)
+//                                auxQueue.async {
+//                                    mol.bondGraphs.insert(pBondGraph)
+//                                }
                             }
                         }
                     }
                 }
             }
+//            if i == stMol.atoms.count - 1 {
+//                auxQueue.async {
+//                    completionSemaphore.signal()
+//                }
+//            }
         }
     }
+    
+//    completionSemaphore.wait()
     return mol
 }
 
 /**
  The recursion constructor. It takes a test atom and compared it with a valid structrual molecule. It will return the possible structural molecules as the atom and the molecule join together.
  */
-func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> [StrcMolecule] {
+func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tolRatio: Double = 0.1, strcQueue: DispatchQueue? = nil) -> [StrcMolecule] {
     let possibleAtoms = atom.possibles
     var possibleSMList: [StrcMolecule] = []
     
     for pAtom in possibleAtoms {
-        let sMol = strcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange, tolRatio: tolRatio)
+        let sMol = strcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange, tolRatio: tolRatio, queue: strcQueue)
         
         if !sMol.bondGraphs.isEmpty {
             possibleSMList.append(sMol)
@@ -1212,9 +1240,15 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
         return []
     }
     
+    let auxQueue = DispatchQueue(label: "auxillary-rcsAction")
+//    let auxStrcQueue = DispatchQueue(label: "auxillary-strc")
+    var countToPrint = 0
+    
+    var rcsCache = GlobalCache()
+    
     let rCount = rAtoms.count
     
-    var mDynDict: [Int: [Set<Atom>: Set<StrcMolecule>]] = [Int: [Set<Atom>: Set<StrcMolecule>]]()
+    var mDynDict: [Int: [Set<Atom>: Array<StrcMolecule>]] = [Int: [Set<Atom>: Array<StrcMolecule>]]()
     
     for i in 0...rCount {
         mDynDict[i] = [:]
@@ -1222,9 +1256,9 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
     
     func addStMolToMDynDict(_ j: Int, _ stMol: StrcMolecule) {
         if mDynDict[j]![stMol.atoms] == nil {
-            mDynDict[j]![stMol.atoms] = Set([stMol])
+            mDynDict[j]![stMol.atoms] = [stMol]
         } else {
-            mDynDict[j]![stMol.atoms]!.insert(stMol)
+            mDynDict[j]![stMol.atoms]!.append(stMol)
         }
     }
     
@@ -1235,71 +1269,77 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
     
     func loopDisplayString(_ j1: Int, _ j2: Int, _ tIJ: Date) -> String {
         let timeTaken = String(-(Double(tIJ.timeIntervalSinceNow).rounded(digitsAfterDecimal: 1))) + "s"
-        return "Atoms: \(toPrintWithSpace(j1 + 1, 4)) Interm. possibles: \(toPrintWithSpace(mDynDict[j2 + 1]!.count, 9)) Time: \(toPrintWithSpace(timeTaken, 10)) "
+        return "Atoms: \(toPrintWithSpace(j1 + 1, 4)) Interm. possibles: \(toPrintWithSpace(countToPrint, 9)) Time: \(toPrintWithSpace(timeTaken, 10)) "
     }
     
     print(loopDisplayString(0, -1, Date()))
     
     for j in 0...(rCount - 1) {
         let tIJ = Date()
-        for (_, stMols) in mDynDict[j]! {
-            if mDynDict[j] != nil {
-                mDynDict[j] = nil
-            }
-            for stMol in stMols {
-                let rList = rAtoms.filter { !stMol.containsById($0) }
-                for rAtom in rList {
-                    let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
-                    
+        let compSemaphore = DispatchSemaphore(value: 0)
+        let stMols = mDynDict[j]!.flatMap({ $0.value })
+        auxQueue.async {
+            mDynDict[j] = nil
+        }
+        for (i, stMol) in stMols.enumerated() {
+            let rList = rAtoms.filter { !stMol.containsById($0) }
+            for rAtom in rList {
+                let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
+                
+                auxQueue.async(flags: .barrier) {
                     for newStMol in newMList {
-                        if globalCache.stMolMatched.0.contains(newStMol.atoms) {
-                            globalCache.stMolMatched.0.remove(newStMol.atoms)
-                            globalCache.stMolMatched.1.insert(newStMol.atoms)
-                        } else if globalCache.stMolMatched.1.contains(newStMol.atoms) {
+                        if rcsCache.stMolMatched.0.contains(newStMol.atoms) {
+                            rcsCache.stMolMatched.0.remove(newStMol.atoms)
+                            rcsCache.stMolMatched.1.insert(newStMol.atoms)
+                        } else if rcsCache.stMolMatched.1.contains(newStMol.atoms) {
                             // Do nothing
                         } else {
-                            globalCache.stMolMatched.0.insert(newStMol.atoms)
+                            rcsCache.stMolMatched.0.insert(newStMol.atoms)
                         }
                         
                         addStMolToMDynDict(j + 1, newStMol)
                     }
                     
-                    
+                    countToPrint = mDynDict[j + 1]!.count
                     #if DEBUG
                     #else
-                    print(loopDisplayString(j + 1, j, tIJ) + "Computing..", terminator: "\r")
-                    #if os(Linux)
-                    fflush(stdout)
-                    #else
-                    fflush(__stdoutp)
+                    printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Computing..")
                     #endif
-                    #endif
+                    
+                }
+                
+            }
+            
+            if i == stMols.endIndex - 1 {
+                auxQueue.async {
+                    compSemaphore.signal()
                 }
             }
         }
         
-        for atoms in globalCache.stMolMatched.1 {
+        compSemaphore.wait()
+        
+        for atoms in rcsCache.stMolMatched.1 {
             let saList = mDynDict[j + 1]![atoms]
             guard saList != nil && saList!.isEmpty == false else {
                 continue
             }
             let combinedStMol: StrcMolecule = saList!.reduce(StrcMolecule(atoms), { $0.combined($1) ?? $0 })
             mDynDict[j + 1]![atoms] = [combinedStMol]
-
+            
             #if DEBUG
             #else
-            print(loopDisplayString(j + 1, j, tIJ) + "Deduplicating..", terminator: "\r")
-            #if os(Linux)
-            fflush(stdout)
-            #else
-            fflush(__stdoutp)
-            #endif
+            auxQueue.async {
+                printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Deduplicating..")
+            }
             #endif
         }
         
-        print(toPrintWithSpace(loopDisplayString(j + 1, j, tIJ), 79))
+        auxQueue.async {
+            print(toPrintWithSpace(loopDisplayString(j + 1, j, tIJ), 79))
+        }
         
-        globalCache.stMolMatched = ([], [])
+        rcsCache.stMolMatched = ([], [])
     }
     
     let result = mDynDict[rCount]!.flatMap({ $0.value })
