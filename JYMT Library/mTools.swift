@@ -1234,15 +1234,16 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
 
 /**
  The iteration version of the `rcsAction` for faster and clearer computations. Memoized dynamic progamming is implemented for utilization.
+ - TODO: Implement GCD properly.
  */
 func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, tolRatio: Double = 0.1, trueMol: StrcMolecule? = nil) -> [StrcMolecule] {
     guard !rAtoms.isEmpty else {
         return []
     }
     
-    let auxQueue = DispatchQueue(label: "auxillary-rcsAction")
+//    let auxQueue = DispatchQueue(label: "auxillary-rcsAction")
 //    let auxStrcQueue = DispatchQueue(label: "auxillary-strc")
-    var countToPrint = 0
+//    var countToPrint = 0
     
     var rcsCache = GlobalCache()
     
@@ -1269,55 +1270,56 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
     
     func loopDisplayString(_ j1: Int, _ j2: Int, _ tIJ: Date) -> String {
         let timeTaken = String(-(Double(tIJ.timeIntervalSinceNow).rounded(digitsAfterDecimal: 1))) + "s"
-        return "Atoms: \(toPrintWithSpace(j1 + 1, 4)) Interm. possibles: \(toPrintWithSpace(countToPrint, 9)) Time: \(toPrintWithSpace(timeTaken, 10)) "
+        return "Atoms: \(toPrintWithSpace(j1 + 1, 4)) Interm. possibles: \(toPrintWithSpace(mDynDict[j2 + 1]!.count, 9)) Time: \(toPrintWithSpace(timeTaken, 10)) "
     }
     
     print(loopDisplayString(0, -1, Date()))
     
     for j in 0...(rCount - 1) {
         let tIJ = Date()
-        let compSemaphore = DispatchSemaphore(value: 0)
+//        let compSemaphore = DispatchSemaphore(value: 0)
         let stMols = mDynDict[j]!.flatMap({ $0.value })
-        auxQueue.async {
-            mDynDict[j] = nil
-        }
-        for (i, stMol) in stMols.enumerated() {
+//        auxQueue.async {
+//            mDynDict[j] = nil
+//        }
+        mDynDict[j] = nil
+        for stMol in stMols {
             let rList = rAtoms.filter { !stMol.containsById($0) }
             for rAtom in rList {
                 let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
                 
-                auxQueue.async(flags: .barrier) {
-                    for newStMol in newMList {
-                        if rcsCache.stMolMatched.0.contains(newStMol.atoms) {
-                            rcsCache.stMolMatched.0.remove(newStMol.atoms)
-                            rcsCache.stMolMatched.1.insert(newStMol.atoms)
-                        } else if rcsCache.stMolMatched.1.contains(newStMol.atoms) {
-                            // Do nothing
-                        } else {
-                            rcsCache.stMolMatched.0.insert(newStMol.atoms)
-                        }
-                        
-                        addStMolToMDynDict(j + 1, newStMol)
+                for newStMol in newMList {
+                    if rcsCache.stMolMatched.0.contains(newStMol.atoms) {
+                        rcsCache.stMolMatched.0.remove(newStMol.atoms)
+                        rcsCache.stMolMatched.1.insert(newStMol.atoms)
+                    } else if rcsCache.stMolMatched.1.contains(newStMol.atoms) {
+                        // Do nothing
+                    } else {
+                        rcsCache.stMolMatched.0.insert(newStMol.atoms)
                     }
                     
-                    countToPrint = mDynDict[j + 1]!.count
-                    #if DEBUG
-                    #else
-                    printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Computing..")
-                    #endif
-                    
+                    addStMolToMDynDict(j + 1, newStMol)
                 }
+                
+//                countToPrint = mDynDict[j + 1]!.count
+                #if DEBUG
+                #else
+                printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Computing..")
+//                auxQueue.async {
+//                    printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Computing..")
+//                }
+                #endif
                 
             }
             
-            if i == stMols.endIndex - 1 {
-                auxQueue.async {
-                    compSemaphore.signal()
-                }
-            }
+//            if i == stMols.endIndex - 1 {
+//                auxQueue.async {
+//                    compSemaphore.signal()
+//                }
+//            }
         }
         
-        compSemaphore.wait()
+//        compSemaphore.wait()
         
         for atoms in rcsCache.stMolMatched.1 {
             let saList = mDynDict[j + 1]![atoms]
@@ -1329,15 +1331,17 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
             
             #if DEBUG
             #else
-            auxQueue.async {
-                printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Deduplicating..")
-            }
+            printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Deduplicating..")
+//            auxQueue.async {
+//                printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Deduplicating..")
+//            }
             #endif
         }
         
-        auxQueue.async {
-            print(toPrintWithSpace(loopDisplayString(j + 1, j, tIJ), 79))
-        }
+//        auxQueue.async {
+//            print(toPrintWithSpace(loopDisplayString(j + 1, j, tIJ), 79))
+//        }
+        print(toPrintWithSpace(loopDisplayString(j + 1, j, tIJ), 79))
         
         rcsCache.stMolMatched = ([], [])
     }
