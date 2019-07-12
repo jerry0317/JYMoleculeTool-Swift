@@ -17,21 +17,21 @@ var globalCache = GlobalCache()
  Provides a structure for cache that is easily to access globally.
  */
 struct GlobalCache {
-    lazy var indexCombinations: [CombTuple: Set<Set<Int>>] = [:]
+    var indexCombinations: [CombTuple: Set<Set<Int>>] = [:]
     
-    lazy var rcsConstructorCache: Set<RcsConstructorTuple> = []
+    var rcsConstructorCache: Set<RcsConstructorTuple> = []
     
-    lazy var possibleBondTypes: [Array<ChemElement>: [ChemBondType]] = [:]
+    var possibleBondTypes: [Array<ChemElement>: [ChemBondType]] = [:]
     
-    lazy var stMolMatched: (Set<Set<Atom>>, Set<Set<Atom>>) = ([], [])
+    var stMolMatched: (Set<Set<Atom>>, Set<Set<Atom>>) = ([], [])
     
-    lazy var atomPossibles: [Atom: [Atom]] = [Atom: [Atom]]()
+    var atomPossibles: [Atom: [Atom]] = [Atom: [Atom]]()
     
-    lazy var bdCodes: [ChemBondType: BondCode] = [:]
+    var bdCodes: [ChemBondType: BondCode] = [:]
     
-    lazy var bondAngles: [BondAngleTuple: Double] = [:]
+    var bondAngles: [BondAngleTuple: Double] = [:]
     
-    lazy var atomNeighbors: [AtomNeighborTuple: (Bool, Atom)] = [:]
+    var atomNeighbors: [AtomNeighborTuple: (Bool, Atom)] = [:]
 }
 
 struct CombTuple {

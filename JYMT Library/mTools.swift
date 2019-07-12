@@ -1081,12 +1081,9 @@ func bondAnglesFilter(center aAtom: Atom, attached: [Atom], range: ClosedRange<D
  - Parameter tolRatio: The tolerance ratio acting in bond angle filters. Reference with the VSEPR graph.
  
  */
-func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1, tolRatio: Double = 0.1, queue: DispatchQueue? = nil) -> StrcMolecule {
+func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> StrcMolecule {
     var mol = stMol
     let bondGraphs = mol.bondGraphs
-    
-    //let auxQueue = queue ?? DispatchQueue(label: "auxillary-insideStrcConstructor")
-    //let completionSemaphore = DispatchSemaphore(value: 0)
     
     var atomAdded = false
     
@@ -1120,17 +1117,8 @@ func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double =
                         mol.addAtom(atom)
                         atomAdded = true
                     }
-//                    auxQueue.async {
-//                        if !atomAdded {
-//                            mol.addAtom(atom)
-//                            atomAdded = true
-//                        }
-//                    }
                     if stMol.size == 1 {
                         mol.bondGraphs.insert(ChemBondGraph(Set([pBond])))
-//                        auxQueue.async {
-//                           mol.bondGraphs.insert(ChemBondGraph(Set([pBond])))
-//                        }
                     } else if stMol.size > 1 {
                         for bondGraph in bondGraphs {
                             var pBondGraph = bondGraph
@@ -1145,38 +1133,27 @@ func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double =
                                     }
                                 }
                             }
-                            
                             if bPass {
                                 mol.bondGraphs.insert(pBondGraph)
-//                                auxQueue.async {
-//                                    mol.bondGraphs.insert(pBondGraph)
-//                                }
                             }
                         }
                     }
                 }
             }
-//            if i == stMol.atoms.count - 1 {
-//                auxQueue.async {
-//                    completionSemaphore.signal()
-//                }
-//            }
         }
     }
-    
-//    completionSemaphore.wait()
     return mol
 }
 
 /**
  The recursion constructor. It takes a test atom and compared it with a valid structrual molecule. It will return the possible structural molecules as the atom and the molecule join together.
  */
-func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tolRatio: Double = 0.1, strcQueue: DispatchQueue? = nil) -> [StrcMolecule] {
+func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> [StrcMolecule] {
     let possibleAtoms = atom.possibles
     var possibleSMList: [StrcMolecule] = []
     
     for pAtom in possibleAtoms {
-        let sMol = strcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange, tolRatio: tolRatio, queue: strcQueue)
+        let sMol = strcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange, tolRatio: tolRatio)
         
         if !sMol.bondGraphs.isEmpty {
             possibleSMList.append(sMol)
@@ -1234,18 +1211,11 @@ func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double
 
 /**
  The iteration version of the `rcsAction` for faster and clearer computations. Memoized dynamic progamming is implemented for utilization.
- - TODO: Implement GCD properly.
  */
 func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, tolRatio: Double = 0.1, trueMol: StrcMolecule? = nil) -> [StrcMolecule] {
     guard !rAtoms.isEmpty else {
         return []
     }
-    
-//    let auxQueue = DispatchQueue(label: "auxillary-rcsAction")
-//    let auxStrcQueue = DispatchQueue(label: "auxillary-strc")
-//    var countToPrint = 0
-    
-    var rcsCache = GlobalCache()
     
     let rCount = rAtoms.count
     
@@ -1277,73 +1247,54 @@ func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tol
     
     for j in 0...(rCount - 1) {
         let tIJ = Date()
-//        let compSemaphore = DispatchSemaphore(value: 0)
-        let stMols = mDynDict[j]!.flatMap({ $0.value })
-//        auxQueue.async {
-//            mDynDict[j] = nil
-//        }
-        mDynDict[j] = nil
-        for stMol in stMols {
-            let rList = rAtoms.filter { !stMol.containsById($0) }
-            for rAtom in rList {
-                let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
-                
-                for newStMol in newMList {
-                    if rcsCache.stMolMatched.0.contains(newStMol.atoms) {
-                        rcsCache.stMolMatched.0.remove(newStMol.atoms)
-                        rcsCache.stMolMatched.1.insert(newStMol.atoms)
-                    } else if rcsCache.stMolMatched.1.contains(newStMol.atoms) {
-                        // Do nothing
-                    } else {
-                        rcsCache.stMolMatched.0.insert(newStMol.atoms)
+        for (_, stMols) in mDynDict[j]! {
+            if mDynDict[j] != nil {
+                mDynDict[j] = nil
+            }
+            for stMol in stMols {
+                let rList = rAtoms.filter { !stMol.containsById($0) }
+                for rAtom in rList {
+                    let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
+                    
+                    for newStMol in newMList {
+                        if globalCache.stMolMatched.0.contains(newStMol.atoms) {
+                            globalCache.stMolMatched.0.remove(newStMol.atoms)
+                            globalCache.stMolMatched.1.insert(newStMol.atoms)
+                        } else if globalCache.stMolMatched.1.contains(newStMol.atoms) {
+                            // Do nothing
+                        } else {
+                            globalCache.stMolMatched.0.insert(newStMol.atoms)
+                        }
+                        
+                        addStMolToMDynDict(j + 1, newStMol)
                     }
                     
-                    addStMolToMDynDict(j + 1, newStMol)
+                    
+                    #if DEBUG
+                    #else
+                    printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Calculating..")
+                    #endif
                 }
-                
-//                countToPrint = mDynDict[j + 1]!.count
-                #if DEBUG
-                #else
-                printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Computing..")
-//                auxQueue.async {
-//                    printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Computing..")
-//                }
-                #endif
-                
             }
-            
-//            if i == stMols.endIndex - 1 {
-//                auxQueue.async {
-//                    compSemaphore.signal()
-//                }
-//            }
         }
         
-//        compSemaphore.wait()
-        
-        for atoms in rcsCache.stMolMatched.1 {
+        for atoms in globalCache.stMolMatched.1 {
             let saList = mDynDict[j + 1]![atoms]
             guard saList != nil && saList!.isEmpty == false else {
                 continue
             }
             let combinedStMol: StrcMolecule = saList!.reduce(StrcMolecule(atoms), { $0.combined($1) ?? $0 })
             mDynDict[j + 1]![atoms] = [combinedStMol]
-            
+
             #if DEBUG
             #else
             printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Deduplicating..")
-//            auxQueue.async {
-//                printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Deduplicating..")
-//            }
             #endif
         }
         
-//        auxQueue.async {
-//            print(toPrintWithSpace(loopDisplayString(j + 1, j, tIJ), 79))
-//        }
         print(toPrintWithSpace(loopDisplayString(j + 1, j, tIJ), 79))
         
-        rcsCache.stMolMatched = ([], [])
+        globalCache.stMolMatched = ([], [])
     }
     
     let result = mDynDict[rCount]!.flatMap({ $0.value })
