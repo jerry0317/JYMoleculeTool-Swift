@@ -59,15 +59,15 @@ if saveResults {
 print()
 
 /**
- Tolerence level used in bond length filter. Unit in angstrom.
+ Tolerance level used in bond length filter. Unit in angstrom.
  */
-let tolerenceLevel = Double(input(name: "Bond length tolerence level in angstrom", type: "double", defaultValue: 0.1, doubleRange: 0...1, printAfterSec: true)) ?? 0.1
+let tolerenceLevel = Double(input(name: "Bond length tolerance level in angstrom", type: "double", defaultValue: 0.1, doubleRange: 0...1, printAfterSec: true)) ?? 0.1
 print()
 
 /**
  Tolerance ratio used in bond angle filter.
  */
-let toleranceRatio = Double(input(name: "Bond angle tolerence ratio", type: "double", defaultValue: 0.1, doubleRange: 0...1, printAfterSec: true)) ?? 0.1
+let toleranceRatio = Double(input(name: "Bond angle tolerance ratio", type: "double", defaultValue: 0.1, doubleRange: 0...1, printAfterSec: true)) ?? 0.1
 print()
 
 
@@ -78,7 +78,7 @@ print()
 //let trimLevel = 0.05
 
 /**
- The number of digits preserved after rounding the position vector of the atoms. The rounding level is suggested to be siginificantly smaller than the major component(s) of the position vector.
+ The number of digits preserved after rounding the position vector of the atoms. The rounding level is suggested to be significantly smaller than the major component(s) of the position vector.
  */
 let roundDigits = Int(input(name: "Rounded digits (of position) after decimal", type: "int", defaultValue: 2, doubleRange: 0...10, printAfterSec: true)) ?? 2
 print()
@@ -134,8 +134,8 @@ if saveResults {
 
 log.add("-----------------------------------")
 log.add("[Basic Settings]")
-log.add("Bond length tolerence level: \(tolerenceLevel)")
-log.add("Bond angle tolerence ratio: \(toleranceRatio)")
+log.add("Bond length tolerance level: \(tolerenceLevel)")
+log.add("Bond angle tolerance ratio: \(toleranceRatio)")
 log.add("Rounded digits after decimal: \(roundDigits)")
 log.add("-----------------------------------")
 // Printing results
