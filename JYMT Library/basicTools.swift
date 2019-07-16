@@ -128,3 +128,27 @@ func printStringInLine(_ str: String) {
     fflush(__stdoutp)
     #endif
 }
+
+func fileInput(name: String = "", message: String? = nil, successMessage: Bool = true, tryAction: (String) throws -> Bool) {
+    var filePass = false
+    var toPrint = ""
+    if message != nil {
+        toPrint = message!
+    } else {
+        toPrint = name + " path"
+    }
+    while !filePass {
+        do {
+            let filePath: String = input(name: toPrint, type: "string").trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "\\", with: "")
+            filePass = try tryAction(filePath)
+            if successMessage {
+                print("Successfully imported from \(name).")
+            }
+        } catch let error {
+            print("Error:\n \(error).\n Please try again.")
+        }
+    }
+}
+
+
+

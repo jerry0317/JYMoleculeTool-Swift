@@ -9,19 +9,24 @@
 import Foundation
 
 /**
+ Physical constants.
+ */
+typealias PhysConst = Constants.Phys
+
+/**
+ Chemical constants.
+ */
+typealias ChemConst = Constants.Chem
+
+/**
  Chemical Elements.
  */
-typealias ChemElement = Constants.Chem.Element
+typealias ChemElement = ChemConst.Element
 
 /**
  Bond codes used by chemical bond types.
  */
-typealias BondCode = Constants.Chem.BondCode
-
-/**
- Physical constants.
- */
-typealias PhysConst = Constants.Phys
+typealias BondCode = ChemConst.BondCode
 
 /**
  Generic constants used in the program.
@@ -141,6 +146,14 @@ enum Constants {
             case sulfur = "S"
             case chlorine = "Cl"
             case argon = "Ar"
+            
+            var atomicMass: Double {
+                ChemConst.atomicMasses[self]!
+            }
+            
+            var mass: Double {
+                atomicMass * PhysConst.amu
+            }
         }
         
         /**

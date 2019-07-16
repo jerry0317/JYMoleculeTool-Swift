@@ -9,24 +9,16 @@
 import Foundation
 
 var saveResults = true
-var writePass = false
 var writePath = URL(fileURLWithPath: "")
 
-var filePass = false
 var xyzSet = XYZFile()
 var fileName = ""
 
-while !filePass {
-    do {
-        let filePath: String = input(name: "XYZ file Path", type: "string").trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "\\", with: "")
-        xyzSet = try XYZFile(fromPath: filePath)
-        fileName = URL(fileURLWithPath: filePath).lastPathComponentName
-        filePass = true
-        print("Successfully imported from XYZ file.")
-    } catch let error {
-        print("Error: \(error). Please try again.")
-    }
-}
+fileInput(name: "XYZ file", tryAction: { (filePath) in
+    xyzSet = try XYZFile(fromPath: filePath)
+    fileName = URL(fileURLWithPath: filePath).lastPathComponentName
+    return true
+})
 
 guard let rawAtoms = xyzSet.atoms else {
     print("No Atoms. Exit with fatal Error.")
@@ -35,27 +27,23 @@ guard let rawAtoms = xyzSet.atoms else {
 
 print()
 
-if saveResults {
-    while !writePass {
-        let writePathInput = input(name: "XYZ exporting Path (leave empty if not to save)", type: "string").trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "\\", with: "")
-        if writePathInput.isEmpty {
-            saveResults = false
-            writePass = true
-            print("The results will not be saved.")
-            break
-        } else {
-            let writePathUrl = URL(fileURLWithPath: writePathInput)
-            guard writePathUrl.hasDirectoryPath else {
-                print("Not a valid directory. Please try again.")
-                continue
-            }
-            writePath = writePathUrl
-            writePass = true
-            print("The result will be saved in \(writePath.relativeString).")
-            break
+fileInput(message: "XYZ exporting Path (leave empty if not to save)", successMessage: false) { (writePathInput) in
+    if writePathInput.isEmpty {
+        saveResults = false
+        print("The results will not be saved.")
+        return true
+    } else {
+        let writePathUrl = URL(fileURLWithPath: writePathInput)
+        guard writePathUrl.hasDirectoryPath else {
+            print("Not a valid directory. Please try again.")
+            return false
         }
+        writePath = writePathUrl
+        print("The result will be saved in \(writePath.relativeString).")
+        return true
     }
 }
+
 print()
 
 /**
@@ -69,7 +57,6 @@ print()
  */
 let toleranceRatio = Double(input(name: "Bond angle tolerance ratio", type: "double", defaultValue: 0.1, doubleRange: 0...1, printAfterSec: true)) ?? 0.1
 print()
-
 
 /**
  (Deprecated, may be invoked for future use)
@@ -187,11 +174,7 @@ for pMol in possibleList {
     if saveResults {
         let xyzUrl = writePath.appendingPathComponent(baseFileName + "_" + String(iCode) + ".xyz")
         let pMolXYZ = XYZFile(fromAtoms: atomList)
-        do {
-            try pMolXYZ.export(toFile: xyzUrl)
-        } catch let error {
-            print("An error occured when saving xyz file: \(error).")
-        }
+        pMolXYZ.safelyExport(toFile: xyzUrl)
     }
 }
 

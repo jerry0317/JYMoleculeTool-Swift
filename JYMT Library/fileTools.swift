@@ -154,7 +154,7 @@ struct XYZFile: File {
                     guard let r: Double = Double(elements[j]) else {
                         break
                     }
-                rvec.dictVec[j - 1] = r
+                    rvec.dictVec[j - 1] = r
                 }
                 let atom = Atom(atomName, rvec)
                 atom.setIdentifier()
@@ -188,6 +188,23 @@ struct XYZFile: File {
             throw xyzExportError.xyzStringIsNil
         }
         try save(xyzString!, asURL: path)
+    }
+    
+    func safelyExport(toFile path: URL) {
+        do {
+            try export(toFile: path)
+        } catch let error {
+            print("An error occured when saving xyz file: \(error).")
+        }
+    }
+}
+
+extension XYZFile: CustomStringConvertible {
+    var description: String {
+        guard let ats = atoms else {
+            return "(Invalid Set)"
+        }
+        return ats.map({"\($0.name)     \($0.rvec!)"}).joined(separator: "\n")
     }
 }
 
@@ -225,6 +242,139 @@ struct TextFile: File {
      */
     func print(terminator: String = "\n") {
         Swift.print(content, terminator: terminator)
+    }
+}
+
+struct SABCFile: File {
+    var content: String {
+        get {
+            exportToString(original: original, comment: comment, substituted: substituted) ?? ""
+        }
+        set {
+            self = .init(fromString: newValue)
+        }
+    }
+    
+    var original: ABCTuple?
+    
+    var comment: String?
+    
+    var substituted: [ABCTuple]?
+    
+    var isValid: Bool {
+        original != nil && substituted != nil
+    }
+    
+    init() {
+        
+    }
+    
+    init(fromString str: String) {
+        (original, comment, substituted) = importFromString(str)
+    }
+    
+    init(fromURL url: URL, encoding: String.Encoding = .utf8) throws {
+        try open(fromURL: url, encoding: encoding)
+    }
+    
+    init(fromPath path: String, encoding: String.Encoding = .utf8) throws {
+        let urlPath = URL(fileURLWithPath: path)
+        try open(fromURL: urlPath, encoding: encoding)
+    }
+    
+    private func exportToString(original: ABCTuple?, comment: String?, substituted: [ABCTuple]?) -> String? {
+        guard let ori = original, let subs = substituted else {
+            return nil
+        }
+        var str: String = ""
+        str = str + "\(ori.A)    \(ori.B)    \(ori.C)    \(ori.totalAtomicMass)\n"
+        str = str + (comment ?? "")
+        for s in subs {
+            guard let sMass = s.substitutedAtomicMass, let sE = s.substitutedElement else {
+                continue
+            }
+            str = str + "\(s.A)    \(s.B)    \(s.C)    \(sMass)   \(sE.rawValue)\n"
+        }
+        return str
+    }
+    
+    private func importFromString(_ str: String) -> (ABCTuple?, String?, [ABCTuple]?) {
+        let lines = str.split(omittingEmptySubsequences: false, whereSeparator: {$0.isNewline})
+        var originalFromFile: ABCTuple? = nil
+        var commentFromFile: String? = nil
+        var substitutedFromFile: [ABCTuple]? = nil
+        
+        for (i, line) in lines.enumerated() {
+            switch i {
+            case 1:
+                commentFromFile = String(line)
+            default:
+                guard !line.isEmpty else {
+                    break
+                }
+                let elements = line.split(separator: " ")
+                guard elements.count == (i == 0 ? 4 : 5) else {
+                    break
+                }
+                var abcTuple = ABCTuple(i == 0 ? .original: .singleSubstituted)
+                for j in 0...2 {
+                    guard let r: Double = Double(elements[j]) else {
+                        break
+                    }
+                    abcTuple[j] = r * 1e6
+                }
+                guard let m: Double = Double(elements[3]) else {
+                    break
+                }
+                if i == 0 {
+                    abcTuple.totalAtomicMass = m
+                    originalFromFile = abcTuple
+                } else {
+                    abcTuple.substitutedAtomicMass = m
+                    
+                    guard let element: ChemElement = ChemElement(rawValue: String(elements[4])) else {
+                        break
+                    }
+                    
+                    abcTuple.substitutedElement = element
+                    abcTuple.totalAtomicMass = originalFromFile!.totalAtomicMass + abcTuple.deltaAtomicMass!
+                    if substitutedFromFile == nil {
+                        substitutedFromFile = []
+                    }
+                    substitutedFromFile!.append(abcTuple)
+                }
+            }
+        }
+        return (originalFromFile, commentFromFile, substitutedFromFile)
+    }
+    
+    func calculateToAtoms() -> [Atom] {
+        guard let oABC = original, let sABCs = substituted, oABC.type == .original else {
+            return []
+        }
+        var results = [Atom]()
+        
+        let iInitial = oABC.inertiaTensor
+        
+        for sABC in sABCs {
+            guard sABC.type == .singleSubstituted, let sElement = sABC.substitutedElement, let deltaM = sABC.deltaMass else {
+                continue
+            }
+            let iSub = sABC.inertiaTensor
+            let deltaI = iSub - iInitial
+            
+            let mu = reducedMass(M: oABC.totalMass, deltaM: deltaM)
+            guard let deltaP = tensorDeltaP(fromDeltaI: deltaI), let rVec = rVecFromSIS(mu: mu, deltaP: deltaP, I: iInitial) else {
+                continue
+            }
+            results.append(Atom(sElement, rVec * 1e10))
+        }
+        
+        return results
+    }
+    
+    func calculateToXYZ() -> XYZFile {
+        return XYZFile(fromAtoms: calculateToAtoms())
     }
 }
 

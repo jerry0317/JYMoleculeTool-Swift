@@ -119,7 +119,7 @@ final class Atom {
         guard let e = element else {
             return 0
         }
-        return Constants.Chem.valences[e] ?? 0
+        return ChemConst.valences[e] ?? 0
     }
     
     /**
@@ -275,7 +275,7 @@ final class ChemBondType {
      The dictionary storing the known bond lengths.
      */
     private var bondLengths: [BondCode: Double] {
-        return Constants.Chem.bondLengths
+        return ChemConst.bondLengths
     }
     
     /**
@@ -534,7 +534,7 @@ struct VSEPRGraph: SubChemBondGraph {
     /**
      The VSEPR type of this graph. Automatically determined based on the information of bonds.
      */
-    var type: Constants.Chem.VESPRType? {
+    var type: ChemConst.VESPRType? {
         return determineType()
     }
     
@@ -609,7 +609,7 @@ struct VSEPRGraph: SubChemBondGraph {
     /**
      To determine the VESPR type of the graph.
      */
-    private func determineType() -> Constants.Chem.VESPRType? {
+    private func determineType() -> ChemConst.VESPRType? {
         guard bonds.count >= 2 else {
             return nil
         }
@@ -1228,7 +1228,7 @@ extension Collection where Iterator.Element == Atom {
                 guard let rvec: Vector3D = atom.rvec else {
                     continue
                 }
-                guard let e = atom.element, let mass: Double = Constants.Chem.atomicMasses[e] else {
+                guard let e = atom.element, let mass: Double = ChemConst.atomicMasses[e] else {
                     continue
                 }
                 totalMass = totalMass + mass

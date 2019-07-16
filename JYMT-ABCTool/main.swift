@@ -8,23 +8,49 @@
 
 import Foundation
 
-print("""
-This is a program under developement to provide a tool for implementing Kraitchman's equations to find the absolute values of the position vector (components) of each atoms in the molecule.
+var saveResults = true
+var writePath = URL(fileURLWithPath: "")
+var sabcSet = SABCFile()
+var fileName = ""
 
-The program will take data of A,B,C (rotational constants) of the original molecule and the ones after single isotopic substitution.
+fileInput(name: "SABC file") { (filePath) -> Bool in
+    sabcSet = try SABCFile(fromPath: filePath)
+    if !sabcSet.isValid {
+        print("Not a valid SABC file.")
+        return false
+    }
+    fileName = URL(fileURLWithPath: filePath).lastPathComponentName
+    return true
+}
 
-The goal for the program is to design a tool to make the JYMT-StructureFinder more practical in lab use.
+fileInput(message: "XYZ exporting Path (leave empty if not to save)", successMessage: false) { (writePathInput) in
+    if writePathInput.isEmpty {
+        saveResults = false
+        print("The results will not be saved.")
+        return true
+    } else {
+        let writePathUrl = URL(fileURLWithPath: writePathInput)
+        guard writePathUrl.hasDirectoryPath else {
+            print("Not a valid directory. Please try again.")
+            return false
+        }
+        writePath = writePathUrl
+        print("The result will be saved in \(writePath.relativeString).")
+        return true
+    }
+}
 
-Keep an eye on it.
+print("Number of atoms: \(sabcSet.substituted!.count)")
 
-""")
+let tInitial = Date()
+let xyzSet = sabcSet.calculateToXYZ()
+let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
 
-//let i = tensorIFromABC(1936.55844e6, 1228.63567e6, 1127.02099e6)
-//let ip = tensorIFromABC(1929.20910e6, 1226.98871e6, 1125.97313e6)
-//let di = ip - i
-//let p = tensorDeltaP(fromDeltaI: di)
-//let v = 1e10 * rVecFromSIS(mu: reducedMass(M: 120 * PhysConst.amu, deltaM: PhysConst.amu), deltaP: p!, I: i)!
-//print(ip.matrixForm)
-//print(di.matrixForm)
-//print(p!.matrixForm)
-//print(v)
+print("**------------Results------------**")
+print(xyzSet)
+
+if saveResults {
+    xyzSet.safelyExport(toFile: writePath.appendingPathComponent(fileName + ".xyz"))
+}
+print("-----------------------------------")
+print("Computation time: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
