@@ -227,6 +227,12 @@ enum Constants {
             return electronChargeMagnitude
         }
         
+        static let atomicMassUnit = 1.660539066e-27
+        
+        static var amu: Double {
+            return atomicMassUnit
+        }
+        
     }
 }
 

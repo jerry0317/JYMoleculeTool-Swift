@@ -18,3 +18,13 @@ The goal for the program is to design a tool to make the JYMT-StructureFinder mo
 Keep an eye on it.
 
 """)
+
+//let i = tensorIFromABC(1936.55844e6, 1228.63567e6, 1127.02099e6)
+//let ip = tensorIFromABC(1929.20910e6, 1226.98871e6, 1125.97313e6)
+//let di = ip - i
+//let p = tensorDeltaP(fromDeltaI: di)
+//let v = 1e10 * rVecFromSIS(mu: reducedMass(M: 120 * PhysConst.amu, deltaM: PhysConst.amu), deltaP: p!, I: i)!
+//print(ip.matrixForm)
+//print(di.matrixForm)
+//print(p!.matrixForm)
+//print(v)
