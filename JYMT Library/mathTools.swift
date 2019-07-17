@@ -186,15 +186,31 @@ extension Vector3D {
 }
 
 struct Matrix {
+    /**
+     The number of rows of the matrix.
+     */
     let rows: Int
+    
+    /**
+     The number of columns of the matrix.
+     */
     let columns: Int
     
+    /**
+     Privately-accessable grid to store the entries of the matrix row-by-row.
+     */
     private var grid: [Double]
     
+    /**
+     The size (dimension) of the matrix. Returns `(rows, columns)` as a tuple.
+     */
     var size: (Int, Int) {
         return (rows, columns)
     }
     
+    /**
+     The standard 2-D array to represent the matrix.
+     */
     var content: [[Double]] {
         return grid.chunked(into: columns)
     }
@@ -216,6 +232,9 @@ struct Matrix {
         self.grid = grid
     }
     
+    /**
+     To determine if a set of indices (row and column) are valid in this matrix.
+     */
     func indexIsValid(_ row: Int, _ column: Int) -> Bool {
         return row >= 0 && row < rows && column >= 0 && column < columns
     }
@@ -252,10 +271,16 @@ extension Matrix: CustomStringConvertible {
 }
 
 extension Matrix {
+    /**
+     The number of entries in the matrix.
+     */
     var numOfElements: Int {
         return rows * columns
     }
     
+    /**
+     The negated matrix.
+     */
     func negated() -> Matrix {
         return Matrix(rows, columns, grid: self.grid.map { -$0 })
     }
@@ -283,7 +308,8 @@ extension Matrix {
 
 extension Matrix {
     /**
-     Credit: https://github.com/hollance/Matrix/blob/master/Matrix.swift
+     Gives a string to represent the matrix form of the matrix.
+     - Credit: https://github.com/hollance/Matrix/blob/master/Matrix.swift
      */
     var matrixForm: String {
         var description = ""
@@ -326,10 +352,12 @@ extension Double {
     }
 }
 
-/**
- - Credit: https://www.hackingwithswift.com/example-code/language/how-to-split-an-array-into-chunks
- */
+
 extension Array {
+    /**
+     Separate an array into a 2-D array with each sub-array having the same given size.
+     - Credit: https://www.hackingwithswift.com/example-code/language/how-to-split-an-array-into-chunks
+     */
     func chunked(into size: Int) -> [[Element]] {
         return stride(from: 0, to: count, by: size).map {
             Array(self[$0 ..< Swift.min($0 + size, count)])
@@ -409,6 +437,9 @@ func combinationsDynProgrammed<T>(_ elements: Array<T>, _ k: Int) -> Set<Set<T>>
 }
 
 extension Array where Element: Equatable {
+    /**
+     In the cyclic transformation, gives the next item to some item in the array, with certain distance (default 1). If the distance is negative, then it gives the item before (with certain distance) to the item.
+     */
     func cyclicallyNext(to item: Element, distance: Int = 1) -> Element? {
         guard let index = self.firstIndex(of: item) else {
             return nil
@@ -418,10 +449,16 @@ extension Array where Element: Equatable {
         return self[indexAfter]
     }
     
+    /**
+     The index cylically after a given index.
+     */
     func index(cyclicallyAfter i: Int) -> Int {
         return index(i, cyclicallyOffsetBy: 1)
     }
     
+    /**
+     The index with cylic transformation certain times.
+     */
     func index(_ i: Int, cyclicallyOffsetBy k: Int) -> Int {
         guard count != 0 else {
             return startIndex
@@ -438,6 +475,9 @@ extension Array where Element: Equatable {
 }
 
 extension Array {
+    /**
+     Gives a 2-D array consists of every possible cyclic transformation over the array.
+     */
     func cyclicTransformed() -> [[Element]] {
         var transformedList = [self]
         var beingTransformed = self

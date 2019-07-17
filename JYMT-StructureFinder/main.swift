@@ -8,6 +8,14 @@
 
 import Foundation
 
+#if DEBUG
+#else
+print()
+print("JYMT-StructureFinder")
+print("Copyright © 2019 Jerry Yan. All rights reserved.")
+print()
+#endif
+
 var saveResults = true
 var writePath = URL(fileURLWithPath: "")
 

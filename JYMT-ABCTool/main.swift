@@ -8,6 +8,14 @@
 
 import Foundation
 
+#if DEBUG
+#else
+print()
+print("JYMT-ABCTool")
+print("Copyright © 2019 Jerry Yan. All rights reserved.")
+print()
+#endif
+
 var saveResults = true
 var writePath = URL(fileURLWithPath: "")
 var sabcSet = SABCFile()
@@ -43,7 +51,7 @@ fileInput(message: "XYZ exporting Path (leave empty if not to save)", successMes
 print("Number of atoms: \(sabcSet.substituted!.count)")
 
 let tInitial = Date()
-let xyzSet = sabcSet.calculateToXYZ()
+let xyzSet = sabcSet.exportToXYZ()
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
 
 print("**------------Results------------**")
@@ -54,3 +62,4 @@ if saveResults {
 }
 print("-----------------------------------")
 print("Computation time: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
+print()

@@ -67,8 +67,65 @@ The tool will print the output to the console, and there is an option to save th
   - The default value is 2.
 
 ## ABC Tool
-This is a program currently **under development** to provide a tool for implementing Kraitchman's equations to find the absolute values of the position vector (components) of each atoms in the molecule.
+This is a tool for implementing [Kraitchman's equations](https://doi.org/10.1119/1.1933338) (J. Kraitchman, *Am. J. Phys.*, **21**, 17 (1953)) to find the absolute values of the position vector (components) of each atoms in the molecule. The program takes data of A,B,C (rotational constants) of the original molecule and the ones after single isotopic substitution.
 
-The program will take data of A,B,C (rotational constants) of the original molecule and the ones after single isotopic substitution.
+### Codes
+The tool uses files in folders `JYMT Library` and `JYMT-ABCTool`.
 
-The goal for the program is to design a tool to make the JYMT-StructureFinder more practical in lab use.
+### Requirements
+The code is written on Swift 5.1, thus any compilation should be performed on the compiler of Swift 5.1 or newer versions. The executables should be working on environments that has Swift 5.1 installed.
+
+|System Version|Swift Version|Status|
+|---|---|---|
+|macOS 10.14.5|Swift 5.1|Verified|
+|macOS 10.15 beta|Swift 5.1|Verified|
+|Ubuntu 18.04.2 LTS|Swift 5.1|Not verified|
+
+To learn how to install Swift, please [visit here](https://swift.org/download/#snapshots). In the "Snapshots" section, select **Swift 5.1 Development**.
+
+### Use
+- Download the executable from the release *(Not available yet)*
+- or compile by
+```
+swiftc JYMT\ Library/*.swift JYMT-ABCTool/*.swift -O -o JYMT-ABCTool-executable
+```
+and run the program by
+```
+./JYMT-ABCTool-executable
+```
+
+### Input
+The tool takes a `.sabc` file as input for the rotational constants and the total mass of the original molecule, and the rotational constants and the substituted atom for each single isotopic substitution. The `.sabc` file looks like below.
+
+```
+1936.55844    1228.63567    1127.02099    120
+Comment line
+1929.20910    1226.98871    1125.97313    13.003355    C
+1935.85590    1222.67766    1121.80384    13.003355    C
+1928.89130    1221.20643    1119.50458    13.003355    C
+1911.05500    1227.55856    1118.84796    13.003355    C
+1926.66350    1226.18046    1121.82067    13.003355    C
+1935.45920    1225.01889    1123.79430    13.003355    C
+1915.87640    1221.12368    1125.75989    13.003355    C
+1912.26360    1217.63188    1123.33119    13.003355    C
+1929.98960    1211.19930    1110.61206    13.003355    C
+1924.63160    1209.41975    1106.97962    13.003355    C
+```
+
+(Source: Neeman, Avilés Moreno, and Huet, J. Chem. Phys. **147**, 214305 (2017).)
+
+- The first line of the file consists of the three rotational constants A, B, and C *with unit in Megahertz (MHz)*, separated by blank spaces, followed by the total mass of the molecule *with unit in amu*.
+- The second line is an optional comment line. It can be blank, but the line must exist.
+- Starting from the third line to the last are the information of single isotopic substitution. Each line consists of the three rotational constants A, B, and C *with unit in Megahertz (MHz)* after single isotopic substitution, followed by the substituted mass *with unit in amu*, and the substituted element. Each block of information is separated by blank spaces.
+
+(Note: The actual file extension does not need to be `.sabc`. However, the format must be correct for the tool to work.)
+
+### Output
+The tool will print the output to the console, and there is an option to save the results as an `.xyz` file.
+
+### Options
+- SABC file path **(Required)**
+  - You will be prompted to enter the input sabc file path. You can either enter the relative/absolute file path or drag the file to the console.
+- XYZ exporting path (Optional)
+  - If you want to save the results, please enter/drag the folder where you want to save the results in.
+  - If you don't want to save the results, just leave it empty.

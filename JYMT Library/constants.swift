@@ -147,10 +147,16 @@ enum Constants {
             case chlorine = "Cl"
             case argon = "Ar"
             
+            /**
+             The atomic mass of the element. Unit in `amu`.
+             */
             var atomicMass: Double {
                 ChemConst.atomicMasses[self]!
             }
             
+            /**
+             The atomic mass of the element. Unit in `kg`.
+             */
             var mass: Double {
                 atomicMass * PhysConst.amu
             }
@@ -240,8 +246,14 @@ enum Constants {
             return electronChargeMagnitude
         }
         
+        /**
+         The atomic mass unit. In SI unit `kg`.
+         */
         static let atomicMassUnit = 1.660539066e-27
         
+        /**
+         Shorthand of atomic mass unit.
+         */
         static var amu: Double {
             return atomicMassUnit
         }

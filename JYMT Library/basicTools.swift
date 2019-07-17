@@ -129,6 +129,9 @@ func printStringInLine(_ str: String) {
     #endif
 }
 
+/**
+ The input for file/directory paths with a `tryAction` to determine the pass state of the inner loop.
+*/
 func fileInput(name: String = "", message: String? = nil, successMessage: Bool = true, tryAction: (String) throws -> Bool) {
     var filePass = false
     var toPrint = ""
@@ -149,6 +152,3 @@ func fileInput(name: String = "", message: String? = nil, successMessage: Bool =
         }
     }
 }
-
-
-

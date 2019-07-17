@@ -190,6 +190,9 @@ struct XYZFile: File {
         try save(xyzString!, asURL: path)
     }
     
+    /**
+     Safely export the xyz file to URL. Print the error when the error raises.
+     */
     func safelyExport(toFile path: URL) {
         do {
             try export(toFile: path)
@@ -246,6 +249,9 @@ struct TextFile: File {
 }
 
 struct SABCFile: File {
+    /**
+     The `File` protocol-compliant content.
+     */
     var content: String {
         get {
             exportToString(original: original, comment: comment, substituted: substituted) ?? ""
@@ -255,12 +261,24 @@ struct SABCFile: File {
         }
     }
     
+    /**
+     The rotational constants of the original molecules.
+     */
     var original: ABCTuple?
     
+    /**
+     The comment line of `.sabc` file.
+     */
     var comment: String?
     
+    /**
+     The rotational constants of each single isotopic substitution.
+     */
     var substituted: [ABCTuple]?
     
+    /**
+     Returns true if both `original` and `substituted` are not `nil`.
+     */
     var isValid: Bool {
         original != nil && substituted != nil
     }
@@ -282,6 +300,9 @@ struct SABCFile: File {
         try open(fromURL: urlPath, encoding: encoding)
     }
     
+    /**
+     Export the current set to an optional string.
+     */
     private func exportToString(original: ABCTuple?, comment: String?, substituted: [ABCTuple]?) -> String? {
         guard let ori = original, let subs = substituted else {
             return nil
@@ -298,6 +319,9 @@ struct SABCFile: File {
         return str
     }
     
+    /**
+     Import the set from an optional string.
+     */
     private func importFromString(_ str: String) -> (ABCTuple?, String?, [ABCTuple]?) {
         let lines = str.split(omittingEmptySubsequences: false, whereSeparator: {$0.isNewline})
         var originalFromFile: ABCTuple? = nil
@@ -348,33 +372,21 @@ struct SABCFile: File {
         return (originalFromFile, commentFromFile, substitutedFromFile)
     }
     
-    func calculateToAtoms() -> [Atom] {
+    /**
+     Calculate the information of current information in the set to an array of atoms.
+     */
+    func exportToAtoms() -> [Atom] {
         guard let oABC = original, let sABCs = substituted, oABC.type == .original else {
             return []
         }
-        var results = [Atom]()
-        
-        let iInitial = oABC.inertiaTensor
-        
-        for sABC in sABCs {
-            guard sABC.type == .singleSubstituted, let sElement = sABC.substitutedElement, let deltaM = sABC.deltaMass else {
-                continue
-            }
-            let iSub = sABC.inertiaTensor
-            let deltaI = iSub - iInitial
-            
-            let mu = reducedMass(M: oABC.totalMass, deltaM: deltaM)
-            guard let deltaP = tensorDeltaP(fromDeltaI: deltaI), let rVec = rVecFromSIS(mu: mu, deltaP: deltaP, I: iInitial) else {
-                continue
-            }
-            results.append(Atom(sElement, rVec * 1e10))
-        }
-        
-        return results
+        return fromSISToAtoms(original: oABC, substituted: sABCs)
     }
     
-    func calculateToXYZ() -> XYZFile {
-        return XYZFile(fromAtoms: calculateToAtoms())
+    /**
+     Export the information of the current set to an XYZ set.
+     */
+    func exportToXYZ() -> XYZFile {
+        return XYZFile(fromAtoms: exportToAtoms())
     }
 }
 
