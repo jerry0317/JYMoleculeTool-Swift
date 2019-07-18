@@ -3,7 +3,7 @@ The project provides tools for analyzing molecules based on physical and chemica
 
 The project currently includes the following tools:
 - Structure Finder
-- ABC Tool **(New project, under development)**
+- ABC Tool
 
 ## Structure Finder
 Structure Finder provides the ability to calculate the possible structures of a molecule from the known absolute values (or uncertain-signed values) of positions |x|, |y|, and |z| for each atom in the molecule. The latter data can be obtained via the single isotope substitution based on Kraitchman's equations.
@@ -23,7 +23,7 @@ The code is written on Swift 5.1, thus any compilation should be performed on th
 To learn how to install Swift, please [visit here](https://swift.org/download/#snapshots). In the "Snapshots" section, select **Swift 5.1 Development**.
 
 ### Use
-- Download the executable from the release *(Not available yet)*
+- Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest).
 - or compile by
 ```
 swiftc JYMT\ Library/*.swift JYMT-StructureFinder/*.swift -O -o JYMT-StructureFinder-executable
@@ -84,7 +84,7 @@ The code is written on Swift 5.1, thus any compilation should be performed on th
 To learn how to install Swift, please [visit here](https://swift.org/download/#snapshots). In the "Snapshots" section, select **Swift 5.1 Development**.
 
 ### Use
-- Download the executable from the release *(Not available yet)*
+- Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest).
 - or compile by
 ```
 swiftc JYMT\ Library/*.swift JYMT-ABCTool/*.swift -O -o JYMT-ABCTool-executable

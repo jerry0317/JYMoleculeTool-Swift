@@ -210,6 +210,15 @@ struct Matrix {
         }
     }
     
+    var columnGrid: [Double] {
+        get {
+            listOfColumns.flatMap { $0 }
+        }
+        set {
+            
+        }
+    }
+    
     /**
      The size (dimension) of the matrix. Returns `(rows, columns)` as a tuple.
      */
@@ -218,9 +227,18 @@ struct Matrix {
     }
     
     /**
-     The standard 2-D array to represent the matrix.
+     The standard 2-D array to represent the matrix. (The array of rows)
      */
     var content: [[Double]] {
+        get {
+            listOfRows
+        }
+        set {
+            _setNewRows(newValue)
+        }
+    }
+    
+    var listOfRows: [[Double]] {
         get {
             if columns > 0 {
                 return grid.chunked(into: columns)
@@ -229,7 +247,16 @@ struct Matrix {
             }
         }
         set {
-            _setNewContent(newValue)
+            _setNewRows(newValue)
+        }
+    }
+    
+    var listOfColumns: [[Double]] {
+        get {
+            _transposeTransform(columns, columns, grid: grid)
+        }
+        set {
+            _setNewColumns(newValue)
         }
     }
     
@@ -259,7 +286,7 @@ struct Matrix {
         let m = content.count
         let n = (m == 0 ? 0 : content[0].count)
         var newMatrix = Matrix(m, n)
-        let check = newMatrix._setNewContent(content)
+        let check = newMatrix._setNewRows(content)
         if check {
             self = newMatrix
         } else {
@@ -284,7 +311,16 @@ struct Matrix {
     }
     
     @discardableResult
-    mutating func _setNewContent(_ newValue: [[Double]]) -> Bool {
+    mutating func _setNewColumnGrid(_ newValue: [Double]) -> Bool {
+        guard newValue.count == numOfElements else {
+            return false
+        }
+        listOfRows = _transposeTransform(rows, rows, grid: grid)
+        return true
+    }
+    
+    @discardableResult
+    mutating func _setNewRows(_ newValue: [[Double]]) -> Bool {
         let columnIdentifier = newValue.reduce(true) { (check, row) in
             check ? row.count == columns : false
         }
@@ -295,6 +331,22 @@ struct Matrix {
         let newGrid = newValue.flatMap { $0 }
         grid = newGrid
         return true
+    }
+    
+    @discardableResult
+    mutating func _setNewColumns(_ newValue: [[Double]]) -> Bool {
+        let rowIdentifier = newValue.reduce(true) { (check, column) in
+            check ? column.count == rows : false
+        }
+        guard newValue.count == columns && rowIdentifier else {
+            print("Fail to interpret the 2-D array.")
+            return false
+        }
+        return _setNewColumnGrid(newValue.flatMap { $0 })
+    }
+    
+    private func _transposeTransform(_ a: Int, _ b: Int, grid: [Double]) -> [[Double]] {
+        (0..<a).map { stride(from: $0, to: grid.endIndex, by: b).map({ grid[$0] }) }
     }
     
     subscript(row: Int, column: Int) -> Double {
@@ -333,18 +385,99 @@ extension Matrix {
      The number of entries in the matrix.
      */
     var numOfElements: Int {
-        return rows * columns
+        rows * columns
+    }
+    
+    var isSquareMatrix: Bool {
+        rows == columns
     }
     
     /**
      The negated matrix.
      */
     func negated() -> Matrix {
-        return Matrix(rows, columns, grid: self.grid.map { -$0 })
+        Matrix(rows, columns, grid: self.grid.map { -$0 })
+    }
+    
+    /**
+     The transpose of the matrix.
+     */
+    func transpose() -> Matrix {
+        Matrix(columns, rows, grid: columnGrid)
+    }
+    
+    /**
+     The submatrix of the matrix by eliminating given row and column.
+     */
+    func subMatrix(_ row: Int, _ column: Int) -> Matrix {
+        precondition(indexIsValid(row, column), "Index out of range")
+        var newContent = listOfColumns
+        newContent.remove(at: column)
+        newContent = _transposeTransform(rows, rows, grid: newContent.flatMap { $0 })
+        newContent.remove(at: row)
+        return Matrix(rows - 1, columns - 1, content: newContent)
+    }
+    
+    /**
+     The trace of the matrix.
+     */
+    func trace() -> Double {
+        (0..<min(rows, columns)).reduce(0.0, { $0 + self[$1, $1] })
+    }
+    
+    /**
+     The determinant of  a square matrix. If the matrix is not a square matrix, it returns `Double.nan`.
+     */
+    func determinant() -> Double {
+        guard isSquareMatrix else {
+            return Double.nan
+        }
+        let n = rows
+        
+        switch n {
+        case 0:
+            return 0
+        case 1:
+            return self[0,0]
+        default:
+            var resultValue: Double = 0.0
+            for i in 0..<n {
+                let ai = (i % 2 == 0) ? self[0, i] : -self[0, i]
+                if ai.isZero {
+                    continue
+                }
+                resultValue = resultValue + ai * subMatrix(0, i).determinant()
+            }
+            return resultValue
+        }
+    }
+    
+    /**
+     Shorthand for the determinant.
+     */
+    func det() -> Double {
+        determinant()
     }
 }
 
 extension Matrix {
+    /**
+     The identity matrix.
+     */
+    static func eye(_ rows: Int, _ columns: Int, value: Double = 1) -> Matrix {
+        var eyeMatrix = Matrix(rows, columns)
+        let k = min(rows, columns)
+        for i in 0..<k {
+            eyeMatrix[i, i] = value
+        }
+        return eyeMatrix
+    }
+}
+
+extension Matrix {
+    /**
+     The negation of a matrix.
+     */
     static prefix func - (matrix: Matrix) -> Matrix {
         return matrix.negated()
     }
@@ -403,6 +536,14 @@ extension Matrix {
             }
         }
         return Matrix(n, p, grid: grid)
+    }
+}
+
+postfix operator ′
+
+extension Matrix {
+    static postfix func ′ (value: Matrix) -> Matrix {
+        value.transpose()
     }
 }
 
