@@ -199,7 +199,16 @@ struct Matrix {
     /**
      Privately-accessable grid to store the entries of the matrix row-by-row.
      */
-    private var grid: [Double]
+    private var _grid: [Double]
+    
+    var grid: [Double] {
+        get {
+            return _grid
+        }
+        set {
+            _setNewGrid(newValue)
+        }
+    }
     
     /**
      The size (dimension) of the matrix. Returns `(rows, columns)` as a tuple.
@@ -212,14 +221,23 @@ struct Matrix {
      The standard 2-D array to represent the matrix.
      */
     var content: [[Double]] {
-        return grid.chunked(into: columns)
+        get {
+            if columns > 0 {
+                return grid.chunked(into: columns)
+            } else {
+                return .init(repeating: [], count: rows)
+            }
+        }
+        set {
+            _setNewContent(newValue)
+        }
     }
     
     init(_ rows: Int, _ columns: Int) {
-        precondition(rows >= 0 && columns >= 0, "Rows and columns must be non-negative")
+        precondition(rows >= 0 && columns >= 0, "Rows and columns must be non-negative.")
         self.rows = rows
         self.columns = columns
-        self.grid = .init(repeating: 0, count: rows * columns)
+        self._grid = .init(repeating: 0, count: rows * columns)
     }
     
     init(_ rows: Int, _ columns: Int, repeatedValue: Double) {
@@ -232,11 +250,51 @@ struct Matrix {
         self.grid = grid
     }
     
+    init(_ rows: Int, _ columns: Int, content: [[Double]]) {
+        self.init(rows, columns)
+        self.content = content
+    }
+    
+    init?(_ content: [[Double]]) {
+        let m = content.count
+        let n = (m == 0 ? 0 : content[0].count)
+        var newMatrix = Matrix(m, n)
+        let check = newMatrix._setNewContent(content)
+        if check {
+            self = newMatrix
+        } else {
+            return nil
+        }
+    }
+    
     /**
      To determine if a set of indices (row and column) are valid in this matrix.
      */
     func indexIsValid(_ row: Int, _ column: Int) -> Bool {
         return row >= 0 && row < rows && column >= 0 && column < columns
+    }
+    
+    @discardableResult
+    mutating func _setNewGrid(_ newValue: [Double]) -> Bool {
+        guard newValue.count == numOfElements else {
+            return false
+        }
+        _grid = newValue
+        return true
+    }
+    
+    @discardableResult
+    mutating func _setNewContent(_ newValue: [[Double]]) -> Bool {
+        let columnIdentifier = newValue.reduce(true) { (check, row) in
+            check ? row.count == columns : false
+        }
+        guard newValue.count == rows && columnIdentifier else {
+            print("Fail to interpret the 2-D array.")
+            return false
+        }
+        let newGrid = newValue.flatMap { $0 }
+        grid = newGrid
+        return true
     }
     
     subscript(row: Int, column: Int) -> Double {
@@ -293,6 +351,9 @@ extension Matrix {
 }
 
 extension Matrix {
+    /**
+     Matrix Addition
+     */
     static func + (lhs: Matrix, rhs: Matrix) -> Matrix {
         guard lhs.size == rhs.size else {
             fatalError("Try to add matrices of different sizes.")
@@ -301,8 +362,47 @@ extension Matrix {
         return Matrix(lhs.rows, lhs.columns, grid: grid)
     }
     
+    /**
+     Matrix Subtraction
+     */
     static func - (lhs: Matrix, rhs: Matrix) -> Matrix {
-        return lhs + (-rhs)
+        lhs + (-rhs)
+    }
+    
+    /**
+     Scalar Product
+     */
+    static func * (lhs: Double, rhs: Matrix) -> Matrix {
+        let grid = rhs.grid.map { lhs * $0 }
+        return Matrix(rhs.rows, rhs.columns, grid: grid)
+    }
+    
+    /**
+     Scalar Product
+     */
+    static func * (lhs: Matrix, rhs: Double) -> Matrix {
+        rhs * lhs
+    }
+    
+    /**
+     Matrix multiplication
+     */
+    static func * (lhs: Matrix, rhs: Matrix) -> Matrix? {
+        guard lhs.columns == rhs.rows else {
+            return nil
+        }
+        
+        let (m, n, p) = (lhs.columns, lhs.rows, rhs.columns)
+        var grid = [Double]()
+        for i in 0..<n {
+            for j in 0..<p {
+                grid.append((0...(m - 1)).reduce(0, {
+                    (sum, k) in
+                    sum + lhs[i, k] * rhs[k, j]
+                }))
+            }
+        }
+        return Matrix(n, p, grid: grid)
     }
 }
 
