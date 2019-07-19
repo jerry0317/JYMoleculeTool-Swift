@@ -11,38 +11,38 @@ import Foundation
 /**
  Physical constants.
  */
-typealias PhysConst = Constants.Phys
+public typealias PhysConst = Constants.Phys
 
 /**
  Chemical constants.
  */
-typealias ChemConst = Constants.Chem
+public typealias ChemConst = Constants.Chem
 
 /**
  Chemical Elements.
  */
-typealias ChemElement = ChemConst.Element
+public typealias ChemElement = ChemConst.Element
 
 /**
  Bond codes used by chemical bond types.
  */
-typealias BondCode = ChemConst.BondCode
+public typealias BondCode = ChemConst.BondCode
 
 /**
  Generic constants used in the program.
  */
-enum Constants {
+public enum Constants {
     /**
      Constants in chemistry area.
      */
-    enum Chem {
+    public enum Chem {
         
         /**
          Known bond lengths of chemical bonds. Unit in Angstrom. **(Currently simplified list)**
          
          - **Source:** Allen, F. H., Kennard, O., Watson, D. G., Brammer, L., Orpen, A. G., & Taylor, R. (1987). Tables of bond lengths determined by X-ray and neutron diffraction. Part 1. Bond lengths in organic compounds. Journal of the Chemical Society, Perkin Transactions 2, (12), S1-S19.
          */
-        static let bondLengths: [BondCode: Double] = [
+        public static let bondLengths: [BondCode: Double] = [
             .CC1: 1.4825,
             .CC2: 1.343,
             .CC3: 1.183,
@@ -68,7 +68,7 @@ enum Constants {
          
          - **Source:** pdg.lbl.gov
          */
-        static let atomicMasses: [ChemElement: Double] = [
+        public static let atomicMasses: [ChemElement: Double] = [
             .hydrogen: 1.00794,
             .helium: 4.002602,
             .lithium: 6.941,
@@ -92,7 +92,7 @@ enum Constants {
         /**
          Usual valence of an atom in organic compounds.
          */
-        static let valences: [ChemElement: Int] = [
+        public static let valences: [ChemElement: Int] = [
             .carbon: 4,
             .oxygen: 2,
             .nitrogen: 3,
@@ -103,7 +103,7 @@ enum Constants {
         /**
          The VESPR molecular type.
          */
-        enum VESPRType {
+        public enum VESPRType {
             case ax2e0
             case ax2e1
             case ax2e2
@@ -127,7 +127,7 @@ enum Constants {
         /**
          Chemical Element.
          */
-        enum Element: String {
+        public enum Element: String {
             case hydrogen = "H"
             case helium = "He"
             case lithium = "Li"
@@ -165,7 +165,7 @@ enum Constants {
         /**
          Known bond code.
          */
-        enum BondCode: String {
+        public enum BondCode: String {
             case CC1
             case CC2
             case CC3
@@ -190,71 +190,71 @@ enum Constants {
     /**
      Constants in chemistry area.
      */
-    enum Phys {
+    public enum Phys {
         /**
          Speed of light. In SI unit `m/s`.
          */
-        static let speedOfLight = 299792458.0
+        public static let speedOfLight = 299792458.0
         
         /**
          Shorthand of the speed of light.
          */
-        static var c: Double {
+        public static var c: Double {
             return speedOfLight
         }
         
         /**
          Returns the measurement of the speed of light. *(Beta)*
          */
-        static var cMeasurement: Measurement<UnitSpeed> {
+        public static var cMeasurement: Measurement<UnitSpeed> {
             return Measurement(value: c, unit: UnitSpeed.metersPerSecond)
         }
         
         /**
          Planck constant. In SI unit `J·s`
          */
-        static let planckConstant = 6.626070040e-34
+        public static let planckConstant = 6.626070040e-34
         
         /**
          Shorthand of Planck constant.
          */
-        static var h: Double {
+        public static var h: Double {
             return planckConstant
         }
         
         /**
          Reduced Planck constant. In SI unit `J·s`
          */
-        static let planckConstantReduced = 1.054571800e-34
+        public static let planckConstantReduced = 1.054571800e-34
         
         /**
          Shorthand of reduced Planck constant.
          */
-        static var hbar: Double {
+        public static var hbar: Double {
             return planckConstantReduced
         }
         
         /**
          Electron charge magnitude. In SI unit `C`.
          */
-        static let electronChargeMagnitude = 1.6021766208e-19
+        public static let electronChargeMagnitude = 1.6021766208e-19
         
         /**
          Shorthand of electron charge magnitude.
          */
-        static var e: Double {
+        public static var e: Double {
             return electronChargeMagnitude
         }
         
         /**
          The atomic mass unit. In SI unit `kg`.
          */
-        static let atomicMassUnit = 1.660539066e-27
+        public static let atomicMassUnit = 1.660539066e-27
         
         /**
          Shorthand of atomic mass unit.
          */
-        static var amu: Double {
+        public static var amu: Double {
             return atomicMassUnit
         }
         

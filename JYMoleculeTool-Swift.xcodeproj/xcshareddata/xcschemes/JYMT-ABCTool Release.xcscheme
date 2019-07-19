@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9D6912A622D67BD0005CA273"
+               BlueprintIdentifier = "JYMoleculeTool-Swift::JYMT-ABCTool"
                BuildableName = "JYMT-ABCTool"
                BlueprintName = "JYMT-ABCTool"
                ReferencedContainer = "container:JYMoleculeTool-Swift.xcodeproj">
@@ -44,7 +44,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9D6912A622D67BD0005CA273"
+            BlueprintIdentifier = "JYMoleculeTool-Swift::JYMT-ABCTool"
             BuildableName = "JYMT-ABCTool"
             BlueprintName = "JYMT-ABCTool"
             ReferencedContainer = "container:JYMoleculeTool-Swift.xcodeproj">
@@ -61,7 +61,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9D6912A622D67BD0005CA273"
+            BlueprintIdentifier = "JYMoleculeTool-Swift::JYMT-ABCTool"
             BuildableName = "JYMT-ABCTool"
             BlueprintName = "JYMT-ABCTool"
             ReferencedContainer = "container:JYMoleculeTool-Swift.xcodeproj">

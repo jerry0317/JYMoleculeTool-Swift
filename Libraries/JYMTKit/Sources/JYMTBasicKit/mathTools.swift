@@ -11,23 +11,23 @@ import Foundation
 /**
  Position vector (three-dimensional)
  */
-struct Vector3D {
-    var x: Double
-    var y: Double
-    var z: Double
+public struct Vector3D {
+    public var x: Double
+    public var y: Double
+    public var z: Double
     
-    init(_ x: Double = 0, _ y: Double = 0, _ z: Double = 0){
+    public init(_ x: Double = 0, _ y: Double = 0, _ z: Double = 0){
         self.x = x
         self.y = y
         self.z = z
     }
     
-    init(_ dictVec: [Double]){
+    public init(_ dictVec: [Double]){
         self.init()
         self.dictVec = dictVec
     }
     
-    subscript(index: Int) -> Double {
+    public subscript(index: Int) -> Double {
         get {
             return dictVec[index]
         }
@@ -39,14 +39,14 @@ struct Vector3D {
     /**
      The magnitude of the vector.
      */
-    var magnitude: Double {
+    public var magnitude: Double {
         return sqrt(self.*self)
     }
     
     /**
      The array form of the vector. Returns [x,y,z].
      */
-    var dictVec: [Double] {
+    public var dictVec: [Double] {
         get {
             return [x, y, z]
         }
@@ -60,21 +60,21 @@ struct Vector3D {
     /**
      Scalar projection of the vector onto another vector (not necessarily normal)
      */
-    func scalarProject(on bVec: Vector3D) -> Double {
+    public func scalarProject(on bVec: Vector3D) -> Double {
         return (self .* bVec) / bVec.magnitude
     }
     
     /**
      Vector projection of the vector onto another vector (not necessarily normal)
      */
-    func vectorProject(on bVec: Vector3D) -> Vector3D {
+    public func vectorProject(on bVec: Vector3D) -> Vector3D {
         return (scalarProject(on: bVec) / bVec.magnitude) * bVec
     }
     
     /**
      The angle between the self vector and another vector in radian.
      */
-    func angleInRad(to bVec: Vector3D) -> Double {
+    public func angleInRad(to bVec: Vector3D) -> Double {
         let cosTheta = (self .* bVec) / (magnitude * bVec.magnitude)
         return acos(cosTheta)
     }
@@ -82,35 +82,35 @@ struct Vector3D {
     /**
      The angle bewteen the self vector and another vector in degree.
      */
-    func angleInDeg(to bVec: Vector3D) -> Double {
+    public func angleInDeg(to bVec: Vector3D) -> Double {
         return angleInRad(to: bVec) * 180.0 / Double.pi
     }
     
     /**
      The angle between the self vector and another vector. Returns a measurement with unit in UnitAngle *(Beta)*.
      */
-    func angle(to bVec: Vector3D) -> Measurement<UnitAngle> {
+    public func angle(to bVec: Vector3D) -> Measurement<UnitAngle> {
         return Measurement(value: angleInRad(to: bVec), unit: UnitAngle.radians)
     }
     
     /**
      The angle between the self vector and another vector. Provided with the desired unit, the function will return the value of the angle. *(Beta)*
      */
-    func angle(to bVec: Vector3D, unit: UnitAngle) -> Double {
+    public func angle(to bVec: Vector3D, unit: UnitAngle) -> Double {
         return angle(to: bVec).converted(to: unit).value
     }
     
 }
 
 extension Vector3D: Hashable {
-    static func == (lhs: Vector3D, rhs: Vector3D) -> Bool {
+    public static func == (lhs: Vector3D, rhs: Vector3D) -> Bool {
         return
             lhs.x == rhs.x &&
                 lhs.y == rhs.y &&
                 lhs.z == rhs.z
     }
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(x)
         hasher.combine(y)
         hasher.combine(z)
@@ -119,13 +119,13 @@ extension Vector3D: Hashable {
 }
 
 extension Vector3D: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         return String(describing: dictVec)
     }
 }
 
 prefix operator -
-extension Vector3D {
+public extension Vector3D {
     /**
      Inverse Vector
      */
@@ -140,7 +140,7 @@ infix operator .*: MultiplicationPrecedence
 infix operator **: MultiplicationPrecedence
 infix operator *: MultiplicationPrecedence
 infix operator /: MultiplicationPrecedence
-extension Vector3D {
+public extension Vector3D {
     /**
      Vector Addition
      */
@@ -185,23 +185,23 @@ extension Vector3D {
     }
 }
 
-struct Matrix {
+public struct Matrix {
     /**
      The number of rows of the matrix.
      */
-    let rows: Int
+    public let rows: Int
     
     /**
      The number of columns of the matrix.
      */
-    let columns: Int
+    public let columns: Int
     
     /**
      Privately-accessable grid to store the entries of the matrix row-by-row.
      */
     private var _grid: [Double]
     
-    var grid: [Double] {
+    public var grid: [Double] {
         get {
             return _grid
         }
@@ -210,7 +210,7 @@ struct Matrix {
         }
     }
     
-    var columnGrid: [Double] {
+    public var columnGrid: [Double] {
         get {
             listOfColumns.flatMap { $0 }
         }
@@ -222,14 +222,14 @@ struct Matrix {
     /**
      The size (dimension) of the matrix. Returns `(rows, columns)` as a tuple.
      */
-    var size: (Int, Int) {
+    public var size: (Int, Int) {
         return (rows, columns)
     }
     
     /**
      The standard 2-D array to represent the matrix. (The array of rows)
      */
-    var content: [[Double]] {
+    public var content: [[Double]] {
         get {
             listOfRows
         }
@@ -238,7 +238,7 @@ struct Matrix {
         }
     }
     
-    var listOfRows: [[Double]] {
+    public var listOfRows: [[Double]] {
         get {
             if columns > 0 {
                 return grid.chunked(into: columns)
@@ -251,7 +251,7 @@ struct Matrix {
         }
     }
     
-    var listOfColumns: [[Double]] {
+    public var listOfColumns: [[Double]] {
         get {
             _transposeTransform(columns, columns, grid: grid)
         }
@@ -260,29 +260,29 @@ struct Matrix {
         }
     }
     
-    init(_ rows: Int, _ columns: Int) {
+    public init(_ rows: Int, _ columns: Int) {
         precondition(rows >= 0 && columns >= 0, "Rows and columns must be non-negative.")
         self.rows = rows
         self.columns = columns
         self._grid = .init(repeating: 0, count: rows * columns)
     }
     
-    init(_ rows: Int, _ columns: Int, repeatedValue: Double) {
+    public init(_ rows: Int, _ columns: Int, repeatedValue: Double) {
         self.init(rows, columns)
         self.grid = .init(repeating: repeatedValue, count: rows * columns)
     }
     
-    init(_ rows: Int, _ columns: Int, grid: [Double]) {
+    public init(_ rows: Int, _ columns: Int, grid: [Double]) {
         self.init(rows, columns)
         self.grid = grid
     }
     
-    init(_ rows: Int, _ columns: Int, content: [[Double]]) {
+    public init(_ rows: Int, _ columns: Int, content: [[Double]]) {
         self.init(rows, columns)
         self.content = content
     }
     
-    init?(_ content: [[Double]]) {
+    public init?(_ content: [[Double]]) {
         let m = content.count
         let n = (m == 0 ? 0 : content[0].count)
         var newMatrix = Matrix(m, n)
@@ -297,7 +297,7 @@ struct Matrix {
     /**
      To determine if a set of indices (row and column) are valid in this matrix.
      */
-    func indexIsValid(_ row: Int, _ column: Int) -> Bool {
+    public func indexIsValid(_ row: Int, _ column: Int) -> Bool {
         return row >= 0 && row < rows && column >= 0 && column < columns
     }
     
@@ -349,7 +349,7 @@ struct Matrix {
         (0..<a).map { stride(from: $0, to: grid.endIndex, by: b).map({ grid[$0] }) }
     }
     
-    subscript(row: Int, column: Int) -> Double {
+    public subscript(row: Int, column: Int) -> Double {
         get {
             precondition(indexIsValid(row, column), "Index out of range")
             return grid[(row * columns) + column]
@@ -363,11 +363,11 @@ struct Matrix {
 }
 
 extension Matrix: Hashable {
-    static func == (lhs: Matrix, rhs: Matrix) -> Bool {
+    public static func == (lhs: Matrix, rhs: Matrix) -> Bool {
         return lhs.rows == rhs.rows && lhs.columns == rhs.columns && lhs.grid == rhs.grid
     }
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(rows)
         hasher.combine(columns)
         hasher.combine(grid)
@@ -375,12 +375,12 @@ extension Matrix: Hashable {
 }
 
 extension Matrix: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         return String(describing: content)
     }
 }
 
-extension Matrix {
+public extension Matrix {
     /**
      The number of entries in the matrix.
      */
@@ -460,7 +460,7 @@ extension Matrix {
     }
 }
 
-extension Matrix {
+public extension Matrix {
     /**
      The identity matrix.
      */
@@ -474,7 +474,7 @@ extension Matrix {
     }
 }
 
-extension Matrix {
+public extension Matrix {
     /**
      The negation of a matrix.
      */
@@ -483,7 +483,7 @@ extension Matrix {
     }
 }
 
-extension Matrix {
+public extension Matrix {
     /**
      Matrix Addition
      */
@@ -541,13 +541,13 @@ extension Matrix {
 
 postfix operator ′
 
-extension Matrix {
+public extension Matrix {
     static postfix func ′ (value: Matrix) -> Matrix {
         value.transpose()
     }
 }
 
-extension Matrix {
+public extension Matrix {
     /**
      Gives a string to represent the matrix form of the matrix.
      - Credit: https://github.com/hollance/Matrix/blob/master/Matrix.swift
@@ -573,7 +573,7 @@ extension Matrix {
     }
 }
 
-extension Double {
+public extension Double {
     /**
      Return the rounded result of a Double with certain digits after decimal.
      */
@@ -593,8 +593,7 @@ extension Double {
     }
 }
 
-
-extension Array {
+public extension Array {
     /**
      Separate an array into a 2-D array with each sub-array having the same given size.
      - Credit: https://www.hackingwithswift.com/example-code/language/how-to-split-an-array-into-chunks
@@ -606,7 +605,7 @@ extension Array {
     }
 }
 
-extension Array where Element == Double {
+public extension Array where Element == Double {
     /**
      Return an array contains Double each rounded certain digits after decimal.
      */
@@ -630,11 +629,11 @@ extension Array where Element == Double {
  - **Credit** for inspiration: `https://stackoverflow.com/questions/25162500/apple-swift-generate-combinations-with-repetition`
  
  */
-func combinations<T>(_ elements: Array<T>, _ k: Int) -> Set<Set<T>> {
+public func combinations<T>(_ elements: Array<T>, _ k: Int) -> Set<Set<T>> {
     return combinations(ArraySlice(elements), k)
 }
 
-func combinations<T>(_ elements: ArraySlice<T>, _ k: Int) -> Set<Set<T>> {
+public func combinations<T>(_ elements: ArraySlice<T>, _ k: Int) -> Set<Set<T>> {
     if k <= 0 {
         return Set([Set()])
     }
@@ -663,7 +662,7 @@ func combinations<T>(_ elements: ArraySlice<T>, _ k: Int) -> Set<Set<T>> {
 /**
  Utilize the cache to implement the memoized dynamic programming of combinations. Stores the combinations of indices in to the cache.
  */
-func combinationsDynProgrammed<T>(_ elements: Array<T>, _ k: Int) -> Set<Set<T>> {
+public func combinationsDynProgrammed<T>(_ elements: Array<T>, _ k: Int) -> Set<Set<T>> {
     let n = elements.count
     let indices = Array(0...(n - 1))
     let combTuple = CombTuple(n,k)
@@ -677,7 +676,7 @@ func combinationsDynProgrammed<T>(_ elements: Array<T>, _ k: Int) -> Set<Set<T>>
     return Set(indexComb!.map({ Set($0.map({ elements[$0] })) }))
 }
 
-extension Array where Element: Equatable {
+public extension Array where Element: Equatable {
     /**
      In the cyclic transformation, gives the next item to some item in the array, with certain distance (default 1). If the distance is negative, then it gives the item before (with certain distance) to the item.
      */
@@ -715,7 +714,7 @@ extension Array where Element: Equatable {
     }
 }
 
-extension Array {
+public extension Array {
     /**
      Gives a 2-D array consists of every possible cyclic transformation over the array.
      */

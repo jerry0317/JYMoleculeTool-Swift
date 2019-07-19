@@ -11,15 +11,15 @@ import Foundation
 /**
  The structure contains the information of rotational constants and single isotopic substitutions (SIS).
  */
-struct ABCTuple {
-    var A: Double = 0
-    var B: Double = 0
-    var C: Double = 0
+public struct ABCTuple {
+    public var A: Double = 0
+    public var B: Double = 0
+    public var C: Double = 0
     
     /**
      The type of the tuple.
      */
-    enum ABCType {
+    public enum ABCType {
         case original
         case singleSubstituted
     }
@@ -27,27 +27,27 @@ struct ABCTuple {
     /**
      The type of the tuple to determine if the molecule was original or after single isotopic substitution.
      */
-    var type: ABCType
+    public var type: ABCType
     
     /**
      The element that has been substituted in the SIS.
      */
-    var substitutedElement: ChemElement? = nil
+    public var substitutedElement: ChemElement? = nil
     
     /**
      The atomic mass of the substituted element, unit in `amu`.
      */
-    var substitutedAtomicMass: Double? = nil
+    public var substitutedAtomicMass: Double? = nil
     
     /**
      The total atomic mass of the molecule, unit in `amu`.
      */
-    var totalAtomicMass: Double = 0
+    public var totalAtomicMass: Double = 0
     
     /**
      The change of atomic mass, calculated from the substituted element. Unit in `amu`.
      */
-    var deltaAtomicMass: Double? {
+    public var deltaAtomicMass: Double? {
         guard type == .singleSubstituted, let mass = substitutedAtomicMass, let element = substitutedElement else {
             return nil
         }
@@ -57,7 +57,7 @@ struct ABCTuple {
     /**
      The change of mass, unit in `kg`.
      */
-    var deltaMass: Double? {
+    public var deltaMass: Double? {
         if deltaAtomicMass == nil {
             return nil
         } else {
@@ -68,7 +68,7 @@ struct ABCTuple {
     /**
      The total mass of the molcule, unit in `kg`.
      */
-    var totalMass: Double {
+    public var totalMass: Double {
         totalAtomicMass * PhysConst.amu
     }
     
@@ -79,7 +79,7 @@ struct ABCTuple {
         return tensorIFromABC(A, B, C)
     }
     
-    subscript(index: Int) -> Double {
+    public subscript(index: Int) -> Double {
         get {
             switch index {
             case 0:
@@ -107,11 +107,11 @@ struct ABCTuple {
         }
     }
     
-    init(_ type: ABCType = .original){
+    public init(_ type: ABCType = .original){
         self.type = type
     }
     
-    init(_ A: Double, _ B: Double, _ C: Double, totalMass: Double, type: ABCType = .original, substitutedElement sElement: ChemElement? = nil, substitutedMass sMass: Double? = nil) {
+    public init(_ A: Double, _ B: Double, _ C: Double, totalMass: Double, type: ABCType = .original, substitutedElement sElement: ChemElement? = nil, substitutedMass sMass: Double? = nil) {
         self.A = A
         self.B = B
         self.C = C
@@ -125,7 +125,7 @@ struct ABCTuple {
 /**
  Generate the tensor of inertia from the rotational constants along the principal axes.
  */
-func tensorIFromABC(_ A: Double, _ B: Double, _ C: Double) -> Matrix {
+public func tensorIFromABC(_ A: Double, _ B: Double, _ C: Double) -> Matrix {
     var tensorI = Matrix(3,3)
     let abc = [A, B, C]
     for (i, value) in abc.enumerated() {
@@ -137,14 +137,14 @@ func tensorIFromABC(_ A: Double, _ B: Double, _ C: Double) -> Matrix {
 /**
  Returns the reduced mass given the original mass and the mass change.
  */
-func reducedMass(M: Double, deltaM: Double) -> Double {
+public func reducedMass(M: Double, deltaM: Double) -> Double {
     return M * deltaM / (M + deltaM)
 }
 
 /**
  Generate the tensor Delta P from the change of inertia tensor Delta I.
  */
-func tensorDeltaP(fromDeltaI deltaI: Matrix) -> Matrix? {
+public func tensorDeltaP(fromDeltaI deltaI: Matrix) -> Matrix? {
     guard deltaI.size == (3,3) else {
         return nil
     }
@@ -161,7 +161,7 @@ func tensorDeltaP(fromDeltaI deltaI: Matrix) -> Matrix? {
 /**
  Calculate the position vector (all absolute valued) <|x|, |y|, |z|> from the reduced mass, delta P tensor, and the original inertia tensor.
  */
-func rVecFromSIS(mu: Double, deltaP: Matrix, I: Matrix, errLevel: Double = 0.5) -> Vector3D? {
+public func rVecFromSIS(mu: Double, deltaP: Matrix, I: Matrix, errLevel: Double = 0.5) -> Vector3D? {
     guard deltaP.size == (3,3) && I.size == (3,3) else {
         return nil
     }
@@ -190,7 +190,7 @@ func rVecFromSIS(mu: Double, deltaP: Matrix, I: Matrix, errLevel: Double = 0.5) 
 /**
  Calculate from a given original ABC and an array of substituted ABC to an array of atoms.
  */
-func fromSISToAtoms(original oABC: ABCTuple, substituted sABCs: [ABCTuple]) -> [Atom] {
+public func fromSISToAtoms(original oABC: ABCTuple, substituted sABCs: [ABCTuple]) -> [Atom] {
     var results = [Atom]()
     
     let iInitial = oABC.inertiaTensor

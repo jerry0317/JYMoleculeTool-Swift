@@ -13,14 +13,14 @@ import Foundation
  
  - Provide ability to open the file from URL and save the file from URL.
  */
-protocol File {
+public protocol File {
     /**
      The content (raw in string) of the file.
      */
     var content: String { get set }
 }
 
-extension File {
+public extension File {
     /**
      Open the file from a given URL with certain encoding.
      */
@@ -49,47 +49,47 @@ extension File {
 /**
  Structure of `.xyz` file.
  */
-struct XYZFile: File {
+public struct XYZFile: File {
     /**
      The number of atoms. The first line.
      */
-    var count: Int?
+    public var count: Int?
     
     /**
      The second line. Usually energy.
      */
-    var note: String?
+    public var note: String?
     
     /**
      The information of atoms contained in the molecule.
      */
-    var atoms: [Atom]?
+    public var atoms: [Atom]?
     
-    init(){
+    public init(){
         
     }
     
-    init(fromString str: String) {
+    public init(fromString str: String) {
         (count, note, atoms) = importFromString(str)
     }
     
-    init(fromURL url: URL, encoding: String.Encoding = .utf8) throws {
+    public init(fromURL url: URL, encoding: String.Encoding = .utf8) throws {
         try open(fromURL: url, encoding: encoding)
     }
     
-    init(fromPath path: String, encoding: String.Encoding = .utf8) throws {
+    public init(fromPath path: String, encoding: String.Encoding = .utf8) throws {
         let urlPath = URL(fileURLWithPath: path)
         try open(fromURL: urlPath, encoding: encoding)
     }
     
-    init(fromAtoms atoms: [Atom]) {
+    public init(fromAtoms atoms: [Atom]) {
         self.importFromAtoms(atoms)
     }
     
     /**
      The `File` protocol-compliant content.
      */
-    var content: String {
+    public var content: String {
         get {
             return xyzString ?? ""
         }
@@ -101,7 +101,7 @@ struct XYZFile: File {
     /**
      The xyz string.
      */
-    var xyzString: String? {
+    public var xyzString: String? {
         guard count != nil && note != nil && atoms != nil else {
             return nil
         }
@@ -167,7 +167,7 @@ struct XYZFile: File {
     /**
      Import the xyz file from atoms.
      */
-    mutating func importFromAtoms(_ atomList: [Atom], note comment: String = "") {
+    public mutating func importFromAtoms(_ atomList: [Atom], note comment: String = "") {
         count = atomList.count
         note = comment
         atoms = atomList
@@ -176,14 +176,14 @@ struct XYZFile: File {
     /**
      Errors describing the xyz exporting process.
      */
-    enum xyzExportError: Error {
+    public enum xyzExportError: Error {
         case xyzStringIsNil
     }
     
     /**
      Export the xyz file to URL.
      */
-    func export(toFile path: URL) throws {
+    public func export(toFile path: URL) throws {
         guard xyzString != nil else {
             throw xyzExportError.xyzStringIsNil
         }
@@ -193,7 +193,7 @@ struct XYZFile: File {
     /**
      Safely export the xyz file to URL. Print the error when the error raises.
      */
-    func safelyExport(toFile path: URL) {
+    public func safelyExport(toFile path: URL) {
         do {
             try export(toFile: path)
         } catch let error {
@@ -203,7 +203,7 @@ struct XYZFile: File {
 }
 
 extension XYZFile: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         guard let ats = atoms else {
             return "(Invalid Set)"
         }
@@ -214,17 +214,17 @@ extension XYZFile: CustomStringConvertible {
 /**
  The structure of text file. Usually indicates `.txt` files.
  */
-struct TextFile: File {
+public struct TextFile: File {
     /**
      The `File` protocol-compliant content.
      */
-    var content: String = ""
+    public var content: String = ""
     
-    init() {
+    public init() {
         
     }
     
-    init(fromURL url: URL, encoding: String.Encoding = .utf8) throws {
+    public init(fromURL url: URL, encoding: String.Encoding = .utf8) throws {
         try open(fromURL: url, encoding: encoding)
     }
     
@@ -235,7 +235,7 @@ struct TextFile: File {
      
      - The function is designed in this way to make it similar to the `Swift.print` function.
      */
-    mutating func add(_ item: Any = "", terminator: String = "\n") {
+    public mutating func add(_ item: Any = "", terminator: String = "\n") {
         let str = String(describing: item)
         content.append(str + terminator)
     }
@@ -243,16 +243,16 @@ struct TextFile: File {
     /**
      Print the content of the text file with optional terminator.
      */
-    func print(terminator: String = "\n") {
+    public func print(terminator: String = "\n") {
         Swift.print(content, terminator: terminator)
     }
 }
 
-struct SABCFile: File {
+public struct SABCFile: File {
     /**
      The `File` protocol-compliant content.
      */
-    var content: String {
+    public var content: String {
         get {
             exportToString(original: original, comment: comment, substituted: substituted) ?? ""
         }
@@ -264,38 +264,38 @@ struct SABCFile: File {
     /**
      The rotational constants of the original molecules.
      */
-    var original: ABCTuple?
+    public var original: ABCTuple?
     
     /**
      The comment line of `.sabc` file.
      */
-    var comment: String?
+    public var comment: String?
     
     /**
      The rotational constants of each single isotopic substitution.
      */
-    var substituted: [ABCTuple]?
+    public var substituted: [ABCTuple]?
     
     /**
      Returns true if both `original` and `substituted` are not `nil`.
      */
-    var isValid: Bool {
+    public var isValid: Bool {
         original != nil && substituted != nil
     }
     
-    init() {
+    public init() {
         
     }
     
-    init(fromString str: String) {
+    public init(fromString str: String) {
         (original, comment, substituted) = importFromString(str)
     }
     
-    init(fromURL url: URL, encoding: String.Encoding = .utf8) throws {
+    public init(fromURL url: URL, encoding: String.Encoding = .utf8) throws {
         try open(fromURL: url, encoding: encoding)
     }
     
-    init(fromPath path: String, encoding: String.Encoding = .utf8) throws {
+    public init(fromPath path: String, encoding: String.Encoding = .utf8) throws {
         let urlPath = URL(fileURLWithPath: path)
         try open(fromURL: urlPath, encoding: encoding)
     }
@@ -375,7 +375,7 @@ struct SABCFile: File {
     /**
      Calculate the information of current information in the set to an array of atoms.
      */
-    func exportToAtoms() -> [Atom] {
+    public func exportToAtoms() -> [Atom] {
         guard let oABC = original, let sABCs = substituted, oABC.type == .original else {
             return []
         }
@@ -385,12 +385,12 @@ struct SABCFile: File {
     /**
      Export the information of the current set to an XYZ set.
      */
-    func exportToXYZ() -> XYZFile {
+    public func exportToXYZ() -> XYZFile {
         return XYZFile(fromAtoms: exportToAtoms())
     }
 }
 
-extension URL {
+public extension URL {
     /**
      The last path component name of the url.
      

@@ -18,19 +18,23 @@ The code is written on Swift 5.1, thus any compilation should be performed on th
 |---|---|---|
 |macOS 10.14.5|Swift 5.1|Verified|
 |macOS 10.15 beta|Swift 5.1|Verified|
-|Ubuntu 18.04.2 LTS|Swift 5.1|Verified|
+|Ubuntu 18.04.2 LTS|Swift 5.1|Not Verified|
 
 To learn how to install Swift, please [visit here](https://swift.org/download/#snapshots). In the "Snapshots" section, select **Swift 5.1 Development**.
 
-### Use
+### Usage
 - Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest).
-- or compile by
+- Alternatively, run the program directly by
 ```
-swiftc JYMT\ Library/*.swift JYMT-StructureFinder/*.swift -O -o JYMT-StructureFinder-executable
+swift run -c release JYMT-StructureFinder
 ```
-and run the program by
+- Or compile the executable by
 ```
-./JYMT-StructureFinder-executable
+swift build --product JYMT-StructureFinder -c release; mv ./.build/release/JYMT-StructureFinder JYMT-StructureFinder
+```
+and run the executable by
+```
+./JYMT-StructureFinder
 ```
 
 *Note: Make sure the environment installed Swift 5.1. The Swift 5.0 compiler won't compile as there will be some errors.*
@@ -83,15 +87,19 @@ The code is written on Swift 5.1, thus any compilation should be performed on th
 
 To learn how to install Swift, please [visit here](https://swift.org/download/#snapshots). In the "Snapshots" section, select **Swift 5.1 Development**.
 
-### Use
+### Usage
 - Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest).
-- or compile by
+- Alternatively, run the program directly by
 ```
-swiftc JYMT\ Library/*.swift JYMT-ABCTool/*.swift -O -o JYMT-ABCTool-executable
+swift run -c release JYMT-ABCTool
 ```
-and run the program by
+- Or compile the executable by
 ```
-./JYMT-ABCTool-executable
+swift build --product JYMT-ABCTool -c release; mv ./.build/release/JYMT-ABCTool JYMT-ABCTool
+```
+and run the executable by
+```
+./JYMT-ABCTool
 ```
 
 ### Input

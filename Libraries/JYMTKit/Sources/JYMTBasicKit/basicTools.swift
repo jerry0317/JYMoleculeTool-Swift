@@ -11,7 +11,7 @@ import Foundation
 /**
  User-friendly input
  */
-func input(name: String, type: String, defaultValue: Any? = nil, intRange:ClosedRange<Int>? = nil, doubleRange: ClosedRange<Double>? = nil, printAfterSec: Bool = false) -> String {
+public func input(name: String, type: String, defaultValue: Any? = nil, intRange:ClosedRange<Int>? = nil, doubleRange: ClosedRange<Double>? = nil, printAfterSec: Bool = false) -> String {
     let typeCode = type.lowercased()
 
     var pass = false
@@ -79,14 +79,14 @@ func input(name: String, type: String, defaultValue: Any? = nil, intRange:Closed
 /**
  Returns the string of current time.
  */
-func timeNow() -> String {
+public func timeNow() -> String {
     return displayTime(Date())
 }
 
 /**
  Returns the string discribing some time locally. *(More parameters to be added later)*
  */
-func displayTime(_ time: Date) -> String {
+public func displayTime(_ time: Date) -> String {
     let formatter = DateFormatter()
     formatter.dateStyle = .long
     formatter.timeStyle = .long
@@ -102,7 +102,7 @@ func displayTime(_ time: Date) -> String {
  - Parameter totSpace: The total number of space (including the string itself) the string needed to be fitted in.
  
  */
-func stringWithSpace(_ str: String, _ totSpace: Int) -> String {
+public func stringWithSpace(_ str: String, _ totSpace: Int) -> String {
     guard totSpace >= str.count else {
         return str
     }
@@ -113,14 +113,14 @@ func stringWithSpace(_ str: String, _ totSpace: Int) -> String {
 /**
  The same as `stringWithSpace`, but it takes `Any` type as the input.
  */
-func toPrintWithSpace(_ item: Any, _ totSpace: Int) -> String {
+public func toPrintWithSpace(_ item: Any, _ totSpace: Int) -> String {
     return stringWithSpace(String(describing: item), totSpace)
 }
 
 /**
  To print string from the start of the console line.
  */
-func printStringInLine(_ str: String) {
+public func printStringInLine(_ str: String) {
     print(str, terminator: "\r")
     #if os(Linux)
     fflush(stdout)
@@ -132,7 +132,7 @@ func printStringInLine(_ str: String) {
 /**
  The input for file/directory paths with a `tryAction` to determine the pass state of the inner loop.
 */
-func fileInput(name: String = "", message: String? = nil, successMessage: Bool = true, tryAction: (String) throws -> Bool) {
+public func fileInput(name: String = "", message: String? = nil, successMessage: Bool = true, tryAction: (String) throws -> Bool) {
     var filePass = false
     var toPrint = ""
     if message != nil {
