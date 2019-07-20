@@ -9,13 +9,7 @@
 import Foundation
 import JYMTBasicKit
 
-#if DEBUG
-#else
-print()
-print("JYMT-ABCTool")
-print("Copyright © 2019 Jerry Yan. All rights reserved.")
-print()
-#endif
+printWelcomeBanner("ABC Tool")
 
 var saveResults = true
 var writePath = URL(fileURLWithPath: "")

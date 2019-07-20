@@ -19,7 +19,17 @@ import JYMTBasicKit
 import PythonKit
 
 public extension Matrix {
-    func eigenSystem() -> ([Double], [[Double]]) {
-        (.init(), .init())
+    var npForm: PythonObject {
+        let np = Python.import("numpy")
+        return np.array(content)
+    }
+    
+    func eigenSystem() -> ([Double]?, [[Double]]?)? {
+        guard isSquareMatrix else {
+            return nil
+        }
+        let LA = Python.import("numpy.linalg")
+        let result = LA.eig(npForm)
+        return ([Double](result[0]), [[Double]](result[1]))
     }
 }

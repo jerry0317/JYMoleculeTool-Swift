@@ -152,3 +152,17 @@ public func fileInput(name: String = "", message: String? = nil, successMessage:
         }
     }
 }
+
+/**
+ Print the copyright information
+ */
+
+public func printWelcomeBanner(_ name: String) {
+    #if DEBUG
+    #else
+    print()
+    print("JYMoleculeTool - \(name)")
+    print("Copyright © 2019 Jerry Yan. All rights reserved.")
+    print()
+    #endif
+}

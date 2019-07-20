@@ -4,12 +4,13 @@ The project provides tools for analyzing molecules based on physical and chemica
 The project currently includes the following tools:
 - Structure Finder
 - ABC Tool
+- ABC Calculator *(Under early development)*
 
 ## Structure Finder
 Structure Finder provides the ability to calculate the possible structures of a molecule from the known absolute values (or uncertain-signed values) of positions |x|, |y|, and |z| for each atom in the molecule. The latter data can be obtained via the single isotope substitution based on Kraitchman's equations.
 
-### Codes
-The tool uses files in folders `JYMT Library` and `JYMT-StructureFinder`.
+### Dependencies
+The tool uses library `JYMTBasicKit`.
 
 ### Requirements
 The code is written on Swift 5.1, thus any compilation should be performed on the compiler of Swift 5.1 or newer versions. The executables should be working on environments that has Swift 5.1 installed.
@@ -73,8 +74,8 @@ The tool will print the output to the console, and there is an option to save th
 ## ABC Tool
 This is a tool for implementing [Kraitchman's equations](https://doi.org/10.1119/1.1933338) (J. Kraitchman, *Am. J. Phys.*, **21**, 17 (1953)) to find the absolute values of the position vector (components) of each atoms in the molecule. The program takes data of A,B,C (rotational constants) of the original molecule and the ones after single isotopic substitution.
 
-### Codes
-The tool uses files in folders `JYMT Library` and `JYMT-ABCTool`.
+### Dependencies
+The tool uses library `JYMTBasicKit`.
 
 ### Requirements
 The code is written on Swift 5.1, thus any compilation should be performed on the compiler of Swift 5.1 or newer versions. The executables should be working on environments that has Swift 5.1 installed.
@@ -137,3 +138,10 @@ The tool will print the output to the console, and there is an option to save th
 - XYZ exporting path (Optional)
   - If you want to save the results, please enter/drag the folder where you want to save the results in.
   - If you don't want to save the results, just leave it empty.
+
+## ABC Calculator
+ABC Calculator will be a new tool to calculate the rotational constants A, B, and C from the structural information (XYZ). It is basically the inverse process of ABC Tool.
+
+The program will utilize `JYMTAdvancedKit`, which depends on the interoperability bewteen Swift and Python to utilize the [NumPy](https://numpy.org) library to calculate the advanced matrix linear algebra.
+
+**This tool is still in early development.** Keep an eye on it.
