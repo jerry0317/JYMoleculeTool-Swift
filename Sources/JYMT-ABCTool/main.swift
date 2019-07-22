@@ -39,14 +39,14 @@ fileInput(message: "XYZ exporting Path (leave empty if not to save)", successMes
         }
         writePath = writePathUrl
         print("The result will be saved in \(writePath.relativeString).")
-        return trues
+        return true
     }
 }
 
 print("Number of atoms: \(sabcSet.substituted!.count)")
 
 let tInitial = Date()
-let xyzSet = sabcSet.exportToXYZ()
+var xyzSet = sabcSet.exportToXYZ()
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
 
 print("**------------Results------------**")

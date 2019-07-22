@@ -225,7 +225,7 @@ public func tensorIFromAtoms(_ atoms: [Atom], origin: Vector3D? = nil) -> Matrix
             var atomDiagMap = [Double]()
             var atomOffDiagMap = [Double]()
             for atom in atoms {
-                guard let mass = atom.atomicMass, let rvec = atom.rvec else {
+                guard let mass = atom.mass, let rvec = atom.rvec else {
                     atomDiagMap.append(0.0)
                     atomOffDiagMap.append(0.0)
                     continue

@@ -1,4 +1,6 @@
 # JYMoleculeTool-Swift
+
+### Overview
 The project provides tools for analyzing molecules based on physical and chemical equations.
 
 The project currently includes the following tools:
@@ -6,13 +8,12 @@ The project currently includes the following tools:
 - ABC Tool
 - ABC Calculator *(Under early development)*
 
-## Structure Finder
-Structure Finder provides the ability to calculate the possible structures of a molecule from the known absolute values (or uncertain-signed values) of positions |x|, |y|, and |z| for each atom in the molecule. The latter data can be obtained via the single isotope substitution based on Kraitchman's equations.
+The programs currently support molcules containing hydrogen\*, carbon, oxygen, nitrogen, fluorine, and chlorine atoms.
 
-### Dependencies
-The tool uses library `JYMTBasicKit`.
+*\*Note: Hydrogen atoms will be neglected in Structure Finder.*
 
 ### Requirements
+#### Swift
 The code is written on Swift 5.1, thus any compilation should be performed on the compiler of Swift 5.1 or newer versions. The executables should be working on environments that has Swift 5.1 installed.
 
 |System Version|Swift Version|Status|
@@ -25,6 +26,17 @@ The code is written on Swift 5.1, thus any compilation should be performed on th
 *\*For Swift 5.0.1, the program is not able to compile, but the exectuables are able to run on Swift 5.0.1.*
 
 To learn how to install Swift, please [visit here](https://swift.org/download/#snapshots). In the "Snapshots" section, select **Swift 5.1 Development**.
+
+#### SPM Dependencies
+The module `JYMTAdvancedKit` for advanced calculations utilizes [`PythonKit`](https://github.com/pvieito/PythonKit) as dependency, which is hosted on GitHub. Therefore, for direct running through `swift run` or compiling through `swift build`, an internet connection may be required to fetch the external SPM dependencies.
+
+## Structure Finder
+Structure Finder provides the ability to calculate the possible structures of a molecule from the known absolute values (or uncertain-signed values) of positions |x|, |y|, and |z| for each atom in the molecule. The latter data can be obtained via the single isotope substitution based on Kraitchman's equations.
+
+*Note: the program ignores hydrogen atoms in the calculation, and the hydrogen atoms are not included in the output results.*
+
+### Dependencies
+The tool uses library `JYMTBasicKit`.
 
 ### Usage
 - Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest).
@@ -74,24 +86,27 @@ The tool will print the output to the console, and there is an option to save th
   - You'll be prompted to enter a desired value if you want to customize the number of digits preserved after rounding the position vector of the atoms. The rounding level is suggested to be significantly smaller than the major component(s) of the position vector.
   - The default value is 2.
 
+### Discussion
+
+As tested on computation-capable platforms, for molecules containing no more than 20 non-hydrogen atoms, the program is able to complete the computation in a reasonable amount of time (mostly less 10 minutes). Some computation time and number of results are listed for reference (tested with CPU [i7-8700B](https://ark.intel.com/content/www/us/en/ark/products/134905/intel-core-i7-8700b-processor-12m-cache-up-to-4-60-ghz.html)).
+
+|Molecule|Non-H Atoms|Results|Computation Time (s)|
+|---|---|---|---|
+|[Glycine](https://pubchem.ncbi.nlm.nih.gov/compound/750)|5|32|0.017|
+|[alpha-Pinene](https://pubchem.ncbi.nlm.nih.gov/compound/6654)|10|108|0.9508|
+|[Aspirin](https://pubchem.ncbi.nlm.nih.gov/compound/2244)|13|428|9.7029|
+|[Branched laurylphenol](https://pubchem.ncbi.nlm.nih.gov/compound/22833469)|17|2880|420.06|
+|[Ethyldihydro-alpha-isomorphine](https://pubchem.ncbi.nlm.nih.gov/compound/5745717)|23|17208|45804|
+
+As the first atom is arbitrarily fixed, the total number of structural combinations for *k* non-hygrogen atoms should be *8^(k-1)*. After optimization in algorithms, the runtime complexity of the program should be *O(n logn)*, where *n = 8^(k-1)*. Therefore, in terms of *k*, the runtime complexity is basically *2^O(k)*, which grows exponentially with the increase of number of non-H atoms.
+
+According to the tests, the program is able to complete most of the computations for molecules containing no more than 20 non-hydrogen atoms in less than 10 minutes. The limit is extended to around 23 if the computation time is allowed to be less than one day. Under current test, **the upper limit of the number of non-hydrogen atoms in the molecules is 24**, which takes over 40 hours to complete the computation. Also note that an extensive amount of memory is needed for computations of large molecules (20+ non-H atoms).
+
 ## ABC Tool
 This is a tool for implementing [Kraitchman's equations](https://doi.org/10.1119/1.1933338) (J. Kraitchman, *Am. J. Phys.*, **21**, 17 (1953)) to find the absolute values of the position vector (components) of each atoms in the molecule. The program takes data of A,B,C (rotational constants) of the original molecule and the ones after single isotopic substitution.
 
 ### Dependencies
 The tool uses library `JYMTBasicKit`.
-
-### Requirements
-The code is written on Swift 5.1, thus any compilation should be performed on the compiler of Swift 5.1 or newer versions. The executables should be working on environments that has Swift 5.1 installed.
-
-|System Version|Swift Version|Status|
-|---|---|---|
-|macOS 10.14.5|Swift 5.1|Verified|
-|macOS 10.15 beta|Swift 5.1|Verified|
-|Ubuntu 18.04.2 LTS|Swift 5.1|Verified|
-|macOS 10.14.5|Swift 5.0.1|Unable to compile\*|
-
-*\*For Swift 5.0.1, the program is not able to compile, but the exectuables are able to run on Swift 5.0.1.*
-To learn how to install Swift, please [visit here](https://swift.org/download/#snapshots). In the "Snapshots" section, select **Swift 5.1 Development**.
 
 ### Usage
 - Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest).
@@ -145,8 +160,49 @@ The tool will print the output to the console, and there is an option to save th
   - If you don't want to save the results, just leave it empty.
 
 ## ABC Calculator
-ABC Calculator will be a new tool to calculate the rotational constants A, B, and C from the structural information (XYZ). It is basically the inverse process of ABC Tool.
+ABC Calculator is a tool to calculate the rotational constants A, B, and C from the structural information (XYZ). It is basically the inverse process of ABC Tool.
 
-The program will utilize `JYMTAdvancedKit`, which depends on the interoperability bewteen Swift and Python to utilize the [NumPy](https://numpy.org) library to calculate the advanced matrix linear algebra.
+This tool utilizes `JYMTAdvancedKit`, which depends on the interoperability bewteen Swift and Python to utilize the [NumPy](https://numpy.org) library to calculate the advanced matrix linear algebra.
 
-**This tool is still in early development.** Keep an eye on it.
+*This tool is still in early development.* More features are expected to be added in the future including the calculation of rotational constants after single isotopic substitutions.
+
+### Dependencies
+The tool uses libraries `JYMTBasicKit` and `JYMTAdvancedKit`.
+
+\*Note: The tool also used `NumPy` library with Python 3. Thus Python 3 along with `NumPy` are required to be installed in the environment.
+
+### Usage
+- Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest). **(Not available yet)**
+- Alternatively, run the program directly by
+```
+swift run -c release JYMT-ABCCalculator
+```
+- Or compile the executable by
+```
+swift build --product JYMT-ABCCalculator -c release; mv ./.build/release/JYMT-ABCCalculator JYMT-ABCCalculator
+```
+and run the executable by
+```
+./JYMT-ABCCalculator
+```
+
+*Note: Make sure the environment installed Swift 5.1. The Swift 5.0 compiler won't compile as there will be some errors.*
+
+### Input
+The tool takes a `.xyz` file as input for the known absolute values (or uncertain-signed values) of positions |x|, |y|, and |z| for each atom in the molecule *with unit in angstrom*. The sign of each value **must be correct** because the tool directly takes the Cartesian coordinates information in the file as the actual structural information. The `.xyz` file looks like below.
+
+```
+4
+
+C   -5.43  2.04  -0.14
+O   -3.44  3.38  -0.19
+C   -3.91  2.04  -0.11
+C   -3.37  1.4  1.16
+```
+
+### Output
+The tool will directly print the output to the console. The output contains the calculated rotational constants with unit in megahertz (MHz).
+
+### Options
+- XYZ file path **(Required)**
+  - You will be prompted to enter the input xyz file path. You can either enter the relative/absolute file path or drag the file to the console.

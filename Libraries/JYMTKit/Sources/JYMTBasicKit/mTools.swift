@@ -77,6 +77,18 @@ public final class Atom {
     }
     
     /**
+         The atomic mass of the atom, with unit in kg. If not specified, it will return the atomic mass of the element of the atom.
+         */
+    public var mass: Double? {
+        get {
+            atomicMass == nil ? nil : atomicMass! * PhysConst.amu
+        }
+        set {
+            storedAtomicMass = (atomicMass == nil ? nil : atomicMass! / PhysConst.amu)
+        }
+    }
+    
+    /**
      The position vector of the atom.
      */
     public var rvec: Vector3D?

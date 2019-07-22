@@ -27,18 +27,21 @@ guard let rawAtoms = xyzSet.atoms else {
 
 print()
 
+print("Molecule name: \(fileName)")
 print("Number of atoms: \(rawAtoms.count)")
-print("Total Mass: \(rawAtoms.totalAtomicMass)")
-print("Center of Mass: \(rawAtoms.centerOfMass)")
+print("Total Atomic Mass: \(rawAtoms.totalAtomicMass.rounded(digitsAfterDecimal: 4)) amu")
+print("Center of Mass: \(rawAtoms.centerOfMass.dictVec.rounded(digitsAfterDecimal: 4)) Å")
 print()
 
 let tInitial = Date()
-let abc = xyzSet.calculateABC()!
+guard let abc = xyzSet.calculateABC() else {
+    fatalError("Unable to calculate the rotational constants")
+}
+
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
 
 print("**------------Result------------**")
-print("[Unit in MHz]")
-print("A: \(abc.A.rounded(digitsAfterDecimal: 1))    B: \(abc.B.rounded(digitsAfterDecimal: 1))    C: \(abc.C.rounded(digitsAfterDecimal: 1))")
+print("A: \(abc.A.rounded(digitsAfterDecimal: 1))    B: \(abc.B.rounded(digitsAfterDecimal: 1))    C: \(abc.C.rounded(digitsAfterDecimal: 1))   (MHz)")
 print("-----------------------------------")
 print("Computation time: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
 print()

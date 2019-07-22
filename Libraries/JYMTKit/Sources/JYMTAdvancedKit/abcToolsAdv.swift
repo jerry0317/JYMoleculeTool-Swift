@@ -17,6 +17,7 @@ public func principalMoments(_ tensorI: Matrix) -> [Double]? {
     return eigs!.0
 }
 
+// TODO: Add single isotopic substitutions (SIS)
 public func ABCFromAtoms(_ atoms: [Atom], origin: Vector3D? = nil) -> ABCTuple? {
     let tensorI = tensorIFromAtoms(atoms, origin: origin)
     guard let pM = principalMoments(tensorI), pM.count == 3 else {
