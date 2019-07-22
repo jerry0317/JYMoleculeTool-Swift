@@ -58,6 +58,24 @@ public final class Atom {
      */
     public var element: ChemElement?
     
+    private var storedAtomicMass: Double? = nil
+    
+    /**
+     The atomic mass of the atom, with unit in amu. If not specified, it will return the atomic mass of the element of the atom.
+     */
+    public var atomicMass: Double? {
+        get {
+            if storedAtomicMass == nil {
+                return element?.atomicMass
+            } else {
+                return storedAtomicMass!
+            }
+        }
+        set {
+            storedAtomicMass = newValue
+        }
+    }
+    
     /**
      The position vector of the atom.
      */
@@ -1228,7 +1246,7 @@ public extension Collection where Iterator.Element == Atom {
                 guard let rvec: Vector3D = atom.rvec else {
                     continue
                 }
-                guard let e = atom.element, let mass: Double = ChemConst.atomicMasses[e] else {
+                guard let mass = atom.atomicMass else {
                     continue
                 }
                 totalMass = totalMass + mass
@@ -1237,6 +1255,13 @@ public extension Collection where Iterator.Element == Atom {
             cmVec = cmVec / totalMass
         }
         return cmVec
+    }
+    
+    /**
+     The total atomic mass of the atoms. (Unit in amu)
+     */
+    var totalAtomicMass: Double {
+        self.reduce(0.0, { $0 + ($1.atomicMass ?? 0.0) })
     }
 }
 

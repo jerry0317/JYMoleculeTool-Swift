@@ -111,11 +111,11 @@ public struct ABCTuple {
         self.type = type
     }
     
-    public init(_ A: Double, _ B: Double, _ C: Double, totalMass: Double, type: ABCType = .original, substitutedElement sElement: ChemElement? = nil, substitutedMass sMass: Double? = nil) {
+    public init(_ A: Double, _ B: Double, _ C: Double, totalAtomicMass: Double, type: ABCType = .original, substitutedElement sElement: ChemElement? = nil, substitutedMass sMass: Double? = nil) {
         self.A = A
         self.B = B
         self.C = C
-        self.totalAtomicMass = totalMass
+        self.totalAtomicMass = totalAtomicMass
         self.type = type
         self.substitutedElement = sElement
         self.substitutedAtomicMass = sMass
@@ -150,9 +150,7 @@ public func tensorDeltaP(fromDeltaI deltaI: Matrix) -> Matrix? {
     }
     var deltaP = Matrix(3,3)
     for ix in [0,1,2].cyclicTransformed() {
-        let i = ix[0]
-        let j = ix[1]
-        let k = ix[2]
+        let (i, j, k) = (ix[0], ix[1], ix[2])
         deltaP[i, i] = 0.5 * (-deltaI[i, i] + deltaI[j, j] + deltaI[k, k])
     }
     return deltaP
@@ -169,9 +167,7 @@ public func rVecFromSIS(mu: Double, deltaP: Matrix, I: Matrix, errLevel: Double 
     var vec = Vector3D()
     
     for ix in [0,1,2].cyclicTransformed() {
-        let i = ix[0]
-        let j = ix[1]
-        let k = ix[2]
+        let (i, j, k) = (ix[0], ix[1], ix[2])
         var result = (deltaP[i, i] / mu) * (1.0 + (deltaP[j, j] / (I[i, i] - I[j, j]))) * (1.0 + (deltaP[k, k] / (I[i, i] - I[k, k])))
         if result < 0 && abs(result) <= errLevel {
             result = 0.0
@@ -210,4 +206,41 @@ public func fromSISToAtoms(original oABC: ABCTuple, substituted sABCs: [ABCTuple
     }
     
     return results
+}
+
+/**
+ Calculate the tensor I in SI unit from an array of atoms *(with position vector unit in angstrom)* with an optional origin. The default origin is the center of mass.
+ */
+public func tensorIFromAtoms(_ atoms: [Atom], origin: Vector3D? = nil) -> Matrix {
+    var tensorI = Matrix(3,3)
+    if !atoms.isEmpty {
+        var center = Vector3D()
+        if origin == nil {
+            center = atoms.centerOfMass
+        } else {
+            center = origin!
+        }
+        for ix in [0, 1, 2].cyclicTransformed() {
+            let (i, j, k) = (ix[0], ix[1], ix[2])
+            var atomDiagMap = [Double]()
+            var atomOffDiagMap = [Double]()
+            for atom in atoms {
+                guard let mass = atom.atomicMass, let rvec = atom.rvec else {
+                    atomDiagMap.append(0.0)
+                    atomOffDiagMap.append(0.0)
+                    continue
+                }
+                let pVec = (rvec - center) * 1e-10
+                atomDiagMap.append(mass * ((pVec[j] * pVec[j]) + (pVec[k] * pVec[k])))
+                atomOffDiagMap.append(mass * pVec[i] * pVec[j])
+            }
+            let resultDiag = atomDiagMap.reduce(0, +)
+            let resultOffDiag = atomOffDiagMap.reduce(0, +)
+            
+            tensorI[i, i] = resultDiag
+            tensorI[i, j] = resultOffDiag
+            tensorI[j, i] = resultOffDiag
+        }
+    }
+    return tensorI
 }

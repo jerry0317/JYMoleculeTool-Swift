@@ -39,7 +39,7 @@ fileInput(message: "XYZ exporting Path (leave empty if not to save)", successMes
         }
         writePath = writePathUrl
         print("The result will be saved in \(writePath.relativeString).")
-        return true
+        return trues
     }
 }
 
@@ -53,6 +53,7 @@ print("**------------Results------------**")
 print(xyzSet)
 
 if saveResults {
+    xyzSet.note = "* unsigned positions (absolute values)"
     xyzSet.safelyExport(toFile: writePath.appendingPathComponent(fileName + ".xyz"))
 }
 print("-----------------------------------")

@@ -20,6 +20,9 @@ The code is written on Swift 5.1, thus any compilation should be performed on th
 |macOS 10.14.5|Swift 5.1|Verified|
 |macOS 10.15 beta|Swift 5.1|Verified|
 |Ubuntu 18.04.2 LTS|Swift 5.1|Verified|
+|macOS 10.14.5|Swift 5.0.1|Unable to compile\*|
+
+*\*For Swift 5.0.1, the program is not able to compile, but the exectuables are able to run on Swift 5.0.1.*
 
 To learn how to install Swift, please [visit here](https://swift.org/download/#snapshots). In the "Snapshots" section, select **Swift 5.1 Development**.
 
@@ -85,7 +88,9 @@ The code is written on Swift 5.1, thus any compilation should be performed on th
 |macOS 10.14.5|Swift 5.1|Verified|
 |macOS 10.15 beta|Swift 5.1|Verified|
 |Ubuntu 18.04.2 LTS|Swift 5.1|Verified|
+|macOS 10.14.5|Swift 5.0.1|Unable to compile\*|
 
+*\*For Swift 5.0.1, the program is not able to compile, but the exectuables are able to run on Swift 5.0.1.*
 To learn how to install Swift, please [visit here](https://swift.org/download/#snapshots). In the "Snapshots" section, select **Swift 5.1 Development**.
 
 ### Usage

@@ -11,33 +11,34 @@ import JYMTAdvancedKit
 
 printWelcomeBanner("ABC Calculator")
 
-print("""
-ABC Calculator will be a new tool to calculate the rotational constants A, B, and C from the structural information (XYZ). It is basically the inverse process of ABC Tool.
+var xyzSet = XYZFile()
+var fileName = ""
 
-The program will utilize JYMTAdvancedKit, which depends on the interoperability bewteen Swift and Python to utilize the NumPy library to calculate the advanced matrix linear algebra.
+fileInput(name: "XYZ file", tryAction: { (filePath) in
+    xyzSet = try XYZFile(fromPath: filePath)
+    fileName = URL(fileURLWithPath: filePath).lastPathComponentName
+    return true
+})
 
-This tool is still in early development. Keep an eye on it.
-""")
-
-print("***")
-print("The use of eigensystem of a matrix is demonstrated as below:")
-print("For example, for a matrix\n")
-
-let m = Matrix([[1,2,3,4],[9,10,11,12],[5,6,7,8],[13,14,15,16]])!
-print(m.matrixForm)
-
-print("It has the following eigensystems: \n")
-if let result = m.eigenSystem() {
-    if let eigVals = result.0, let eigVecs = result.1 {
-        let n = min(eigVals.count, eigVecs.count)
-        for i in 0..<n {
-            print("Eigenvalue: \(toPrintWithSpace(eigVals[i].rounded(digitsAfterDecimal: 4), 10)) Normalized eigenvector:   \(eigVecs[i].rounded(digitsAfterDecimal: 4))")
-        }
-    } else {
-        print("[Error: Can't parse result from NumPy]")
-    }
-} else {
-    print("[Error: Invalid Matrix]")
+guard let rawAtoms = xyzSet.atoms else {
+    print("No Atoms. Exit with fatal Error.")
+    exit(-1)
 }
 
+print()
+
+print("Number of atoms: \(rawAtoms.count)")
+print("Total Mass: \(rawAtoms.totalAtomicMass)")
+print("Center of Mass: \(rawAtoms.centerOfMass)")
+print()
+
+let tInitial = Date()
+let abc = xyzSet.calculateABC()!
+let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
+
+print("**------------Result------------**")
+print("[Unit in MHz]")
+print("A: \(abc.A.rounded(digitsAfterDecimal: 1))    B: \(abc.B.rounded(digitsAfterDecimal: 1))    C: \(abc.C.rounded(digitsAfterDecimal: 1))")
+print("-----------------------------------")
+print("Computation time: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
 print()
