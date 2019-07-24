@@ -70,9 +70,9 @@ C   -3.37  1.4  1.16
 ### Output
 The tool will print the output to the console, and there is an option to save the results as `.xyz` files (which contains only coordinate information) and `.mol` files (which contains both coordinate information and bond information\*), and the log as `.txt` file.
 
-You may visualize the `.xyz` files and `.mol` files with softwares like [Avogadro](https://avogadro.cc).
+You can visualize the `.xyz` files and `.mol` files with softwares like [Avogadro](https://avogadro.cc).
 
-\**Note: For `.mol` files, one (or more) bonds might be missing if some atoms in the molecule form a closed structure (for example, benzene ring). This problem will be fixed in future versions.*
+\**Note: ~~For `.mol` files, one (or more) bonds might be missing if some atoms in the molecule form a closed structure (for example, benzene ring). This problem will be fixed in future versions.~~ This problem appeared to be solved in version 0.1.2, or after git commit [66cea02](https://github.com/jerry0317/JYMoleculeTool-Swift/commit/66cea02), while the actual results are still to be verified.*
 
 ### Options
 - XYZ file path **(Required)**
@@ -86,13 +86,17 @@ You may visualize the `.xyz` files and `.mol` files with softwares like [Avogadr
 - Bond angle tolerance ratio (Optional)
   - You'll be prompted to enter a desired value if you want to customize the tolerance ratio used in bond angle filters. Only values between 0 and 1 are allowed.
   - The default value is 0.1.
-- Rounded digits after decimal (Optional)
+- Rounded digits of positions after decimal (Optional)
   - You'll be prompted to enter a desired value if you want to customize the number of digits preserved after rounding the position vector of the atoms. The rounding level is suggested to be significantly smaller than the major component(s) of the position vector.
   - The default value is 2.
+- Trim level of positions in angstrom (Optional)
+  - You'll be prompted to enter a desired value if you want to customize the trim level used to trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level. The trim level is suggested to be siginificantly smaller than the major component(s) of the position vector.
+  - The default value is 0*.
+    - *Note that even the trim level is set to be zero, trimming down still happens based on the rounded digits after decimal. For example, if the rounded digits after decimal is set to be 2, then any position with absolute value less than 0.005 will be "trimmed down" to zero.
 
 ### Discussion
 
-As tested on computation-capable platforms, for molecules containing no more than 20 non-hydrogen atoms, the program is able to complete the computation in a reasonable amount of time (mostly less 10 minutes). Some computation time and number of results are listed for reference (tested with CPU [i7-8700B](https://ark.intel.com/content/www/us/en/ark/products/134905/intel-core-i7-8700b-processor-12m-cache-up-to-4-60-ghz.html)).
+As tested on computation-capable platforms, for molecules containing no more than 20 non-hydrogen atoms, the program is able to complete the computation in a reasonable amount of time (mostly less 10 minutes). Some computation time and number of results are listed for reference (tested with CPU [i7-8700B](https://ark.intel.com/content/www/us/en/ark/products/134905/intel-core-i7-8700b-processor-12m-cache-up-to-4-60-ghz.html), with commit [f81634f](https://github.com/jerry0317/JYMoleculeTool-Swift/commit/f81634f)).
 
 |Molecule|Non-H Atoms|Results|Computation Time (s)|
 |---|---|---|---|

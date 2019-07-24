@@ -62,19 +62,20 @@ let toleranceRatio = Double(input(name: "Bond angle tolerance ratio", type: "dou
 print()
 
 /**
- (Deprecated, may be invoked for future use)
- Trim level used to trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level. Unit in angstrom. Suggested to be siginificantly smaller than the major component(s) of the position vector.
- */
-//let trimLevel = 0.05
-
-/**
  The number of digits preserved after rounding the position vector of the atoms. The rounding level is suggested to be significantly smaller than the major component(s) of the position vector.
  */
 let roundDigits = Int(input(name: "Rounded digits (of position) after decimal", type: "int", defaultValue: 2, doubleRange: 0...10, printAfterSec: true)) ?? 2
 print()
 
+/**
+ Trim level used to trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level. Unit in angstrom. Suggested to be siginificantly smaller than the major component(s) of the position vector.
+ */
+let trimLevel = Double(input(name: "Trim level (of position) in angstrom", type: "double", defaultValue: 0, doubleRange: 0...1, printAfterSec: true)) ?? 0
+print()
+
 var combAtoms: [Atom] = rawAtoms.removed(byElement: .hydrogen)
-//combAtoms.trimDownRVecs(level: trimLevel)
+
+combAtoms.trimDownRVecs(level: trimLevel)
 combAtoms.roundRVecs(digitsAfterDecimal: roundDigits)
 
 print("Total number of non-hydrogen atoms: \(combAtoms.count).")
@@ -132,6 +133,7 @@ log.add("[Basic Settings]")
 log.add("Bond length tolerance level: \(tolerenceLevel)")
 log.add("Bond angle tolerance ratio: \(toleranceRatio)")
 log.add("Rounded digits after decimal: \(roundDigits)")
+log.add("Trim level: \(trimLevel)")
 log.add("-----------------------------------")
 // Printing results
 for pMol in possibleList {
