@@ -102,19 +102,28 @@ public func displayTime(_ time: Date) -> String {
  - Parameter totSpace: The total number of space (including the string itself) the string needed to be fitted in.
  
  */
-public func stringWithSpace(_ str: String, _ totSpace: Int) -> String {
+public func stringWithSpace(_ str: String, _ totSpace: Int, trailing: Bool = true) -> String {
     guard totSpace >= str.count else {
         return str
     }
-    
-    return str + String(repeating: "\u{0020}", count: totSpace - str.count)
+    if trailing {
+        return str + String(repeating: "\u{0020}", count: totSpace - str.count)
+    } else {
+        return String(repeating: "\u{0020}", count: totSpace - str.count) + str
+    }
 }
 
 /**
  The same as `stringWithSpace`, but it takes `Any` type as the input.
  */
-public func toPrintWithSpace(_ item: Any, _ totSpace: Int) -> String {
-    return stringWithSpace(String(describing: item), totSpace)
+public func toPrintWithSpace(_ item: Any, _ totSpace: Int, trailing: Bool = true) -> String {
+    return stringWithSpace(String(describing: item), totSpace, trailing: trailing)
+}
+
+public extension String {
+    func withSpace(_ totSpace: Int, trailing: Bool = true) -> String {
+        return stringWithSpace(self, totSpace, trailing: trailing)
+    }
 }
 
 /**
@@ -128,6 +137,8 @@ public func printStringInLine(_ str: String) {
     fflush(__stdoutp)
     #endif
 }
+
+
 
 /**
  The input for file/directory paths with a `tryAction` to determine the pass state of the inner loop.

@@ -46,6 +46,14 @@ public extension File {
     }
 }
 
+public typealias FileExportError = FileError.Exporting
+
+public enum FileError {
+    public enum Exporting: Error {
+        case fileIsNotValid
+    }
+}
+
 /**
  Structure of `.xyz` file.
  */
@@ -174,18 +182,11 @@ public struct XYZFile: File {
     }
     
     /**
-     Errors describing the xyz exporting process.
-     */
-    public enum xyzExportError: Error {
-        case xyzStringIsNil
-    }
-    
-    /**
      Export the xyz file to URL.
      */
     public func export(toFile path: URL) throws {
         guard xyzString != nil else {
-            throw xyzExportError.xyzStringIsNil
+            throw FileExportError.fileIsNotValid
         }
         try save(xyzString!, asURL: path)
     }
@@ -388,6 +389,159 @@ public struct SABCFile: File {
     public func exportToXYZ() -> XYZFile {
         return XYZFile(fromAtoms: exportToAtoms())
     }
+}
+
+/**
+ The `.mol` file describes both atoms and bonds in the molecule.
+ 
+ - TODO: Add importing feature (not rush)
+ */
+public struct MOLFile: File {
+    /**
+     The `File` protocol-compliant content.
+     */
+    public var content: String {
+        get {
+            molString ?? ""
+        }
+        set {
+            // Not available yet
+        }
+    }
+    
+    public var title: String = ""
+    
+    public var timestamp: String?
+    
+    public var comment: String = ""
+    
+    public var atoms: [Atom]?
+    
+    public var bonds: [ChemBond]?
+    
+    public init() {
+        
+    }
+    
+    public init(title: String, comment: String = "", atoms: [Atom], bonds: [ChemBond], setTS: Bool = true){
+        self.title = title
+        self.atoms = atoms
+        self.bonds = bonds
+        self.comment = comment
+        if setTS {
+            setTimeStamp()
+        }
+    }
+    
+    public init(title: String, comment: String = "", atoms: Set<Atom>, bonds: Set<ChemBond>, setTS: Bool = true){
+        self.init(title: title, comment: comment, atoms: Array(atoms), bonds: Array(bonds), setTS: setTS)
+    }
+    
+    public var isValid: Bool {
+        timestamp != nil && atoms != nil && bonds != nil
+    }
+    
+    private var atomIndices: [Atom: Int]? {
+        guard let atomList = atoms else {
+            return nil
+        }
+        var dict = [Atom: Int]()
+        for (i, atom) in atomList.enumerated() {
+            dict[atom] = i
+        }
+        return dict
+    }
+    
+    private var atomsFormalized: [String]? {
+        guard let atomList = atoms else {
+            return nil
+        }
+        var formalizedList = [String]()
+        for atom in atomList {
+            guard let rvec = atom.rvec, let element = atom.element else {
+                continue
+            }
+            let rvecStrings = rvec.dictVec.map({ (comp) -> String in
+                let preStr = String(format: "%.4f", comp)
+                return preStr.withSpace(10, trailing: false)
+            })
+            let rvecString = rvecStrings.joined(separator: "")
+            formalizedList.append("\(rvecString) \(element.rawValue.withSpace(2, trailing: false))   0  0  0  0  0  0  0  0  0  0  0  0")
+        }
+        return formalizedList
+    }
+    
+    private var bondsFormalized: [String]? {
+        guard let atomDict = atomIndices, let bondList = bonds else {
+            return nil
+        }
+        var formalizedList = [String]()
+        for bond in bondList {
+            let atomArray = Array(bond.atoms)
+            let (atom1, atom2) = (atomArray[0], atomArray[1])
+            guard let index1 = atomDict[atom1], let index2 = atomDict[atom2] else {
+                continue
+            }
+            let codesList: [Int] = [index1 + 1, index2 + 1, bond.type.order]
+            let codeString = codesList.map({ String(describing: $0).withSpace(3, trailing: false) }).joined(separator: "")
+            formalizedList.append("\(codeString)  0  0  0  0")
+        }
+        return formalizedList
+    }
+    
+    public var molString: String? {
+        guard let atomFList = atomsFormalized, let bondFList = bondsFormalized else {
+            return nil
+        }
+        return exportToString(title: title, timestamp: self.timestamp ?? timeStampNow(), comment: comment, atomsFormalized: atomFList, bondsFormalized: bondFList)
+    }
+    
+    private mutating func setTimeStamp() {
+        timestamp = timeStampNow()
+    }
+    
+    private func timeStampNow() -> String {
+        let timeNow = Date()
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMddyyHHmm"
+        return "JYMoleculeTool" + dateFormatter.string(from: timeNow) + "3D"
+    }
+    
+    private func exportToString(title: String, timestamp: String, comment: String, atomsFormalized atomFList: [String], bondsFormalized bondFList: [String]) -> String {
+        var str = ""
+        str += "\(title)\n"
+        str += " \(timestamp)\n"
+        str += "\(comment)\n"
+        str += " \(String(atomFList.count).withSpace(2, trailing: false)) \(String(bondFList.count).withSpace(2, trailing: false))  0  0  0  0  0  0  0  0999 V2000\n"
+        str += atomFList.joined(separator: "\n")
+        str += "\n"
+        str += bondFList.joined(separator: "\n")
+        str += "\n"
+        str += "M  END"
+        return str
+    }
+    
+    /**
+     Export the mol file to URL.
+     */
+    public func export(toFile path: URL) throws {
+        guard molString != nil else {
+            throw FileExportError.fileIsNotValid
+        }
+        try save(molString!, asURL: path)
+    }
+    
+    /**
+     Safely export the mol file to URL. Print the error when the error raises.
+     */
+    public func safelyExport(toFile path: URL) {
+        do {
+            try export(toFile: path)
+        } catch let error {
+            print("An error occured when saving mol file: \(error).")
+        }
+    }
+    
 }
 
 public extension URL {

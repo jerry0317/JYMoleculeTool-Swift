@@ -309,6 +309,13 @@ public final class ChemBondType {
     }
     
     /**
+     The validity of a bond type.
+     */
+    public var isValid: Bool {
+        validate()
+    }
+    
+    /**
      Tells if a bond type is valid.
      */
     public func validate() -> Bool{
@@ -368,9 +375,20 @@ extension ChemBondType: Hashable {
  */
 public final class ChemBond {
     /**
-     The atoms engaged in the chemical bond.
+     The two atoms engaged in the chemical bond.
      */
-    public var atoms: Set<Atom>
+    public var atoms: Set<Atom> {
+        get {
+            [atom1, atom2]
+        }
+        set {
+            if newValue.count == 2 {
+                let list = Array(newValue)
+                atom1 = list[0]
+                atom2 = list[1]
+            }
+        }
+    }
     
     /**
      Privately saved for faster determination of the neighbor of an atom.
@@ -383,8 +401,14 @@ public final class ChemBond {
      */
     public var type: ChemBondType
     
+    /**
+     The validity of a bond.
+     */
+    public var isValid: Bool {
+        type.isValid
+    }
+    
     public init(_ atom1: Atom, _ atom2: Atom, _ bondType: ChemBondType){
-        self.atoms = [atom1, atom2]
         self.type = bondType
         self.atom1 = atom1
         self.atom2 = atom2
@@ -938,6 +962,8 @@ public func bondAnglesFilter(center aAtom: Atom, attached: [Atom], range: Closed
  - Parameter tolRange: The tolerance level acting in bond length filters, unit in angstrom.
  
  - Parameter tolRatio: The tolerance ratio acting in bond angle filters. Reference with the VSEPR graph.
+ 
+ - TODO: Identify when the atom should form a ring or some closed sub-structure with the `stMol`.
  
  */
 public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> StrcMolecule {

@@ -10,9 +10,6 @@
 //  library.
 //
 //
-//  UNDER DEVELOPMENT...
-//
-//
 
 import Foundation
 import JYMTBasicKit
