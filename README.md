@@ -68,12 +68,16 @@ C   -3.37  1.4  1.16
 ```
 
 ### Output
-The tool will print the output to the console, and there is an option to save the results as `.xyz` files and the log as `.txt` file.
+The tool will print the output to the console, and there is an option to save the results as `.xyz` files (which contains only coordinate information) and `.mol` files (which contains both coordinate information and bond information\*), and the log as `.txt` file.
+
+You may visualize the `.xyz` files and `.mol` files with softwares like [Avogadro](https://avogadro.cc).
+
+\**Note: For `.mol` files, one (or more) bonds might be missing if some atoms in the molecule form a closed structure (for example, benzene ring). This problem will be fixed in future versions.*
 
 ### Options
 - XYZ file path **(Required)**
   - You will be prompted to enter the input xyz file path. You can either enter the relative/absolute file path or drag the file to the console.
-- XYZ exporting path (Optional)
+- XYZ & MOL exporting path (Optional)
   - If you want to save the results, please enter/drag the folder where you want to save the results in.
   - If you don't want to save the results, just leave it empty.
 - Bond length tolerance level in angstrom (Optional)
@@ -172,7 +176,7 @@ The tool uses libraries `JYMTBasicKit` and `JYMTAdvancedKit`.
 \*Note: The tool also used `NumPy` library with Python 3. Thus Python 3 along with `NumPy` are required to be installed in the environment.
 
 ### Usage
-- Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest). **(Not available yet)**
+- Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest).
 - Alternatively, run the program directly by
 ```
 swift run -c release JYMT-ABCCalculator
