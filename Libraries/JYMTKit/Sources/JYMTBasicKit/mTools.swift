@@ -970,59 +970,60 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
     var mol = stMol
     let bondGraphs = mol.bondGraphs
     
-    var atomAdded = false
-    
     if mol.size <= 0 {
         mol.addAtom(atom)
     }
     else {
         mol.bondGraphs.removeAll()
+        
+        // Step 1: Make sure the new atom is not too close to any of the existing atoms.
+        let minimumBDLCheck = stMol.atoms.filter({ (atomDistance($0, atom) ?? 0) < ChemConst.minimumBondLength }).isEmpty
+        if !minimumBDLCheck {
+            // print(stMol.atoms.map({atomDistance($0, atom)!}))
+            return mol
+        }
+        
+        // Step 2: Find all the possible bond connections between the new atom and any of the existing atoms.
+        var possibleBondsCollected: [[ChemBond]] = []
+        
+        // Step 2.1: Find possible new bond connections of each existing atom.
         for vAtom in stMol.atoms {
             let possibleBts = possibleBondTypesDynProgrammed(vAtom.element, atom.element)
+            var possibleBonds = [ChemBond]()
             for bondType in possibleBts {
-                guard bondTypeLengthFilter(vAtom, atom, bondType, tolRange) else {
+                if !bondTypeLengthFilter(vAtom, atom, bondType, tolRange) {
                     continue
                 }
-                
-                let vRemainingAtoms = stMol.atoms.filter({$0 != vAtom})
-                var dPass = true
-                for vRAtom in vRemainingAtoms {
-                    guard let d: Double = atomDistance(vRAtom, atom) else {
-                        dPass = false
-                        break
-                    }
-                    if d < (bondType.length! - tolRange) {
-                        dPass = false
-                        break
-                    }
-                }
-                if dPass {
-                    let pBond = ChemBond(vAtom, atom, bondType)
-                    if !atomAdded {
-                        mol.addAtom(atom)
-                        atomAdded = true
-                    }
-                    if stMol.size == 1 {
-                        mol.bondGraphs.insert(ChemBondGraph(Set([pBond])))
-                    } else if stMol.size > 1 {
-                        for bondGraph in bondGraphs {
-                            var pBondGraph = bondGraph
-                            pBondGraph.bonds.insert(pBond)
-                            var bPass = true
-                            for bAtom in stMol.atoms {
-                                if pBondGraph.degreeOfAtom(bAtom) >= 2 {
-                                    let vseprGraph = pBondGraph.findVseprGraph(bAtom)
-                                    if !vseprGraph.filter(bondAngleTolRatio: tolRatio) {
-                                        bPass = false
-                                        break
-                                    }
-                                }
-                            }
-                            if bPass {
-                                mol.bondGraphs.insert(pBondGraph)
-                            }
+                let pBond = ChemBond(vAtom, atom, bondType)
+                possibleBonds.append(pBond)
+            }
+            if !possibleBonds.isEmpty {
+                possibleBondsCollected.append(possibleBonds)
+            }
+        }
+        
+        // Step 2.2: Find the Cartesian product of the collected possible bonds.
+        if possibleBondsCollected.isEmpty {
+            return mol
+        }
+        
+        // Step 3: Perform VSEPR filter on each of the possible Cartesian combination of the bonds.
+        mol.addAtom(atom)
+        
+        for bonds in possibleBondsCollected.cartesianProduct() {
+            if stMol.size == 1 {
+                mol.bondGraphs.insert(ChemBondGraph(Set(bonds)))
+            } else if stMol.size > 1 {
+                outer: for bondGraph in bondGraphs {
+                    var pBondGraph = bondGraph
+                    pBondGraph.bonds.formUnion(bonds)
+                    for bAtom in stMol.atoms {
+                        let vseprGraph = pBondGraph.findVseprGraph(bAtom)
+                        if !vseprGraph.filter(bondAngleTolRatio: tolRatio) {
+                            continue outer
                         }
                     }
+                    mol.bondGraphs.insert(pBondGraph)
                 }
             }
         }
@@ -1446,3 +1447,4 @@ public func bondAnglesInDeg(center: Atom, bonds: [ChemBond]) -> [(Double?, Set<C
     let attachedAtomsList = combinationsDynProgrammed(bonds, 2)
     return attachedAtomsList.map { (bondAngleInDeg(center: center, bonds: Array($0)), $0) }
 }
+

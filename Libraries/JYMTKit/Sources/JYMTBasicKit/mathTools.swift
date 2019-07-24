@@ -731,3 +731,43 @@ public extension Array {
         return transformedList
     }
 }
+
+extension Array where Element : RangeReplaceableCollection {
+
+    typealias InnerCollection = Element
+    typealias InnerElement = InnerCollection.Iterator.Element
+
+    /**
+     The cartesian product among the members of the array.
+     */
+    func cartesianProduct(ignoreEmpties: Bool = false) -> [[InnerElement]] {
+        if isEmpty {
+            return []
+        }
+        
+        var dims = self
+        if ignoreEmpties {
+            dims.removeAll(where: { $0.isEmpty })
+        } else {
+            if dims.contains(where: { $0.isEmpty }) {
+                return []
+            }
+        }
+        
+        let totalElements = self.reduce(0, { $0 + $1.count })
+        var result: [[InnerElement]] = [[]]
+        result.reserveCapacity(totalElements)
+        for dim in self {
+            let oldResult = result
+            var newResult = [[InnerElement]]()
+            for oldGroup in oldResult {
+                for newElement in dim {
+                    newResult.append(oldGroup + [newElement])
+                }
+            }
+            result = newResult
+        }
+        
+        return result
+    }
+}

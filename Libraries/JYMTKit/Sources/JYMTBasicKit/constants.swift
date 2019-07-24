@@ -185,6 +185,11 @@ public enum Constants {
             case ClN1
             case ClO1
         }
+        
+        /**
+         Minimum bond length, arbitrarily defined *(may be modified later)*.
+         */
+        public static let minimumBondLength = 1.0
     }
     
     /**
