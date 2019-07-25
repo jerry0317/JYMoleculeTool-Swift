@@ -1065,6 +1065,7 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
  */
 public func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> [StrcMolecule] {
     let possibleAtoms = atom.possibles
+    // let possibleAtoms = [atom]
     var possibleSMList: [StrcMolecule] = []
     
     for pAtom in possibleAtoms {
