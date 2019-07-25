@@ -1126,17 +1126,19 @@ public func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecul
     
     func loopDisplayString(_ j1: Int, _ j2: Int, _ tIJ: Date) -> String {
         let timeTaken = String(-(Double(tIJ.timeIntervalSinceNow).rounded(digitsAfterDecimal: 1))) + "s"
-        return "Atoms: \(toPrintWithSpace(j1 + 1, 4)) Interm. possibles: \(toPrintWithSpace(mDynDict[j2 + 1]!.count, 9)) Time: \(toPrintWithSpace(timeTaken, 10)) "
+        return "Atoms: \(toPrintWithSpace(j1 + 1, 4)) Int. possibles: \(toPrintWithSpace(mDynDict[j2 + 1]!.count, 9)) Time: \(toPrintWithSpace(timeTaken, 10)) "
     }
     
     print(loopDisplayString(0, -1, Date()))
     
     for j in 0...(rCount - 1) {
         let tIJ = Date()
-        for (_, stMols) in mDynDict[j]! {
+        let previousCount = mDynDict[j]!.count
+        for (i, (_, stMols)) in mDynDict[j]!.enumerated() {
             if mDynDict[j] != nil {
                 mDynDict[j] = nil
             }
+            let percentage = i * 100 / previousCount
             for stMol in stMols {
                 let rList = rAtoms.filter { !stMol.containsById($0) }
                 for rAtom in rList {
@@ -1158,14 +1160,17 @@ public func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecul
                     
                     #if DEBUG
                     #else
-                    printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Calculating..")
+                    printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Calculating (\(percentage)%)")
                     #endif
                 }
             }
         }
         
-        for atoms in globalCache.stMolMatched.1 {
+        let dedCount = globalCache.stMolMatched.1.count
+        for (i, atoms) in globalCache.stMolMatched.1.enumerated() {
             let saList = mDynDict[j + 1]![atoms]
+            let percentage = i * 100 / dedCount
+            
             guard saList != nil && saList!.isEmpty == false else {
                 continue
             }
@@ -1174,7 +1179,7 @@ public func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecul
 
             #if DEBUG
             #else
-            printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Deduplicating..")
+            printStringInLine(loopDisplayString(j + 1, j, tIJ) + "Deduplicating (\(percentage)%)")
             #endif
         }
         
