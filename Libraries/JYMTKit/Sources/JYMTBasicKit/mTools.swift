@@ -713,7 +713,7 @@ public struct VSEPRGraph: SubChemBondGraph {
     /**
      A filter to determine if this VSEPR graph is valid.
      */
-    public func filter(bondAngleTolRatio tolRatio: Double = 0.1) -> Bool {
+    public func filter(tolRatio: Double = 0.1) -> Bool {
         guard (center.valence - valenceOccupied) >= 0 else {
             return false
         }
@@ -731,7 +731,7 @@ public struct VSEPRGraph: SubChemBondGraph {
             default:
                 break
             }
-            return bondAnglesFilter(center: center, attached: attached, range: range)
+            return bondAnglesFilter(center: center, attached: attached, range: range, tolRatio: tolRatio)
         default:
             break
         }
@@ -933,7 +933,7 @@ public func possibleBondTypesDynProgrammed(_ atomName1: ChemElement?, _ atomName
  Filtering by bond angle with a given range. Given a list of angles in degrees.
  */
 public func bondAnglesFilter(_ angles: [Double?], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
-    let lowerBound = range.lowerBound * (1 - tolRatio)
+    let lowerBound = tolRatio < 1 ? range.lowerBound * (1 - tolRatio) : 0
     let upperBound = range.upperBound * (1 + tolRatio)
     let tRange: ClosedRange<Double> = lowerBound...upperBound
     for theta in angles {
@@ -1048,7 +1048,7 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
                     pBondGraph.bonds.formUnion(pBonds)
                     for bAtom in mol.atoms {
                         let vseprGraph = pBondGraph.findVseprGraph(bAtom)
-                        if !vseprGraph.filter(bondAngleTolRatio: tolRatio) {
+                        if !vseprGraph.filter(tolRatio: tolRatio) {
                             continue outer
                         }
                     }
@@ -1065,7 +1065,7 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
  */
 public func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> [StrcMolecule] {
     let possibleAtoms = atom.possibles
-    // let possibleAtoms = [atom]
+//    let possibleAtoms = [atom]
     var possibleSMList: [StrcMolecule] = []
     
     for pAtom in possibleAtoms {
