@@ -301,6 +301,21 @@ public final class ChemBondType {
         return bondLengths[bd]
     }
     
+    public var lengthRange: ClosedRange<Double>? {
+        guard let bd = bdCode else {
+            return nil
+        }
+        let (lb, ub) = ChemConst.bondLengthRangeTuples[bd]!
+        return lb...ub
+    }
+    
+    public var lengthRangeTuple: (Double, Double)? {
+        guard let bd = bdCode else {
+            return nil
+        }
+        return ChemConst.bondLengthRangeTuples[bd]!
+    }
+    
     /**
      The dictionary storing the known bond lengths.
      */
@@ -853,9 +868,24 @@ public func atomDistance(_ atom1: Atom, _ atom2: Atom) -> Double?{
 }
 
 /**
- Filtering by bond length with the reference of bond type
+ Filtering by bond length with the reference of bond type (bondlength range implemented)
  */
 public func bondTypeLengthFilter(_ atom1: Atom, _ atom2: Atom, _ bondType: ChemBondType, _ tolRange: Double = 0.1) -> Bool {
+    guard let d = atomDistance(atom1, atom2), let length = bondType.lengthRangeTuple else {
+        return false
+    }
+    if d < (length.0 - tolRange) || d > (length.1 + tolRange) {
+        return false
+    }
+    else {
+        return true
+    }
+}
+
+/**
+ Filtering by bond length with the reference of bond type (original, deprecated)
+ */
+public func bondTypeLengthFilterLegacy(_ atom1: Atom, _ atom2: Atom, _ bondType: ChemBondType, _ tolRange: Double = 0.1) -> Bool {
     guard let d = atomDistance(atom1, atom2), let length = bondType.length else {
         return false
     }
@@ -979,7 +1009,6 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
         // Step 1: Make sure the new atom is not too close to any of the existing atoms.
         let minimumBDLCheck = stMol.atoms.filter({ (atomDistance($0, atom) ?? 0) < ChemConst.minimumBondLength }).isEmpty
         if !minimumBDLCheck {
-            // print(stMol.atoms.map({atomDistance($0, atom)!}))
             return mol
         }
         
@@ -1010,14 +1039,14 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
         // Step 3: Perform VSEPR filter on each of the possible Cartesian combination of the bonds.
         mol.addAtom(atom)
         
-        for bonds in possibleBondsCollected.cartesianProduct() {
+        for pBonds in possibleBondsCollected.cartesianProduct() {
             if stMol.size == 1 {
-                mol.bondGraphs.insert(ChemBondGraph(Set(bonds)))
+                mol.bondGraphs.insert(ChemBondGraph(Set(pBonds)))
             } else if stMol.size > 1 {
                 outer: for bondGraph in bondGraphs {
                     var pBondGraph = bondGraph
-                    pBondGraph.bonds.formUnion(bonds)
-                    for bAtom in stMol.atoms {
+                    pBondGraph.bonds.formUnion(pBonds)
+                    for bAtom in mol.atoms {
                         let vseprGraph = pBondGraph.findVseprGraph(bAtom)
                         if !vseprGraph.filter(bondAngleTolRatio: tolRatio) {
                             continue outer

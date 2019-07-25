@@ -81,8 +81,9 @@ You can visualize the `.xyz` files and `.mol` files with softwares like [Avogadr
   - If you want to save the results, please enter/drag the folder where you want to save the results in.
   - If you don't want to save the results, just leave it empty.
 - Bond length tolerance level in angstrom (Optional)
-  - You'll be prompted to enter a desired value if you want to customize the tolerance level used in bond length filters.
-  - The default value is 0.1.
+  - You'll be prompted to enter a desired value if you want to customize the tolerance level used in bond length filters. If the distance between two atoms lies in the bond length range extended by the tolerance level, the program will form a bond between these two atoms. The formula for the range is `(bondLengthRange.min - tolLevel, bondLengthRange.max + tolLevel)`.
+  - The default value is 0.01.
+  - *\*Note: In version 0.1.2 or before, the tolerance level meant if the distance between two atoms is in the bond length typical value plus or minus the tolerance level, the program will form a bond between these two atoms. The formula for the range was* `(typBondLength - tolLevel, typBondLength + tolLevel)`. *The default value in these versions was 0.1.*
 - Bond angle tolerance ratio (Optional)
   - You'll be prompted to enter a desired value if you want to customize the tolerance ratio used in bond angle filters. Only values between 0 and 1 are allowed.
   - The default value is 0.1.
@@ -92,7 +93,7 @@ You can visualize the `.xyz` files and `.mol` files with softwares like [Avogadr
 - Trim level of positions in angstrom (Optional)
   - You'll be prompted to enter a desired value if you want to customize the trim level used to trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level. The trim level is suggested to be siginificantly smaller than the major component(s) of the position vector.
   - The default value is 0*.
-    - *Note that even the trim level is set to be zero, trimming down still happens based on the rounded digits after decimal. For example, if the rounded digits after decimal is set to be 2, then any position with absolute value less than 0.005 will be "trimmed down" to zero.
+    - \*Notice that even the trim level is set to be zero, trimming down still happens based on the rounded digits after decimal. For example, if the rounded digits after decimal is set to be 2, then any position with absolute value less than 0.005 will be "trimmed down" to zero.
 
 ### Discussion
 

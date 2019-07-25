@@ -52,7 +52,7 @@ print()
 /**
  Tolerance level used in bond length filter. Unit in angstrom.
  */
-let tolerenceLevel = Double(input(name: "Bond length tolerance level in angstrom", type: "double", defaultValue: 0.1, doubleRange: 0...1, printAfterSec: true)) ?? 0.1
+let tolerenceLevel = Double(input(name: "Bond length tolerance level in angstrom", type: "double", defaultValue: 0.01, doubleRange: 0...1, printAfterSec: true)) ?? 0.01
 print()
 
 /**

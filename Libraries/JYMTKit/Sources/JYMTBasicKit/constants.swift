@@ -64,6 +64,32 @@ public enum Constants {
         ]
         
         /**
+         Known minima and maxima of chemical bond lengths. Unit in Angstrom.
+         
+         - **Source:** Allen, F. H., Kennard, O., Watson, D. G., Brammer, L., Orpen, A. G., & Taylor, R. (1987). Tables of bond lengths determined by X-ray and neutron diffraction. Part 1. Bond lengths in organic compounds. Journal of the Chemical Society, Perkin Transactions 2, (12), S1-S19.
+         */
+        public static let bondLengthRangeTuples: [BondCode: (Double, Double)] = [
+            .CC1: (1.377, 1.588),
+            .CC2: (1.294, 1.392),
+            .CC3: (1.174, 1.192),
+            .CCl1: (1.713, 1.849),
+            .CF1: (1.320, 1.428),
+            .CN1: (1.321, 1.552),
+            .CN2: (1.279, 1.362),
+            .CN3: (1.136, 1.155),
+            .CO1: (1.293, 1.492),
+            .CO2: (1.187, 1.255),
+            .ClN1: (1.705, 1.757),
+            .ClO1: (1.414, 1.414),
+            .FN1: (1.406, 1.406),
+            .NN1: (1.350, 1.454),
+            .NN2: (1.124, 1.255),
+            .NO1: (1.234, 1.463),
+            .NO2: (1.210, 1.239),
+            .OO1: (1.464, 1.496)
+        ]
+        
+        /**
          Known atom mass. Unit in amu.
          
          - **Source:** pdg.lbl.gov
