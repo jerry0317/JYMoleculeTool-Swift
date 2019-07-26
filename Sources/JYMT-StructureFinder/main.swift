@@ -9,6 +9,26 @@
 import Foundation
 import JYMTBasicKit
 
+/**
+ The program mode used by Structure Finder.
+ */
+enum SFProgramMode {
+    /**
+     The test mode is to test whether a known molecule will pass all the filters or not. In the test mode, the program will not re-sign the coordinates.
+     */
+    case test
+    
+    /**
+     The simple mode is to run with all default parameters.
+     */
+    case simple
+    
+    /**
+     The ordinary mode.
+     */
+    case ordinary
+}
+
 printWelcomeBanner("Structure Finder")
 
 var saveResults = true
@@ -17,13 +37,21 @@ var writePath = URL(fileURLWithPath: "")
 var xyzSet = XYZFile()
 var fileName = ""
 
-/**
- Use test mode to test whether a known molecule will pass all the filters or not. In the test mode, the program will not re-sign the coordinates.
- */
-let testMode = CommandLine.arguments.count >= 2 && CommandLine.arguments[1] == "-t"
-if testMode {
-    print("[NOTE] This session will run in test mode.\n")
+var modes: Set<SFProgramMode> = [.ordinary]
+
+if CommandLine.arguments.count >= 2 {
+    if CommandLine.arguments.contains("-t") {
+        modes.remove(.ordinary)
+        modes.insert(.test)
+        print("[Test mode] This session will run in test mode.\n")
+    }
+    if CommandLine.arguments.contains("-s") {
+        modes.insert(.simple)
+        print("[Simple mode] All the parameters will be set as default values.\n")
+    }
 }
+
+let testMode = modes.contains(.test)
 
 fileInput(name: "XYZ file", tryAction: { (filePath) in
     xyzSet = try XYZFile(fromPath: filePath)
@@ -60,26 +88,36 @@ print()
 /**
  Tolerance level used in bond length filter. Unit in angstrom.
  */
-let tolerenceLevel = Double(input(name: "Bond length tolerance level in angstrom", type: "double", defaultValue: 0.01, doubleRange: 0...1, printAfterSec: true)) ?? 0.01
-print()
+var toleranceLevel: Double = 0.01
 
 /**
  Tolerance ratio used in bond angle filter.
  */
-let toleranceRatio = Double(input(name: "Bond angle tolerance ratio", type: "double", defaultValue: 0.1, doubleRange: 0...1, printAfterSec: true)) ?? 0.1
-print()
+var toleranceRatio: Double = 0.1
 
 /**
  The number of digits preserved after rounding the position vector of the atoms. The rounding level is suggested to be significantly smaller than the major component(s) of the position vector.
  */
-let roundDigits = Int(input(name: "Rounded digits (of position) after decimal", type: "int", defaultValue: 2, doubleRange: 0...10, printAfterSec: true)) ?? 2
-print()
+var roundDigits: Int = 2
 
 /**
  Trim level used to trim down the component of the position vector of an atom to zero if the absolute value of that component is less than the trim level. Unit in angstrom. Suggested to be siginificantly smaller than the major component(s) of the position vector.
  */
-let trimLevel = Double(input(name: "Trim level (of position) in angstrom", type: "double", defaultValue: 0, doubleRange: 0...1, printAfterSec: true)) ?? 0
-print()
+var trimLevel: Double = 0
+
+if !modes.contains(.simple) {
+    toleranceLevel = Double(input(name: "Bond length tolerance level in angstrom", type: "double", defaultValue: 0.01, doubleRange: 0...1, printAfterSec: true)) ?? 0.01
+    print()
+
+    toleranceRatio = Double(input(name: "Bond angle tolerance ratio", type: "double", defaultValue: 0.1, doubleRange: 0...1, printAfterSec: true)) ?? 0.1
+    print()
+
+    roundDigits = Int(input(name: "Rounded digits (of position) after decimal", type: "int", defaultValue: 2, doubleRange: 0...10, printAfterSec: true)) ?? 2
+    print()
+
+    trimLevel = Double(input(name: "Trim level (of position) in angstrom", type: "double", defaultValue: 0, doubleRange: 0...1, printAfterSec: true)) ?? 0
+    print()
+}
 
 var combAtoms: [Atom] = rawAtoms.removed(byElement: .hydrogen)
 
@@ -104,7 +142,7 @@ let tInitial = Date()
 print("Computation started on \(displayTime(tInitial)).")
 print()
 
-possibleList = rcsActionDynProgrammed(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, tolRatio: toleranceRatio, trueMol: StrcMolecule(Set(combAtoms)), testMode: testMode)
+possibleList = rcsActionDynProgrammed(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: toleranceLevel, tolRatio: toleranceRatio, trueMol: StrcMolecule(Set(combAtoms)), testMode: testMode)
 
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
 
@@ -141,7 +179,7 @@ log.add("[Basic Settings]")
 if testMode {
     log.add("<Test Mode>")
 }
-log.add("Bond length tolerance level: \(tolerenceLevel)")
+log.add("Bond length tolerance level: \(toleranceLevel)")
 log.add("Bond angle tolerance ratio: \(toleranceRatio)")
 log.add("Rounded digits after decimal: \(roundDigits)")
 log.add("Trim level: \(trimLevel)")

@@ -57,13 +57,19 @@ and run the executable by
 
 #### Test Mode
 
-Test mode is available for use in version 0.1.3 or later. Enter the test mode by providing the parameter `-t`. For example, you can run the exeuctable and enter the test mode by
+Test mode is available for use in version 0.1.3 or later. Enter the test mode by passing the command line argument `-t`. For example, you can run the exeuctable and enter the test mode by
 
 ```
 ./JYMT-StructureFinder -t
 ```
 
 Use test mode to test whether a known molecule will pass all the filters (with given parameters listed [here](#options)) or not. In the test mode, the program will not re-sign the coordinates.
+
+#### Simple Mode
+
+Simple mode is available for use in version 0.1.4 or later. Enable the simple mode by passing the command line argument `-s`. In simple mode, all the parameters will be set to default values and you will not be promopted to enter them. You still need to identify the input xyz file path and optional exporting path.
+
+You can use the simple mode and test mode at the same time by passing the commmand line arguments `-s -t` or `-t -s`. 
 
 ### Input
 
@@ -110,7 +116,7 @@ You can visualize the `.xyz` files and `.mol` files with softwares like [Avogadr
 
 ### Discussion
 
-As tested on computation-capable platforms, for molecules containing no more than 20 non-hydrogen atoms, the program is able to complete the computation in a reasonable amount of time (mostly less 10 minutes). Some computation time and number of results are listed for reference (tested with CPU [i7-8700B](https://ark.intel.com/content/www/us/en/ark/products/134905/intel-core-i7-8700b-processor-12m-cache-up-to-4-60-ghz.html), with commit [f81634f](https://github.com/jerry0317/JYMoleculeTool-Swift/commit/f81634f)).
+As tested on computation-capable platforms, for molecules containing no more than 20 non-hydrogen atoms, the program is able to complete the computation in a reasonable amount of time (mostly less 10 minutes). Some computation time and number of results are listed for reference (tested with CPU [i7-8700B](https://ark.intel.com/content/www/us/en/ark/products/134905/intel-core-i7-8700b-processor-12m-cache-up-to-4-60-ghz.html), with commit [f81634f](https://github.com/jerry0317/JYMoleculeTool-Swift/commit/f81634f)).\*
 
 |Molecule|Non-H Atoms|Results|Computation Time (s)|
 |---|---|---|---|
@@ -119,6 +125,8 @@ As tested on computation-capable platforms, for molecules containing no more tha
 |[Aspirin](https://pubchem.ncbi.nlm.nih.gov/compound/2244)|13|428|9.7029|
 |[Branched laurylphenol](https://pubchem.ncbi.nlm.nih.gov/compound/22833469)|17|2880|420.06|
 |[Ethyldihydro-alpha-isomorphine](https://pubchem.ncbi.nlm.nih.gov/compound/5745717)|23|17208|45804|
+
+*\*Note: The results and computaion time listed in this table may not match the performance of the current versions because the computation algorithms were changed siginificantly in a recent update of version 0.1.2.*
 
 As the first atom is arbitrarily fixed, the total number of structural combinations for *k* non-hygrogen atoms should be *8^(k-1)*. After optimization in algorithms, the runtime complexity of the program should be *O(n logn)*, where *n = 8^(k-1)*. Therefore, in terms of *k*, the runtime complexity is basically *2^O(k)*, which grows exponentially with the increase of number of non-H atoms.
 

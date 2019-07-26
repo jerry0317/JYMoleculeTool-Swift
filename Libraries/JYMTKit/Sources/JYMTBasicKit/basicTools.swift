@@ -165,7 +165,7 @@ public func fileInput(name: String = "", message: String? = nil, successMessage:
 }
 
 /**
- Print the copyright information
+ Print the copyright information if the configuration is set to `release`.
  */
 
 public func printWelcomeBanner(_ name: String) {

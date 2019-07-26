@@ -17,20 +17,49 @@ public var globalCache = GlobalCache()
  Provides a structure for cache that is easily to access globally.
  */
 public struct GlobalCache {
+    /**
+     The combinations of indices based on `C(n,k)`.
+     */
     public var indexCombinations: [CombTuple: Set<Set<Int>>] = [:]
     
+    /**
+     A cache containing the tuples of `atom` and `stMol`.
+     */
     public var rcsConstructorCache: Set<RcsConstructorTuple> = []
     
+    /**
+     Cached possible bond types keyed by the **Array** of `ChemElement`.
+     */
     public var possibleBondTypes: [Array<ChemElement>: [ChemBondType]] = [:]
     
+    /**
+     Record how many times the atoms has been matched by structure molecules.
+     
+     - If the set of atoms is in `stMolMatched.0`, then it has been matched only once (unique).
+     - If the set of atoms is in `stMolMatched.1`, then it has been matched twice or more (duplicated).
+     */
     public var stMolMatched: (Set<Set<Atom>>, Set<Set<Atom>>) = ([], [])
     
+    /**
+     The cached possible atoms after re-signing.
+     */
     public var atomPossibles: [Atom: [Atom]] = [Atom: [Atom]]()
     
+    /**
+     The cached `bdCodes` of bond types.
+     */
     public var bdCodes: [ChemBondType: BondCode] = [:]
     
+    /**
+     The cached bond angles keyed by a tuple containing the center atom, the first adjacent atom, and the second adjacent atom.
+     */
     public var bondAngles: [BondAngleTuple: Double] = [:]
     
+    /**
+     The cached neighbors of an atom in a bond.
+     
+     - It's keyed by a set of atom and the origin atom. If there's a neighbor, it will record  `(true, neighbor)`. If there're no neighbors, it will record `(false, self)`.
+     */
     public var atomNeighbors: [AtomNeighborTuple: (Bool, Atom)] = [:]
 }
 

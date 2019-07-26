@@ -58,6 +58,9 @@ public final class Atom {
      */
     public var element: ChemElement?
     
+    /**
+     A stored atomic mass corresponding to the public property `atomicMass`.
+     */
     private var storedAtomicMass: Double? = nil
     
     /**
@@ -77,8 +80,8 @@ public final class Atom {
     }
     
     /**
-         The atomic mass of the atom, with unit in kg. If not specified, it will return the atomic mass of the element of the atom.
-         */
+     The atomic mass of the atom, with unit in kg. If not specified, it will return the atomic mass of the element of the atom.
+    */
     public var mass: Double? {
         get {
             atomicMass == nil ? nil : atomicMass! * PhysConst.amu
@@ -301,6 +304,9 @@ public final class ChemBondType {
         return bondLengths[bd]
     }
     
+    /**
+     An optional `ClosedRange<Double>?` to represent the bond length range.
+     */
     public var lengthRange: ClosedRange<Double>? {
         guard let bd = bdCode else {
             return nil
@@ -309,6 +315,9 @@ public final class ChemBondType {
         return lb...ub
     }
     
+    /**
+     An optional tuple `(Double, Double)?` to present the min and the max of the bond length range.
+     */
     public var lengthRangeTuple: (Double, Double)? {
         guard let bd = bdCode else {
             return nil
@@ -678,6 +687,9 @@ public struct VSEPRGraph: SubChemBondGraph {
         return true
     }
     
+    /**
+     To determine if the neighbors of the atom all are the same element.
+     */
     public var neighborSymmetric: Bool {
         guard !attached.isEmpty else {
             return false
@@ -693,6 +705,9 @@ public struct VSEPRGraph: SubChemBondGraph {
         return true
     }
     
+    /**
+     Determine if the VESPR graph is both `bondOrderSymmetric` and `neighborSymmetric`.
+     */
     public var completelySymmetric: Bool {
         bondOrderSymmetric && neighborSymmetric
     }

@@ -201,6 +201,9 @@ public struct Matrix {
      */
     private var _grid: [Double]
     
+    /**
+     Grid to store/access the entries of the matrix row-by-row.
+     */
     public var grid: [Double] {
         get {
             return _grid
@@ -210,6 +213,9 @@ public struct Matrix {
         }
     }
     
+    /**
+     Grid to store/access the entris of the matrix column-by-column.
+     */
     public var columnGrid: [Double] {
         get {
             listOfColumns.flatMap { $0 }
@@ -238,6 +244,9 @@ public struct Matrix {
         }
     }
     
+    /**
+     The 2-D array to represent the rows.
+     */
     public var listOfRows: [[Double]] {
         get {
             if columns > 0 {
@@ -251,6 +260,9 @@ public struct Matrix {
         }
     }
     
+    /**
+     The 2-D array to represent the columns.
+     */
     public var listOfColumns: [[Double]] {
         get {
             _transposeTransform(columns, columns, grid: grid)
@@ -388,6 +400,9 @@ public extension Matrix {
         rows * columns
     }
     
+    /**
+     Check if the number of rows is equal to the number of columns.
+     */
     var isSquareMatrix: Bool {
         rows == columns
     }
@@ -739,6 +754,9 @@ extension Array where Element : RangeReplaceableCollection {
 
     /**
      The cartesian product among the members of the array.
+     
+     - Example: `[[1],[2,3]].cartesianProduct() = [[1,2],[2,3]].`
+     - The total number of elements equal to the product of the count of all the sub-arrays.
      */
     func cartesianProduct(ignoreEmpties: Bool = false) -> [[InnerElement]] {
         if isEmpty {

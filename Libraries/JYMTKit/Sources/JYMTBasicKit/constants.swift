@@ -242,7 +242,7 @@ public enum Constants {
         }
         
         /**
-         Planck constant. In SI unit `J·s`
+         Planck constant. In SI unit `J·s`.
          */
         public static let planckConstant = 6.626070040e-34
         
@@ -254,7 +254,7 @@ public enum Constants {
         }
         
         /**
-         Reduced Planck constant. In SI unit `J·s`
+         Reduced Planck constant. In SI unit `J·s`.
          */
         public static let planckConstantReduced = 1.054571800e-34
         

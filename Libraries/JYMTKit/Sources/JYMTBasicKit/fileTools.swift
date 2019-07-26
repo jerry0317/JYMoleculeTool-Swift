@@ -46,10 +46,22 @@ public extension File {
     }
 }
 
+/**
+ A typealias of file exporting error.
+ */
 public typealias FileExportError = FileError.Exporting
 
+/**
+ Errors that could appear in file operations.
+ */
 public enum FileError {
+    /**
+     Errors that could appear in the exporting process of files.
+     */
     public enum Exporting: Error {
+        /**
+         The file is not valid to export.
+         */
         case fileIsNotValid
     }
 }
@@ -229,12 +241,14 @@ public struct TextFile: File {
         try open(fromURL: url, encoding: encoding)
     }
     
-    // TODO: Choose to print or not when adding
-    
     /**
      Add anything to the file. Optional terminator with default for a new line.
      
      - The function is designed in this way to make it similar to the `Swift.print` function.
+     - Parameters:
+        - item: An `Any` item that will be converted to sting by `String(describing: item)`. The default is empty string ("").
+        - terminator: The terminator to end the content. The default value is a new line ("\n")
+        - print: If `true`, then the function will print the content to the console. The default value is `true`.
      */
     public mutating func add(_ item: Any = "", terminator: String = "\n", print: Bool = true) {
         let str = String(describing: item) + terminator
