@@ -55,7 +55,18 @@ and run the executable by
 
 *Note: Make sure the environment installed Swift 5.1. The Swift 5.0 compiler won't compile as there will be some errors.*
 
+#### Test Mode
+
+Test mode is available for use in version 0.1.3 or later. Enter the test mode by providing the parameter `-t`. For example, you can run the exeuctable and enter the test mode by
+
+```
+./JYMT-StructureFinder -t
+```
+
+Use test mode to test whether a known molecule will pass all the filters (with given parameters listed [here](#options)) or not. In the test mode, the program will not re-sign the coordinates.
+
 ### Input
+
 The tool takes a `.xyz` file as input for the known absolute values (or uncertain-signed values) of positions |x|, |y|, and |z| for each atom in the molecule *with unit in angstrom*. The sign of each value can be incorrect, but their value (absolute value) must be matched to the ultimate correct structure. The `.xyz` file looks like below.
 
 ```

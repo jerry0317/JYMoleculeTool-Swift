@@ -720,14 +720,17 @@ public struct VSEPRGraph: SubChemBondGraph {
         let vType = type
         switch vType {
         case .ax2e0, .ax2e1, .ax2e2, .ax3e0, .ax3e1, .ax4e0:
-            var range = 0.0...0.0
+            var range = 0.0...360.0
             switch vType {
             case .ax2e0: // linear
                 range = 180.0...180.0
+//                range = 170.0...180.0
             case .ax3e0, .ax2e1: // trigonal planar
                 range = 120.0...120.0
+//                range = 115.0...125.0
             case .ax4e0, .ax3e1, .ax2e2: // tetrahedral
-                range = 90...109.5
+//                range = 90...109.5
+                range = 90.0...115.0
             default:
                 break
             }
@@ -937,7 +940,11 @@ public func bondAnglesFilter(_ angles: [Double?], range: ClosedRange<Double>, to
     let upperBound = range.upperBound * (1 + tolRatio)
     let tRange: ClosedRange<Double> = lowerBound...upperBound
     for theta in angles {
-        if theta == nil || !tRange.contains(theta!) {
+        guard let t = theta else {
+            return false
+        }
+        
+        if !tRange.contains(t) && !tRange.contains(360.0 - t) {
             return false
         }
     }
@@ -992,8 +999,6 @@ public func bondAnglesFilter(center aAtom: Atom, attached: [Atom], range: Closed
  - Parameter tolRange: The tolerance level acting in bond length filters, unit in angstrom.
  
  - Parameter tolRatio: The tolerance ratio acting in bond angle filters. Reference with the VSEPR graph.
- 
- - TODO: Identify when the atom should form a ring or some closed sub-structure with the `stMol`.
  
  */
 public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> StrcMolecule {
@@ -1063,9 +1068,8 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
 /**
  The recursion constructor. It takes a test atom and compared it with a valid structrual molecule. It will return the possible structural molecules as the atom and the molecule join together.
  */
-public func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tolRatio: Double = 0.1) -> [StrcMolecule] {
-    let possibleAtoms = atom.possibles
-//    let possibleAtoms = [atom]
+public func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0.1, tolRatio: Double = 0.1, testMode: Bool = false) -> [StrcMolecule] {
+    let possibleAtoms = testMode ? [atom] : atom.possibles
     var possibleSMList: [StrcMolecule] = []
     
     for pAtom in possibleAtoms {
@@ -1128,7 +1132,7 @@ public func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange:
 /**
  The iteration version of the `rcsAction` for faster and clearer computations. Memoized dynamic progamming is implemented for utilization.
  */
-public func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, tolRatio: Double = 0.1, trueMol: StrcMolecule? = nil) -> [StrcMolecule] {
+public func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, tolRatio: Double = 0.1, trueMol: StrcMolecule? = nil, testMode: Bool = false) -> [StrcMolecule] {
     guard !rAtoms.isEmpty else {
         return []
     }
@@ -1172,7 +1176,7 @@ public func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecul
             for stMol in stMols {
                 let rList = rAtoms.filter { !stMol.containsById($0) }
                 for rAtom in rList {
-                    let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio)
+                    let newMList = rcsConstructor(atom: rAtom, stMol: stMol, tolRange: tolRange, tolRatio: tolRatio, testMode: testMode)
                     
                     for newStMol in newMList {
                         if globalCache.stMolMatched.0.contains(newStMol.atoms) {

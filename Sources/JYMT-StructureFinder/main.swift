@@ -17,6 +17,14 @@ var writePath = URL(fileURLWithPath: "")
 var xyzSet = XYZFile()
 var fileName = ""
 
+/**
+ Use test mode to test whether a known molecule will pass all the filters or not. In the test mode, the program will not re-sign the coordinates.
+ */
+let testMode = CommandLine.arguments.count >= 2 && CommandLine.arguments[1] == "-t"
+if testMode {
+    print("[NOTE] This session will run in test mode.\n")
+}
+
 fileInput(name: "XYZ file", tryAction: { (filePath) in
     xyzSet = try XYZFile(fromPath: filePath)
     fileName = URL(fileURLWithPath: filePath).lastPathComponentName
@@ -96,7 +104,7 @@ let tInitial = Date()
 print("Computation started on \(displayTime(tInitial)).")
 print()
 
-possibleList = rcsActionDynProgrammed(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, tolRatio: toleranceRatio, trueMol: StrcMolecule(Set(combAtoms)))
+possibleList = rcsActionDynProgrammed(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: tolerenceLevel, tolRatio: toleranceRatio, trueMol: StrcMolecule(Set(combAtoms)), testMode: testMode)
 
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
 
