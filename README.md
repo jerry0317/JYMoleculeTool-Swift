@@ -94,10 +94,12 @@ You can visualize the `.xyz` files and `.mol` files with softwares like [Avogadr
 - Bond length tolerance level in angstrom (Optional)
   - You'll be prompted to enter a desired value if you want to customize the tolerance level used in bond length filters. If the distance between two atoms lies in the bond length range extended by the tolerance level, the program will form a bond between these two atoms. The formula for the range is `(bondLengthRange.min - tolLevel, bondLengthRange.max + tolLevel)`.
   - The default value is 0.01.
+  - For experimentally determined data, the tolerance level is suggested to be larger to match the uncertainties persented in the data set.
   - *\*Note: In version 0.1.2 or before, the tolerance level meant if the distance between two atoms is in the bond length typical value plus or minus the tolerance level, the program will form a bond between these two atoms. The formula for the range was* `(typBondLength - tolLevel, typBondLength + tolLevel)`. *The default value in these versions was 0.1.*
 - Bond angle tolerance ratio (Optional)
   - You'll be prompted to enter a desired value if you want to customize the tolerance ratio used in bond angle filters. Only values between 0 and 1 are allowed.
   - The default value is 0.1.
+  - For larger and more complex molecules, the bond angle tolerance ratio is suggested to be increased to bigger values like 0.15 or 0.2 as the bond angles in larger and more complex structures are less predictable.
 - Rounded digits of positions after decimal (Optional)
   - You'll be prompted to enter a desired value if you want to customize the number of digits preserved after rounding the position vector of the atoms. The rounding level is suggested to be significantly smaller than the major component(s) of the position vector.
   - The default value is 2.

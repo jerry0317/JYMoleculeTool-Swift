@@ -236,9 +236,12 @@ public struct TextFile: File {
      
      - The function is designed in this way to make it similar to the `Swift.print` function.
      */
-    public mutating func add(_ item: Any = "", terminator: String = "\n") {
-        let str = String(describing: item)
-        content.append(str + terminator)
+    public mutating func add(_ item: Any = "", terminator: String = "\n", print: Bool = true) {
+        let str = String(describing: item) + terminator
+        if print {
+            Swift.print(str, terminator: "")
+        }
+        content.append(str)
     }
     
     /**

@@ -663,12 +663,58 @@ public struct VSEPRGraph: SubChemBondGraph {
     /**
      To determine if the bond orders are all the same.
      */
-    public var completelySymmetric: Bool {
-        var bondList = Array(bonds)
+    public var bondOrderSymmetric: Bool {
+        guard !bonds.isEmpty else {
+            return false
+        }
+        var bondList = bonds
         let fOrder = bondList[0].type.order
         bondList.removeFirst()
         for bond in bondList {
             if bond.type.order != fOrder {
+                return false
+            }
+        }
+        return true
+    }
+    
+    public var neighborSymmetric: Bool {
+        guard !attached.isEmpty else {
+            return false
+        }
+        var atomList = attached
+        let fElement = atomList[0].element
+        atomList.removeFirst()
+        for atom in atomList {
+            if atom.element != fElement {
+                return false
+            }
+        }
+        return true
+    }
+    
+    public var completelySymmetric: Bool {
+        bondOrderSymmetric && neighborSymmetric
+    }
+    
+    // Not available for use yet
+    private func completelySymmetricFilter(tolRatio: Double = 0.1) -> Bool {
+        guard completelySymmetric else {
+            return true
+        }
+        
+        guard bonds.count >= 3 else {
+            return true
+        }
+        
+        let angles = bondAnglesInDeg(center: center, attached: attached).map { $0.0 }
+        let nonNilAngles = angles.compactMap({ $0 })
+        if nonNilAngles.count < angles.count {
+            return false
+        }
+        let avgAngle = nonNilAngles.reduce(0, +) / Double(nonNilAngles.count)
+        for angle in nonNilAngles {
+            if !((avgAngle * (1 - tolRatio))...(avgAngle * (1 + tolRatio))).contains(angle) {
                 return false
             }
         }
@@ -713,11 +759,15 @@ public struct VSEPRGraph: SubChemBondGraph {
     /**
      A filter to determine if this VSEPR graph is valid.
      */
-    public func filter(tolRatio: Double = 0.1) -> Bool {
+    public func filter(tolRatio: Double = 0.1, csTolRatio: Double? = nil) -> Bool {
         guard (center.valence - valenceOccupied) >= 0 else {
             return false
         }
         let vType = type
+//        var csRatio = tolRatio
+//        if csTolRatio != nil {
+//            csRatio = csTolRatio!
+//        }
         switch vType {
         case .ax2e0, .ax2e1, .ax2e2, .ax3e0, .ax3e1, .ax4e0:
             var range = 0.0...360.0
@@ -734,10 +784,18 @@ public struct VSEPRGraph: SubChemBondGraph {
             default:
                 break
             }
-            return bondAnglesFilter(center: center, attached: attached, range: range, tolRatio: tolRatio)
+            if !bondAnglesFilter(center: center, attached: attached, range: range, tolRatio: tolRatio) {
+                return false
+            }
+            
+//            if !completelySymmetricFilter(tolRatio: csRatio) {
+//                return false
+//            }
+            
         default:
             break
         }
+        
         return true
     }
 }

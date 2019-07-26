@@ -135,9 +135,12 @@ if saveResults {
 
 let xyzPath = writePath.appendingPathComponent("xyz", isDirectory: true)
 let molPath = writePath.appendingPathComponent("mol", isDirectory: true)
-
+print("**------------Results------------**")
 log.add("-----------------------------------")
 log.add("[Basic Settings]")
+if testMode {
+    log.add("<Test Mode>")
+}
 log.add("Bond length tolerance level: \(tolerenceLevel)")
 log.add("Bond angle tolerance ratio: \(toleranceRatio)")
 log.add("Rounded digits after decimal: \(roundDigits)")
@@ -235,8 +238,6 @@ if saveResults {
     }
 }
 print()
-print("**------------Results------------**")
-log.print()
 
 print("Exited on \(displayTime(Date())).")
 print()
