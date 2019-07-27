@@ -7,6 +7,7 @@ The project currently includes the following tools:
 - Structure Finder
 - ABC Tool
 - ABC Calculator *(Under early development)*
+- MIS Calculator *(Under initial development, not available for use)*
 
 The programs currently support molcules containing hydrogen\*, carbon, oxygen, nitrogen, fluorine, and chlorine atoms.
 
@@ -236,3 +237,13 @@ The tool will directly print the output to the console. The output contains the 
 ### Options
 - XYZ file path **(Required)**
   - You will be prompted to enter the input xyz file path. You can either enter the relative/absolute file path or drag the file to the console.
+
+## MIS Calculator
+
+MIS Calculator will be a new tool to calculate the rotational constants information for multiple isotopic substitutions. The initial data source will be from single isotopic substitutions (`sabc` file), while `.xyz`, `.mol` are planned to be added in the future.
+
+The program should predict the rotational constants under multiple isotopic substitutions from the given single isotopic substitution information (or data of the molecular structure). The outcomes are not expected to be unique if the structural information is not determined in the data source, but the program should perform as well as [JYMT-StructureFinder](#structure-finder) in terms of reduction efficiency.
+
+The program will utilize `JYMTAdvancedKit`, which depends on the interoperability bewteen Swift and Python to utilize the `NumPy` library to calculate the advanced matrix linear algebra.
+
+**This tool is still in initial development.**
