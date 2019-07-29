@@ -177,3 +177,23 @@ public func printWelcomeBanner(_ name: String) {
     print()
     #endif
 }
+
+/**
+ The program mode used by Structure Finder or related processes.
+ */
+public enum SFProgramMode {
+    /**
+     The test mode is to test whether a known molecule will pass all the filters or not. In the test mode, the program will not re-sign the coordinates.
+     */
+    case test
+    
+    /**
+     The simple mode is to run with all default parameters.
+     */
+    case simple
+    
+    /**
+     The ordinary mode.
+     */
+    case ordinary
+}

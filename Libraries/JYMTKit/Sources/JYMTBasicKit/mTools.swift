@@ -69,7 +69,13 @@ public final class Atom {
     public var atomicMass: Double? {
         get {
             if storedAtomicMass == nil {
-                return element?.atomicMass
+                if massNumber == nil {
+                    return element?.atomicMass
+                } else if element == nil {
+                    return nil
+                } else {
+                    return element!.isotopeAtomicMasses[massNumber!]
+                }
             } else {
                 return storedAtomicMass!
             }
@@ -78,6 +84,8 @@ public final class Atom {
             storedAtomicMass = newValue
         }
     }
+    
+    public var massNumber: Int? = nil
     
     /**
      The atomic mass of the atom, with unit in kg. If not specified, it will return the atomic mass of the element of the atom.

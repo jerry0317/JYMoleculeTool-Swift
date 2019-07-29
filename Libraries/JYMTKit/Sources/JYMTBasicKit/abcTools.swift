@@ -9,7 +9,7 @@
 import Foundation
 
 /**
- The structure contains the information of rotational constants and single isotopic substitutions (SIS).
+ The structure contains the information of rotational constants and isotopic substitutions.
  */
 public struct ABCTuple {
     public var A: Double = 0
@@ -17,52 +17,54 @@ public struct ABCTuple {
     public var C: Double = 0
     
     /**
-     The type of the tuple.
-     */
-    public enum ABCType {
-        case original
-        case singleSubstituted
-    }
-    
-    /**
      The type of the tuple to determine if the molecule was original or after single isotopic substitution.
      */
-    public var type: ABCType
+    public var substituted: Int {
+        substitutedElements.count
+    }
     
     /**
      The element that has been substituted in the SIS.
      */
-    public var substitutedElement: ChemElement? = nil
+    public var substitutedElements: [ChemElement] = []
     
     /**
      The atomic mass of the substituted element, unit in `amu`.
      */
-    public var substitutedAtomicMass: Double? = nil
+    public var substitutedAtomicMasses: [Double] = []
     
     /**
      The total atomic mass of the molecule, unit in `amu`.
      */
     public var totalAtomicMass: Double = 0
     
+    public var isValid: Bool {
+        substitutedElements.count == substitutedAtomicMasses.count
+    }
+    
+    public var isSIS: Bool {
+        substituted == 1 && isValid
+    }
+    
+    public var isParent: Bool {
+        substituted == 0 && isValid
+    }
+    
     /**
      The change of atomic mass, calculated from the substituted element. Unit in `amu`.
      */
-    public var deltaAtomicMass: Double? {
-        guard type == .singleSubstituted, let mass = substitutedAtomicMass, let element = substitutedElement else {
-            return nil
+    public var deltaAtomicMasses: [Double] {
+        guard isValid else {
+            return []
         }
-        return mass - element.atomicMass
+        return (0..<substituted).map { substitutedAtomicMasses[$0] - substitutedElements[$0].mostCommonIsotopeAtomicMass }
     }
     
     /**
      The change of mass, unit in `kg`.
      */
-    public var deltaMass: Double? {
-        if deltaAtomicMass == nil {
-            return nil
-        } else {
-            return deltaAtomicMass! * PhysConst.amu
-        }
+    public var deltaMass: [Double] {
+        deltaAtomicMasses.map { $0 * PhysConst.amu }
     }
     
     /**
@@ -107,18 +109,17 @@ public struct ABCTuple {
         }
     }
     
-    public init(_ type: ABCType = .original){
-        self.type = type
+    public init(){
+        
     }
     
-    public init(_ A: Double, _ B: Double, _ C: Double, totalAtomicMass: Double, type: ABCType = .original, substitutedElement sElement: ChemElement? = nil, substitutedMass sMass: Double? = nil) {
+    public init(_ A: Double, _ B: Double, _ C: Double, totalAtomicMass: Double, substitutedElements sElements: [ChemElement] = [], substitutedMasses sMasses: [Double] = []) {
         self.A = A
         self.B = B
         self.C = C
         self.totalAtomicMass = totalAtomicMass
-        self.type = type
-        self.substitutedElement = sElement
-        self.substitutedAtomicMass = sMass
+        self.substitutedElements = sElements
+        self.substitutedAtomicMasses = sMasses
     }
 }
 
@@ -192,17 +193,17 @@ public func fromSISToAtoms(original oABC: ABCTuple, substituted sABCs: [ABCTuple
     let iInitial = oABC.inertiaTensor
     
     for sABC in sABCs {
-        guard sABC.type == .singleSubstituted, let sElement = sABC.substitutedElement, let deltaM = sABC.deltaMass else {
+        guard sABC.substituted == 1 && sABC.isValid else {
             continue
         }
         let iSub = sABC.inertiaTensor
         let deltaI = iSub - iInitial
         
-        let mu = reducedMass(M: oABC.totalMass, deltaM: deltaM)
+        let mu = reducedMass(M: oABC.totalMass, deltaM: sABC.deltaMass[0])
         guard let deltaP = tensorDeltaP(fromDeltaI: deltaI), let rVec = rVecFromSIS(mu: mu, deltaP: deltaP, I: iInitial) else {
             continue
         }
-        results.append(Atom(sElement, rVec * 1e10))
+        results.append(Atom(sABC.substitutedElements[0], rVec * 1e10))
     }
     
     return results

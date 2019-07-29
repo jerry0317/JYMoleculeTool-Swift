@@ -290,7 +290,7 @@ public struct SABCFile: File {
     public var comment: String?
     
     /**
-     The rotational constants of each single isotopic substitution.
+     The rotational constants of each single isotopic substitution (SIS).
      */
     public var substituted: [ABCTuple]?
     
@@ -329,10 +329,10 @@ public struct SABCFile: File {
         str = str + "\(ori.A)    \(ori.B)    \(ori.C)    \(ori.totalAtomicMass)\n"
         str = str + (comment ?? "")
         for s in subs {
-            guard let sMass = s.substitutedAtomicMass, let sE = s.substitutedElement else {
+            guard s.isSIS else {
                 continue
             }
-            str = str + "\(s.A)    \(s.B)    \(s.C)    \(sMass)   \(sE.rawValue)\n"
+            str = str + "\(s.A)    \(s.B)    \(s.C)    \(s.substitutedAtomicMasses[0])   \(s.substitutedElements[0].rawValue)\n"
         }
         return str
     }
@@ -358,7 +358,7 @@ public struct SABCFile: File {
                 guard elements.count == (i == 0 ? 4 : 5) else {
                     break
                 }
-                var abcTuple = ABCTuple(i == 0 ? .original: .singleSubstituted)
+                var abcTuple = ABCTuple()
                 for j in 0...2 {
                     guard let r: Double = Double(elements[j]) else {
                         break
@@ -372,14 +372,18 @@ public struct SABCFile: File {
                     abcTuple.totalAtomicMass = m
                     originalFromFile = abcTuple
                 } else {
-                    abcTuple.substitutedAtomicMass = m
-                    
+                    let substitutedMassNumber = Int(m)
                     guard let element: ChemElement = ChemElement(rawValue: String(elements[4])) else {
                         break
                     }
                     
-                    abcTuple.substitutedElement = element
-                    abcTuple.totalAtomicMass = originalFromFile!.totalAtomicMass + abcTuple.deltaAtomicMass!
+                    guard let substitutedMass = element.isotopeAtomicMasses[substitutedMassNumber] else {
+                        break
+                    }
+                    
+                    abcTuple.substitutedAtomicMasses.append(substitutedMass)
+                    abcTuple.substitutedElements.append(element)
+                    abcTuple.totalAtomicMass = originalFromFile!.totalAtomicMass + abcTuple.deltaAtomicMasses[0]
                     if substitutedFromFile == nil {
                         substitutedFromFile = []
                     }
@@ -394,7 +398,7 @@ public struct SABCFile: File {
      Calculate the information of current information in the set to an array of atoms.
      */
     public func exportToAtoms() -> [Atom] {
-        guard let oABC = original, let sABCs = substituted, oABC.type == .original else {
+        guard let oABC = original, let sABCs = substituted, oABC.isParent else {
             return []
         }
         return fromSISToAtoms(original: oABC, substituted: sABCs)

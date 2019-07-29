@@ -11,12 +11,50 @@ import JYMTAdvancedKit
 
 printWelcomeBanner("MIS Calculator")
 
-print("""
-MIS Calculator will be a new tool to calculate the rotational constants information for multiple isotopic substitutions. The initial data source will be from single isotopic substitutions (sabc file), while `.xyz`, `.mol` are planned to be added in the future.
+//var saveResults = true
+//var writePath = URL(fileURLWithPath: "")
+//var sabcSet = SABCFile()
+//var fileName = ""
+//
+//fileInput(name: "SABC file") { (filePath) -> Bool in
+//    sabcSet = try SABCFile(fromPath: filePath)
+//    if !sabcSet.isValid {
+//        print("Not a valid SABC file.")
+//        return false
+//    }
+//    fileName = URL(fileURLWithPath: filePath).lastPathComponentName
+//    return true
+//}
+//
+//fileInput(message: "log exporting Path (leave empty if not to save)", successMessage: false) { (writePathInput) in
+//    if writePathInput.isEmpty {
+//        saveResults = false
+//        print("The results will not be saved.")
+//        return true
+//    } else {
+//        let writePathUrl = URL(fileURLWithPath: writePathInput)
+//        guard writePathUrl.hasDirectoryPath else {
+//            print("Not a valid directory. Please try again.")
+//            return false
+//        }
+//        writePath = writePathUrl
+//        print("The result will be saved in \(writePath.relativeString).")
+//        return true
+//    }
+//}
+//
+//let sisCount = sabcSet.substituted!.count
+//
+//var maximumDepth: Int = 2
+//
+//maximumDepth = Int(input(name: "Maximum depth", type: "int", defaultValue: 2, doubleRange: 0...Int.max, printAfterSec: true)) ?? 2
+//
+//print()
+//print("Number of atoms in SIS: \(sisCount)")
+//print()
+//
+//let tInitial = Date()
+//let rawAtoms = sabcSet.exportToAtoms()
 
-The program should predict the rotational constants under multiple isotopic substitutions from the given single isotopic substitution information (or data of the molecular structure). The outcomes are not expected to be unique if the structural information is not determined in the data source, but the program should perform as well as JYMT-StructureFinder in terms of reduction efficiency.
 
-The program will utilize JYMTAdvancedKit, which depends on the interoperability bewteen Swift and Python to utilize the NumPy library to calculate the advanced matrix linear algebra.
 
-This tool is still in initial development. Keep an eye on it.
-""")

@@ -116,6 +116,116 @@ public enum Constants {
         ]
         
         /**
+         Known isotope masses for elements. Unit in amu.
+         
+         - **Source:** https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl
+         */
+        public static let isotopeAtomicMasses: [ChemElement: [Int: Double]] = [
+            .hydrogen: [
+                1: 1.00782503223,
+                2: 2.01410177812,
+                3: 3.0160492779
+            ],
+            .helium: [
+                3: 3.0160293201,
+                4: 4.00260325413
+            ],
+            .lithium: [
+                6: 6.0151228874,
+                7: 7.0160034366
+            ],
+            .beryllium: [
+                9: 9.012183065
+            ],
+            .boron: [
+                10: 10.01293695,
+                11: 11.00930536
+            ],
+            .carbon: [
+                12: 12.0,
+                13: 13.00335483507,
+                14: 14.0032419884
+            ],
+            .nitrogen: [
+                14: 14.00307400443,
+                15: 15.00010889888
+            ],
+            .oxygen: [
+                16: 15.99491461957,
+                17: 16.99913175650,
+                18: 17.99915961286
+            ],
+            .fluorine: [
+                19: 18.99840316273
+            ],
+            .neon: [
+                20: 19.9924401762,
+                21: 20.993846685,
+                22: 21.991365114
+            ],
+            .sodium: [
+                23: 22.9897692820
+            ],
+            .magnesium: [
+                24: 23.985041697,
+                25: 24.985836976,
+                26: 25.982592968
+            ],
+            .aluminum: [
+                27: 26.98153853
+            ],
+            .silicon: [
+                28: 27.97692653465,
+                29: 28.97649466490,
+                30: 29.973770136
+            ],
+            .phosphorus: [
+                31: 30.97376199842
+            ],
+            .sulfur: [
+                32: 31.9720711744,
+                33: 32.9714589098,
+                34: 33.976867004,
+                36: 35.96708071
+            ],
+            .chlorine: [
+                35: 34.968852682,
+                37: 36.965902602
+            ],
+            .argon: [
+                36: 35.967545105,
+                38: 37.96273211,
+                40: 39.9623831237
+            ]
+        ]
+        
+        /**
+         The mass numbers of the most abundant isotopes for each element.
+         
+         - **Source:** https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl
+         */
+        public static let commonMassNumbers: [ChemElement: [Int]] = [
+            .hydrogen: [1, 2, 3],
+            .helium: [4, 3],
+            .lithium: [7, 6],
+            .beryllium: [9],
+            .boron: [11, 10],
+            .carbon: [12, 13, 14],
+            .nitrogen: [14, 15],
+            .oxygen: [16, 18, 17],
+            .fluorine: [19],
+            .neon: [20, 22, 21],
+            .sodium: [23],
+            .magnesium: [24, 26, 25],
+            .aluminum: [27],
+            .silicon: [28, 29, 30],
+            .phosphorus: [31],
+            .sulfur: [32, 34, 33, 36],
+            .chlorine: [35, 37],
+            .argon: [40, 36, 38]
+        ]
+        
+        /**
          Usual valence of an atom in organic compounds.
          */
         public static let valences: [ChemElement: Int] = [
@@ -185,6 +295,34 @@ public enum Constants {
              */
             var mass: Double {
                 atomicMass * PhysConst.amu
+            }
+            
+            var commonMassNumbers: [Int] {
+                ChemConst.commonMassNumbers[self]!
+            }
+            
+            var mostCommonMassNumber: Int {
+                commonMassNumbers[0]
+            }
+            
+            var mostCommonIsotopeAtomicMass: Double {
+                isotopeAtomicMasses[mostCommonMassNumber]!
+            }
+            
+            var secondCommonMassNumber: Int? {
+                commonMassNumbers.count >= 2 ? commonMassNumbers[1] : nil
+            }
+            
+            var secondCommonIsotopeAtomicMass: Double? {
+                if secondCommonMassNumber == nil {
+                    return nil
+                } else {
+                    return isotopeAtomicMasses[secondCommonMassNumber!]
+                }
+            }
+            
+            var isotopeAtomicMasses: [Int: Double] {
+                ChemConst.isotopeAtomicMasses[self]!
             }
         }
         
