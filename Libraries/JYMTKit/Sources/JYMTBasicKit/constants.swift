@@ -286,34 +286,34 @@ public enum Constants {
             /**
              The atomic mass of the element. Unit in `amu`.
              */
-            var atomicMass: Double {
+            public var atomicMass: Double {
                 ChemConst.atomicMasses[self]!
             }
             
             /**
              The atomic mass of the element. Unit in `kg`.
              */
-            var mass: Double {
+            public var mass: Double {
                 atomicMass * PhysConst.amu
             }
             
-            var commonMassNumbers: [Int] {
+            public var commonMassNumbers: [Int] {
                 ChemConst.commonMassNumbers[self]!
             }
             
-            var mostCommonMassNumber: Int {
+            public var mostCommonMassNumber: Int {
                 commonMassNumbers[0]
             }
             
-            var mostCommonIsotopeAtomicMass: Double {
+            public var mostCommonIsotopeAtomicMass: Double {
                 isotopeAtomicMasses[mostCommonMassNumber]!
             }
             
-            var secondCommonMassNumber: Int? {
+            public var secondCommonMassNumber: Int? {
                 commonMassNumbers.count >= 2 ? commonMassNumbers[1] : nil
             }
             
-            var secondCommonIsotopeAtomicMass: Double? {
+            public var secondCommonIsotopeAtomicMass: Double? {
                 if secondCommonMassNumber == nil {
                     return nil
                 } else {
@@ -321,7 +321,7 @@ public enum Constants {
                 }
             }
             
-            var isotopeAtomicMasses: [Int: Double] {
+            public var isotopeAtomicMasses: [Int: Double] {
                 ChemConst.isotopeAtomicMasses[self]!
             }
         }

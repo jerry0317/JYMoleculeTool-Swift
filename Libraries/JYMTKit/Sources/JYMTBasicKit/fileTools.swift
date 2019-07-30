@@ -332,7 +332,7 @@ public struct SABCFile: File {
             guard s.isSIS else {
                 continue
             }
-            str = str + "\(s.A)    \(s.B)    \(s.C)    \(s.substitutedAtomicMasses[0])   \(s.substitutedElements[0].rawValue)\n"
+            str = str + "\(s.A)    \(s.B)    \(s.C)    \(s.substitutedAtomicMasses[0])   \(s.substitutedIsotopes[0].0.rawValue)\n"
         }
         return str
     }
@@ -377,12 +377,7 @@ public struct SABCFile: File {
                         break
                     }
                     
-                    guard let substitutedMass = element.isotopeAtomicMasses[substitutedMassNumber] else {
-                        break
-                    }
-                    
-                    abcTuple.substitutedAtomicMasses.append(substitutedMass)
-                    abcTuple.substitutedElements.append(element)
+                    abcTuple.substitutedIsotopes.append((element, substitutedMassNumber))
                     abcTuple.totalAtomicMass = originalFromFile!.totalAtomicMass + abcTuple.deltaAtomicMasses[0]
                     if substitutedFromFile == nil {
                         substitutedFromFile = []

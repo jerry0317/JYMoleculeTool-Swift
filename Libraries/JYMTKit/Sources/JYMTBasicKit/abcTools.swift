@@ -20,18 +20,20 @@ public struct ABCTuple {
      The type of the tuple to determine if the molecule was original or after single isotopic substitution.
      */
     public var substituted: Int {
-        substitutedElements.count
+        substitutedIsotopes.count
     }
     
     /**
      The element that has been substituted in the SIS.
      */
-    public var substitutedElements: [ChemElement] = []
+    public var substitutedIsotopes: [(ChemElement, Int)] = []
     
     /**
      The atomic mass of the substituted element, unit in `amu`.
      */
-    public var substitutedAtomicMasses: [Double] = []
+    public var substitutedAtomicMasses: [Double] {
+        substitutedIsotopes.map { $0.0.isotopeAtomicMasses[$0.1] ?? $0.0.mostCommonIsotopeAtomicMass }
+    }
     
     /**
      The total atomic mass of the molecule, unit in `amu`.
@@ -39,7 +41,7 @@ public struct ABCTuple {
     public var totalAtomicMass: Double = 0
     
     public var isValid: Bool {
-        substitutedElements.count == substitutedAtomicMasses.count
+        substitutedIsotopes.count == substitutedAtomicMasses.count
     }
     
     public var isSIS: Bool {
@@ -57,7 +59,7 @@ public struct ABCTuple {
         guard isValid else {
             return []
         }
-        return (0..<substituted).map { substitutedAtomicMasses[$0] - substitutedElements[$0].mostCommonIsotopeAtomicMass }
+        return (0..<substituted).map { substitutedAtomicMasses[$0] - substitutedIsotopes[$0].0.mostCommonIsotopeAtomicMass }
     }
     
     /**
@@ -77,7 +79,7 @@ public struct ABCTuple {
     /**
      The inertia tensor calculated from the rotational constants A, B, and C.
      */
-    var inertiaTensor: Matrix {
+    public var inertiaTensor: Matrix {
         return tensorIFromABC(A, B, C)
     }
     
@@ -109,17 +111,29 @@ public struct ABCTuple {
         }
     }
     
+    public var arrayForm: [Double] {
+        return [A, B, C]
+    }
+    
     public init(){
         
     }
     
-    public init(_ A: Double, _ B: Double, _ C: Double, totalAtomicMass: Double, substitutedElements sElements: [ChemElement] = [], substitutedMasses sMasses: [Double] = []) {
+    public init(_ A: Double, _ B: Double, _ C: Double, totalAtomicMass: Double, substitutedIsotopes sIsotpes: [(ChemElement, Int)] = [], substitutedMassNumbers sMassNumbers: [Double] = []) {
         self.A = A
         self.B = B
         self.C = C
         self.totalAtomicMass = totalAtomicMass
-        self.substitutedElements = sElements
-        self.substitutedAtomicMasses = sMasses
+        self.substitutedIsotopes = sIsotpes
+    }
+    
+    public func megaHertzForm(roundDigits: Int? = nil) -> [Double] {
+        var aForm = arrayForm
+        aForm = aForm.map({ $0 * 1e-6 })
+        if roundDigits != nil {
+            aForm.round(digitsAfterDecimal: roundDigits!)
+        }
+        return aForm
     }
 }
 
@@ -203,7 +217,9 @@ public func fromSISToAtoms(original oABC: ABCTuple, substituted sABCs: [ABCTuple
         guard let deltaP = tensorDeltaP(fromDeltaI: deltaI), let rVec = rVecFromSIS(mu: mu, deltaP: deltaP, I: iInitial) else {
             continue
         }
-        results.append(Atom(sABC.substitutedElements[0], rVec * 1e10))
+        let newAtom = Atom(sABC.substitutedIsotopes[0].0, rVec * 1e10)
+        newAtom.setIdentifier()
+        results.append(newAtom)
     }
     
     return results

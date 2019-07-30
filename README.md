@@ -31,6 +31,22 @@ To learn how to install Swift, please [visit here](https://swift.org/download/#s
 #### SPM Dependencies
 The module `JYMTAdvancedKit` for advanced calculations utilizes [`PythonKit`](https://github.com/pvieito/PythonKit) as dependency, which is hosted on GitHub. Therefore, for direct running through `swift run` or compiling through `swift build`, an internet connection may be required to fetch the external SPM dependencies.
 
+### Compile
+
+To compile all the executables with swift package manager, use
+
+```
+swift build -c release; mv ./.build/release/JYMT-* ./; rm -rf ./*.product
+```
+
+and run any executable by
+
+```
+./JYMT-[Tool Name]
+```
+
+You'll be able to find how to compile and run for each specific tool in the sections below.
+
 ## Structure Finder
 Structure Finder provides the ability to calculate the possible structures of a molecule from the known absolute values (or uncertain-signed values) of positions |x|, |y|, and |z| for each atom in the molecule. The latter data can be obtained via the single isotope substitution based on Kraitchman's equations.
 

@@ -39,9 +39,10 @@ guard let abc = xyzSet.calculateABC() else {
 }
 
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
+let MHzForm = abc.megaHertzForm(roundDigits: 1)
 
 print("**------------Result------------**")
-print("A: \(abc.A.rounded(digitsAfterDecimal: 1))    B: \(abc.B.rounded(digitsAfterDecimal: 1))    C: \(abc.C.rounded(digitsAfterDecimal: 1))   (MHz)")
+print("A: \(MHzForm[0])    B: \(MHzForm[1])    C: \(MHzForm[2])   (MHz)")
 print("-----------------------------------")
 print("Computation time: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
 print()

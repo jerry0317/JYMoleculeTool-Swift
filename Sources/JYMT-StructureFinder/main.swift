@@ -107,9 +107,10 @@ combAtoms.roundRVecs(digitsAfterDecimal: roundDigits)
 print("Total number of non-hydrogen atoms: \(combAtoms.count).")
 
 combAtoms.sort(by: { $0.rvec!.magnitude > $1.rvec!.magnitude })
+let nonZeroAtoms = combAtoms.filter({ !$0.rvec!.dictVec.contains(0.0) })
 
 // Fix the first atom
-let A1 = combAtoms[0]
+let A1 = nonZeroAtoms.isEmpty ? combAtoms[0] : nonZeroAtoms[0]
 print("The first atom has been located.")
 print()
 

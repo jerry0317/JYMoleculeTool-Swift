@@ -59,33 +59,34 @@ public final class Atom {
     public var element: ChemElement?
     
     /**
-     A stored atomic mass corresponding to the public property `atomicMass`.
-     */
-    private var storedAtomicMass: Double? = nil
-    
-    /**
      The atomic mass of the atom, with unit in amu. If not specified, it will return the atomic mass of the element of the atom.
      */
     public var atomicMass: Double? {
         get {
-            if storedAtomicMass == nil {
-                if massNumber == nil {
-                    return element?.atomicMass
-                } else if element == nil {
-                    return nil
-                } else {
-                    return element!.isotopeAtomicMasses[massNumber!]
-                }
+            if element == nil {
+                return nil
+            } else if storedMassNumber == nil {
+                return element!.atomicMass
             } else {
-                return storedAtomicMass!
+                return element!.isotopeAtomicMasses[storedMassNumber!]
             }
-        }
-        set {
-            storedAtomicMass = newValue
         }
     }
     
-    public var massNumber: Int? = nil
+    private var storedMassNumber: Int? = nil
+    
+    public var massNumber: Int? {
+        get {
+            if element == nil {
+                return nil
+            } else {
+                return storedMassNumber
+            }
+        }
+        set {
+            storedMassNumber = newValue
+        }
+    }
     
     /**
      The atomic mass of the atom, with unit in kg. If not specified, it will return the atomic mass of the element of the atom.
@@ -93,9 +94,6 @@ public final class Atom {
     public var mass: Double? {
         get {
             atomicMass == nil ? nil : atomicMass! * PhysConst.amu
-        }
-        set {
-            storedAtomicMass = (atomicMass == nil ? nil : atomicMass! / PhysConst.amu)
         }
     }
     
@@ -109,16 +107,19 @@ public final class Atom {
      */
     public var identifier: Int?
     
-    public init(_ name: String, _ rvec: Vector3D? = nil, _ identifier: Int? = nil){
-        self.element = ChemElement(rawValue: name)
-        self.rvec = rvec
-        self.identifier = identifier
+    public convenience init(_ name: String, _ rvec: Vector3D? = nil, _ identifier: Int? = nil, massNumber: Int? = nil){
+        let element = ChemElement(rawValue: name)
+        self.init(element, rvec, identifier, massNumber: massNumber)
     }
     
-    public init(_ element: ChemElement?, _ rvec: Vector3D? = nil, _ identifier: Int? = nil){
+    public init(_ element: ChemElement?, _ rvec: Vector3D? = nil, _ identifier: Int? = nil, massNumber: Int? = nil){
         self.element = element
         self.rvec = rvec
         self.identifier = identifier
+        
+        if massNumber != nil {
+            self.massNumber = massNumber
+        }
     }
     
     /**
@@ -136,7 +137,7 @@ public final class Atom {
             return []
         } else {
             let possibleRvecList = rvec!.resign()
-            return possibleRvecList.map { Atom(element, $0, identifier) }
+            return Array(Set(possibleRvecList.map { Atom(element, $0, identifier, massNumber: massNumber) }))
         }
     }
     
@@ -1213,7 +1214,7 @@ public func rcsAction(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange:
 /**
  The iteration version of the `rcsAction` for faster and clearer computations. Memoized dynamic progamming is implemented for utilization.
  */
-public func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.1, tolRatio: Double = 0.1, trueMol: StrcMolecule? = nil, testMode: Bool = false) -> [StrcMolecule] {
+public func rcsActionDynProgrammed(rAtoms: [Atom], stMolList mList: [StrcMolecule], tolRange: Double = 0.01, tolRatio: Double = 0.1, trueMol: StrcMolecule? = nil, testMode: Bool = false) -> [StrcMolecule] {
     guard !rAtoms.isEmpty else {
         return []
     }
@@ -1421,6 +1422,20 @@ public extension Collection where Iterator.Element == Atom {
      */
     var totalAtomicMass: Double {
         self.reduce(0.0, { $0 + ($1.atomicMass ?? 0.0) })
+    }
+    
+    mutating func clearMassNumbers() {
+        for i in self.indices {
+            self[i].massNumber = nil
+        }
+    }
+    
+    mutating func setMassNumbersToMostCommon() {
+        for i in self.indices {
+            if self[i].element != nil {
+                self[i].massNumber = self[i].element!.mostCommonMassNumber
+            }
+        }
     }
 }
 
