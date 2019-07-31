@@ -30,11 +30,11 @@ print("Number of atoms in SIS: \(sisCount)")
 print()
 log.add("----Imported Data----")
 log.add("[Parent Molecule]")
-let mhzForm = sabcSet.original!.megaHertzForm().map { String(format: "%.3f", $0) }
+let mhzForm = sabcSet.original!.megaHertzForm().map { String(format: "%.4f", $0) }
 log.add("PM    A: \(mhzForm[0])    B: \(mhzForm[1])   C: \(mhzForm[2])   Mass: \(sabcSet.original!.totalAtomicMass)")
 log.add("[Single Isotopic Substitutions]")
 for (i, sisTuple) in sabcSet.substituted!.enumerated() {
-    let sisMhzForm = sisTuple.megaHertzForm().map { String(format: "%.3f", $0) }
+    let sisMhzForm = sisTuple.megaHertzForm().map { String(format: "%.4f", $0) }
     let isotopeStr = sisTuple.substitutedIsotopes[0].0.rawValue + String(i + 1)
     log.add("\(toPrintWithSpace(isotopeStr, 4))  A: \(sisMhzForm[0])    B: \(sisMhzForm[1])   C: \(sisMhzForm[2])   Isotope: \(sisTuple.substitutedIsotopes[0].1)")
 }

@@ -11,9 +11,6 @@ import JYMTBasicKit
 
 printWelcomeBanner("Structure Finder")
 
-var saveResults = true
-var writePath = URL(fileURLWithPath: "")
-
 var modes: Set<SFProgramMode> = [.ordinary]
 
 if CommandLine.arguments.count >= 2 {
