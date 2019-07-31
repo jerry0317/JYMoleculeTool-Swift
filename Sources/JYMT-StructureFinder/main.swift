@@ -14,9 +14,6 @@ printWelcomeBanner("Structure Finder")
 var saveResults = true
 var writePath = URL(fileURLWithPath: "")
 
-var xyzSet = XYZFile()
-var fileName = ""
-
 var modes: Set<SFProgramMode> = [.ordinary]
 
 if CommandLine.arguments.count >= 2 {
@@ -33,36 +30,13 @@ if CommandLine.arguments.count >= 2 {
 
 let testMode = modes.contains(.test)
 
-fileInput(name: "XYZ file", tryAction: { (filePath) in
-    xyzSet = try XYZFile(fromPath: filePath)
-    fileName = URL(fileURLWithPath: filePath).lastPathComponentName
-    return true
-})
+var (xyzSet, fileName) = xyzFileInput()
 
-guard let rawAtoms = xyzSet.atoms else {
-    print("No Atoms. Exit with fatal Error.")
-    exit(-1)
-}
+let rawAtoms = xyzSet.atoms!
 
 print()
 
-fileInput(message: "XYZ & MOL exporting Path (leave empty if not to save)", successMessage: false) { (writePathInput) in
-    if writePathInput.isEmpty {
-        saveResults = false
-        print("The results will not be saved.")
-        return true
-    } else {
-        let writePathUrl = URL(fileURLWithPath: writePathInput)
-        guard writePathUrl.hasDirectoryPath else {
-            print("Not a valid directory. Please try again.")
-            return false
-        }
-        writePath = writePathUrl
-        print("The results will be saved in \(writePath.relativeString).")
-        return true
-    }
-}
-
+var (saveResults, writePath) = exportingPathInput("xyz & mol")
 print()
 
 /**
@@ -111,7 +85,6 @@ let nonZeroAtoms = combAtoms.filter({ !$0.rvec!.dictVec.contains(0.0) })
 
 // Fix the first atom
 let A1 = nonZeroAtoms.isEmpty ? combAtoms[0] : nonZeroAtoms[0]
-print("The first atom has been located.")
 print()
 
 let combrAtoms = combAtoms.removed(A1)

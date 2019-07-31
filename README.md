@@ -192,7 +192,7 @@ Comment line
 
 - The first line of the file consists of the three rotational constants A, B, and C *with unit in Megahertz (MHz)*, separated by blank spaces, followed by the total mass of the molecule *with unit in amu*.
 - The second line is an optional comment line. It can be blank, but the line must exist.
-- Starting from the third line to the last are the information of single isotopic substitution. Each line consists of the three rotational constants A, B, and C *with unit in Megahertz (MHz)* after single isotopic substitution, followed by the substituted mass *with unit in amu*, and the substituted element. Each block of information is separated by blank spaces.
+- Starting from the third line to the last are the information of single isotopic substitution. Each line consists of the three rotational constants A, B, and C *with unit in Megahertz (MHz)* after single isotopic substitution, followed by the mass number of the substituted element (for example, `13` for carbon-13), and the substituted element. Each block of information is separated by blank spaces.
 
 (Note: The actual file extension does not need to be `.sabc`. However, the format must be correct for the tool to work.)
 

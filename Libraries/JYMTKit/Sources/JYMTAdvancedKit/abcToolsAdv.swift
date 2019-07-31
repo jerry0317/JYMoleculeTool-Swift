@@ -30,14 +30,14 @@ public func ABCFromAtoms(_ atoms: [Atom], origin: Vector3D? = nil) -> ABCTuple? 
     return ABCFromTensorI(tensorI, totalAtomicMass: atoms.totalAtomicMass)
 }
 
-public func ABCFromTensorI(_ tensorI: Matrix, totalAtomicMass: Double) -> ABCTuple? {
+public func ABCFromTensorI(_ tensorI: Matrix, totalAtomicMass: Double, substitutedIsotopes: [(ChemElement, Int)] = []) -> ABCTuple? {
     guard let pM = principalMoments(tensorI), pM.count == 3 else {
         return nil
     }
     let abc = pM.map({ (principalMoment) -> Double in
         PhysConst.h / (8 * Double.pi * Double.pi * principalMoment)
     }).sorted(by: >) // Unit in Hz
-    let abcTuple = ABCTuple(abc[0], abc[1], abc[2], totalAtomicMass: totalAtomicMass)
+    let abcTuple = ABCTuple(abc[0], abc[1], abc[2], totalAtomicMass: totalAtomicMass, substitutedIsotopes: substitutedIsotopes)
     return abcTuple
 }
 
@@ -57,9 +57,10 @@ public func MISFromSubstitutedAtoms(depth: Int, original: ABCTuple, substitutedA
         let tensorITBS = tensorIFromAtoms(originalAtoms, origin: Vector3D())
         let newTotalMass = original.totalAtomicMass + atoms.reduce(0.0, { $0 + ($1.atomicMass! - $1.element!.mostCommonIsotopeAtomicMass) })
         let newTensorI = originalInertia + tensorITBA - tensorITBS
-        guard let abc = ABCFromTensorI(newTensorI, totalAtomicMass: newTotalMass) else {
+        guard var abc = ABCFromTensorI(newTensorI, totalAtomicMass: newTotalMass) else {
             continue
         }
+        abc.substitutedIsotopes = atomArray.map({ ($0.element!, $0.massNumber!) })
         result.append((atomArray, abc))
     }
     

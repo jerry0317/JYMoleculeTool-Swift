@@ -11,39 +11,14 @@ import JYMTBasicKit
 
 printWelcomeBanner("ABC Tool")
 
-var saveResults = true
-var writePath = URL(fileURLWithPath: "")
-var sabcSet = SABCFile()
-var fileName = ""
+var (sabcSet, fileName) = sabcFileInput()
+print()
 
-fileInput(name: "SABC file") { (filePath) -> Bool in
-    sabcSet = try SABCFile(fromPath: filePath)
-    if !sabcSet.isValid {
-        print("Not a valid SABC file.")
-        return false
-    }
-    fileName = URL(fileURLWithPath: filePath).lastPathComponentName
-    return true
-}
-
-fileInput(message: "XYZ exporting Path (leave empty if not to save)", successMessage: false) { (writePathInput) in
-    if writePathInput.isEmpty {
-        saveResults = false
-        print("The results will not be saved.")
-        return true
-    } else {
-        let writePathUrl = URL(fileURLWithPath: writePathInput)
-        guard writePathUrl.hasDirectoryPath else {
-            print("Not a valid directory. Please try again.")
-            return false
-        }
-        writePath = writePathUrl
-        print("The result will be saved in \(writePath.relativeString).")
-        return true
-    }
-}
+var (saveResults, writePath) = exportingPathInput("xyz")
+print()
 
 print("Number of atoms: \(sabcSet.substituted!.count)")
+print()
 
 let tInitial = Date()
 var xyzSet = sabcSet.exportToXYZ()

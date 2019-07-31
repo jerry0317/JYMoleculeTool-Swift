@@ -65,7 +65,7 @@ public struct ABCTuple {
     /**
      The change of mass, unit in `kg`.
      */
-    public var deltaMass: [Double] {
+    public var deltaMasses: [Double] {
         deltaAtomicMasses.map { $0 * PhysConst.amu }
     }
     
@@ -184,13 +184,13 @@ public func rVecFromSIS(mu: Double, deltaP: Matrix, I: Matrix, errLevel: Double 
     for ix in [0,1,2].cyclicTransformed() {
         let (i, j, k) = (ix[0], ix[1], ix[2])
         var result = (deltaP[i, i] / mu) * (1.0 + (deltaP[j, j] / (I[i, i] - I[j, j]))) * (1.0 + (deltaP[k, k] / (I[i, i] - I[k, k])))
-        if result < 0 && abs(result) <= errLevel {
+        if result < 0 {
+            let dev = abs(result).squareRoot()
+            let abcDev = PhysConst.h * (-deltaP[i, i]) / (4 * Double.pi * Double.pi * I[i, i] * I[i, i])
+            print("WARNING: Imaginary number \(String(format: "%.3e", dev))i appeared. Rounded to zero. (ABC dev: \(String(format: "%.1f", abcDev * 1e-3))kHz)")
             result = 0.0
-        } else if result >= 0 {
-            result = result.squareRoot()
         } else {
-            result = 0.0
-            print("WARNING: The negative number to be square rooted is over-deviated. Rounded to zero.")
+            result = result.squareRoot()
         }
         vec.dictVec[i] = result
     }
@@ -213,7 +213,7 @@ public func fromSISToAtoms(original oABC: ABCTuple, substituted sABCs: [ABCTuple
         let iSub = sABC.inertiaTensor
         let deltaI = iSub - iInitial
         
-        let mu = reducedMass(M: oABC.totalMass, deltaM: sABC.deltaMass[0])
+        let mu = reducedMass(M: oABC.totalMass, deltaM: sABC.deltaMasses[0])
         guard let deltaP = tensorDeltaP(fromDeltaI: deltaI), let rVec = rVecFromSIS(mu: mu, deltaP: deltaP, I: iInitial) else {
             continue
         }
@@ -249,7 +249,7 @@ public func tensorIFromAtoms(_ atoms: [Atom], origin: Vector3D? = nil) -> Matrix
                 }
                 let pVec = (rvec - center) * 1e-10
                 atomDiagMap.append(mass * ((pVec[j] * pVec[j]) + (pVec[k] * pVec[k])))
-                atomOffDiagMap.append(mass * pVec[i] * pVec[j])
+                atomOffDiagMap.append(-mass * pVec[i] * pVec[j])
             }
             let resultDiag = atomDiagMap.reduce(0, +)
             let resultOffDiag = atomOffDiagMap.reduce(0, +)

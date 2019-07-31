@@ -11,42 +11,10 @@ import JYMTAdvancedKit
 
 printWelcomeBanner("MIS Calculator")
 
-var saveResults = true
-var writePath = URL(fileURLWithPath: "")
-var sabcSet = SABCFile()
-var fileName = ""
-
-fileInput(name: "SABC file") { (filePath) -> Bool in
-    sabcSet = try SABCFile(fromPath: filePath)
-    if !sabcSet.isValid {
-        print("Not a valid SABC file.")
-        return false
-    }
-    if sabcSet.substituted!.isEmpty {
-        print("No SIS information.")
-        return false
-    }
-    fileName = URL(fileURLWithPath: filePath).lastPathComponentName
-    return true
-}
+var (sabcSet, fileName) = sabcFileInput()
 print()
 
-fileInput(message: "log exporting Path (leave empty if not to save)", successMessage: false) { (writePathInput) in
-    if writePathInput.isEmpty {
-        saveResults = false
-        print("The results will not be saved.")
-        return true
-    } else {
-        let writePathUrl = URL(fileURLWithPath: writePathInput)
-        guard writePathUrl.hasDirectoryPath else {
-            print("Not a valid directory. Please try again.")
-            return false
-        }
-        writePath = writePathUrl
-        print("The result will be saved in \(writePath.relativeString).")
-        return true
-    }
-}
+var (saveResults, writePath) = exportingPathInput("log")
 print()
 
 var log = TextFile()
@@ -55,7 +23,7 @@ let sisCount = sabcSet.substituted!.count
 
 var maximumDepth: Int = 2
 
-maximumDepth = Int(input(name: "Maximum depth", type: "int", defaultValue: 2, doubleRange: 0...Double(Int.max), printAfterSec: true)) ?? 2
+maximumDepth = Int(input(name: "maximum depth", type: "int", defaultValue: 2, doubleRange: 0...Double(Int.max), printAfterSec: true)) ?? 2
 
 print()
 print("Number of atoms in SIS: \(sisCount)")
@@ -175,7 +143,7 @@ for (i, pMol) in possibleMols.enumerated() {
 
 log.add("-----------------------------------------\n")
 
-for depth in 2...maximumDepth {
+for depth in 1...maximumDepth {
     log.add("----\(depth)-atom Isotopic Substitutions----")
     for (i, sAtoms) in possibleSAtoms.enumerated() {
         log.add("**** Structure No.\(i+1) ****")
@@ -184,7 +152,7 @@ for depth in 2...maximumDepth {
         for (atoms, abc) in rABC {
             let atomsStrings = stringIdsOfAtoms(atoms)
             let atomsStr = atomsStrings.2.map( { atomsStrings.0[$0] }).joined(separator: ",")
-            let misMhzForm = abc.megaHertzForm().map { String(format: "%.3f", $0) }
+            let misMhzForm = abc.megaHertzForm().map { String(format: "%.6f", $0) }
             log.add("\(toPrintWithSpace(atomsStr, 4 * depth))  A: \(misMhzForm[0])    B: \(misMhzForm[1])   C: \(misMhzForm[2])")
         }
         if i < possibleSAtoms.endIndex - 1 {

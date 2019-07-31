@@ -197,3 +197,60 @@ public enum SFProgramMode {
      */
     case ordinary
 }
+
+public func xyzFileInput() -> (XYZFile, String) {
+    var xyzSet = XYZFile()
+    var fileName = ""
+    fileInput(name: "XYZ file", tryAction: { (filePath) in
+        xyzSet = try XYZFile(fromPath: filePath)
+        fileName = URL(fileURLWithPath: filePath).lastPathComponentName
+        guard xyzSet.atoms != nil && !xyzSet.atoms!.isEmpty else {
+            print("No Atoms in xyz file. Can not proceed.")
+            return false
+        }
+        return true
+    })
+    return (xyzSet, fileName)
+}
+
+public func sabcFileInput() -> (SABCFile, String) {
+    var sabcSet = SABCFile()
+    var fileName = ""
+    fileInput(name: "SABC file") { (filePath) -> Bool in
+        sabcSet = try SABCFile(fromPath: filePath)
+        if !sabcSet.isValid {
+            print("Not a valid SABC file.")
+            return false
+        }
+        if sabcSet.substituted!.isEmpty {
+            print("No SIS information.")
+            return false
+        }
+        fileName = URL(fileURLWithPath: filePath).lastPathComponentName
+        return true
+    }
+    return (sabcSet, fileName)
+}
+
+public func exportingPathInput(_ name: String = "") -> (Bool, URL) {
+    var saveResults = true
+    var writePath = URL(fileURLWithPath: "")
+    fileInput(message: "\(name) exporting Path (leave empty if not to save)", successMessage: false) { (writePathInput) in
+        if writePathInput.isEmpty {
+            saveResults = false
+            print("The results will not be saved.")
+            return true
+        } else {
+            let writePathUrl = URL(fileURLWithPath: writePathInput)
+            guard writePathUrl.hasDirectoryPath else {
+                print("Not a valid directory. Please try again.")
+                return false
+            }
+            writePath = writePathUrl
+            print("The result will be saved in \(writePath.relativeString).")
+            return true
+        }
+    }
+    return (saveResults, writePath)
+}
+

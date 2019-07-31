@@ -11,19 +11,9 @@ import JYMTAdvancedKit
 
 printWelcomeBanner("ABC Calculator")
 
-var xyzSet = XYZFile()
-var fileName = ""
+var (xyzSet, fileName) = xyzFileInput()
 
-fileInput(name: "XYZ file", tryAction: { (filePath) in
-    xyzSet = try XYZFile(fromPath: filePath)
-    fileName = URL(fileURLWithPath: filePath).lastPathComponentName
-    return true
-})
-
-guard let rawAtoms = xyzSet.atoms else {
-    print("No Atoms. Exit with fatal Error.")
-    exit(-1)
-}
+let rawAtoms = xyzSet.atoms!
 
 print()
 
