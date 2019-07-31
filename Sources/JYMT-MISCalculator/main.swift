@@ -100,7 +100,6 @@ let nonZeroAtoms = rawAtoms.filter({ !$0.rvec!.dictVec.contains(0.0) })
 
 // Fix the first atom
 let A1 = nonZeroAtoms.isEmpty ? rawAtoms[0] : nonZeroAtoms[0]
-print("The first atom has been located.")
 print()
 
 print("Calculating possible combinations...\n")
@@ -126,7 +125,7 @@ for (i, pMol) in possibleMols.enumerated() {
     
     for (atom, id) in atomTupList {
         let isotopeStr = atom.name + String(id + 1)
-        log.add("\(toPrintWithSpace(isotopeStr, 4)) \(atom.rvec!.dictVec.rounded(digitsAfterDecimal: 4))")
+        log.add("\(toPrintWithSpace(isotopeStr, 4)) \(atom.rvec!.dictVec.sroundedString(digitsAfterDecimal: 5))")
     }
     
     log.add("====Bond Information====")
@@ -134,7 +133,7 @@ for (i, pMol) in possibleMols.enumerated() {
         let atoms = Array(bond.atoms)
         let atomsStrings = stringIdsOfAtoms(atoms)
         let atomsStr: String = atomsStrings.2.map( { atomsStrings.0[$0] }).joined(separator: "-")
-        log.add("Atoms: \(atomsStr)   Distance: \(bond.distance!.rounded(digitsAfterDecimal: 4))")
+        log.add("Atoms: \(atomsStr)   Distance: \(bond.distance!.srounded(digitsAfterDecimal: 5))")
     }
     if i < possibleMols.endIndex - 1 {
         log.add()

@@ -1399,22 +1399,8 @@ public extension Collection where Iterator.Element == Atom {
      The center of mass of several atoms
      */
     var centerOfMass: Vector3D {
-        var cmVec = Vector3D()
-        if self.count > 0 {
-            var totalMass: Double = 0.0
-            for atom in self {
-                guard let rvec: Vector3D = atom.rvec else {
-                    continue
-                }
-                guard let mass = atom.atomicMass else {
-                    continue
-                }
-                totalMass = totalMass + mass
-                cmVec = cmVec + mass * rvec
-            }
-            cmVec = cmVec / totalMass
-        }
-        return cmVec
+        let masses: [(Double, Vector3D)] = self.map({ ($0.atomicMass ?? 0.0, $0.rvec ?? Vector3D()) })
+        return centerOfPointMasses(masses)
     }
     
     /**
@@ -1581,5 +1567,16 @@ public func bondAnglesInDeg(center: Atom, attached: [Atom]) -> [(Double?, Set<At
 public func bondAnglesInDeg(center: Atom, bonds: [ChemBond]) -> [(Double?, Set<ChemBond>)] {
     let attachedAtomsList = combinationsDynProgrammed(bonds, 2)
     return attachedAtomsList.map { (bondAngleInDeg(center: center, bonds: Array($0)), $0) }
+}
+
+public func centerOfPointMasses(_ masses: [(Double, Vector3D)]) -> Vector3D {
+    var cmVec = Vector3D()
+    var totalMass = 0.0
+    for (mass, rvec) in masses {
+        totalMass = totalMass + mass
+        cmVec = cmVec + mass * rvec
+    }
+    cmVec = cmVec / totalMass
+    return cmVec
 }
 

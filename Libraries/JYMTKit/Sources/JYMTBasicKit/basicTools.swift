@@ -254,3 +254,18 @@ public func exportingPathInput(_ name: String = "") -> (Bool, URL) {
     return (saveResults, writePath)
 }
 
+public extension Double {
+    func srounded(digitsAfterDecimal: Int, option: String = "f") -> String {
+        String(format: "%.\(digitsAfterDecimal)\(option)", self)
+    }
+}
+
+public extension Array where Element == Double {
+    func srounded(digitsAfterDecimal: Int, option: String = "f") -> [String] {
+        self.map { String(format: "%.\(digitsAfterDecimal)\(option)", $0)}
+    }
+    
+    func sroundedString(digitsAfterDecimal: Int, option: String = "f") -> String {
+        "[" + srounded(digitsAfterDecimal: digitsAfterDecimal, option: option).joined(separator: ", ") + "]"
+    }
+}

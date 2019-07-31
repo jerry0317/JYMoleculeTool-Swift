@@ -53,10 +53,13 @@ public func MISFromSubstitutedAtoms(depth: Int, original: ABCTuple, substitutedA
     for atoms in combAtoms {
         let atomArray = Array(atoms)
         let originalAtoms = atomArray.map({ Atom($0.element, $0.rvec, $0.identifier, massNumber: $0.element?.mostCommonMassNumber) })
+        let masses = [(original.totalAtomicMass, Vector3D())] + atoms.map( {(($0.atomicMass! - $0.element!.mostCommonIsotopeAtomicMass), $0.rvec ?? Vector3D())} )
+        let newCM = centerOfPointMasses(masses) * 1e-10 // In angstrom
         let tensorITBA = tensorIFromAtoms(atomArray, origin: Vector3D())
         let tensorITBS = tensorIFromAtoms(originalAtoms, origin: Vector3D())
         let newTotalMass = original.totalAtomicMass + atoms.reduce(0.0, { $0 + ($1.atomicMass! - $1.element!.mostCommonIsotopeAtomicMass) })
-        let newTensorI = originalInertia + tensorITBA - tensorITBS
+        var newTensorI = originalInertia + tensorITBA - tensorITBS
+        newTensorI = translateTensorI(newTensorI, totalMass: newTotalMass * PhysConst.amu, newOrigin: newCM, centerOfMass: newCM)
         guard var abc = ABCFromTensorI(newTensorI, totalAtomicMass: newTotalMass) else {
             continue
         }
