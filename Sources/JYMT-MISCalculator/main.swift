@@ -91,8 +91,7 @@ for (i, id) in identifiers.enumerated() {
 }
 
 guard rawAtoms.count == sisCount else {
-    print("Fatal Error: fail to calculate from SIS to atoms")
-    exit(-1)
+    fatalError("Fatal Error: fail to calculate from SIS to atoms")
 }
 
 rawAtoms.sort(by: { $0.rvec!.magnitude > $1.rvec!.magnitude })
