@@ -198,6 +198,11 @@ public enum SFProgramMode {
     case ordinary
 }
 
+/**
+ A packed input module for importing `.xyz` file.
+ 
+ - Returns: a tuple `(XYZFile, String)` where the first element is the imported XYZ file and the second element is the last component name of the `.xyz` file.
+ */
 public func xyzFileInput() -> (XYZFile, String) {
     var xyzSet = XYZFile()
     var fileName = ""
@@ -213,6 +218,11 @@ public func xyzFileInput() -> (XYZFile, String) {
     return (xyzSet, fileName)
 }
 
+/**
+ A packed input module for importing `sabc`file.
+ 
+ - Returns: a tuple `(SABCFile, String)` where the first element is the imported SABC file and the second element is the last component name of the `sabc` file.
+ */
 public func sabcFileInput() -> (SABCFile, String) {
     var sabcSet = SABCFile()
     var fileName = ""
@@ -232,6 +242,12 @@ public func sabcFileInput() -> (SABCFile, String) {
     return (sabcSet, fileName)
 }
 
+/**
+ A packed input module for optional selecting exporting path.
+ 
+ - Returns: a tuple `(Bool, URL)` where the first element whether the user decided to save results or not, and the second element is the `URL` of the user-selected exporting path.
+    - The second element is meaningless if the first element returns `false`.
+ */
 public func exportingPathInput(_ name: String = "") -> (Bool, URL) {
     var saveResults = true
     var writePath = URL(fileURLWithPath: "")
@@ -254,17 +270,66 @@ public func exportingPathInput(_ name: String = "") -> (Bool, URL) {
     return (saveResults, writePath)
 }
 
+/**
+ Create a new directory with optional sub-directories.
+ 
+ - Returns: a tuple `(URL, [URL])` where the first element is the path of the directory (if success) and the second element is the paths of the sub-directories that has been created (if success).
+ */
+@discardableResult
+public func createNewDirectory(_ name: String, subDirectories: [String] = [], at basePath: URL, withIntermediateDirectories: Bool = false) -> (URL, [URL]) {
+    var subDirPaths = [URL]()
+    do {
+        let newDirectoryPath = basePath.appendingPathComponent(name, isDirectory: true)
+        try FileManager.default.createDirectory(at: newDirectoryPath, withIntermediateDirectories: withIntermediateDirectories)
+        for subName in subDirectories {
+            let subPath = newDirectoryPath.appendingPathComponent(subName, isDirectory: true)
+            try FileManager.default.createDirectory(at: subPath, withIntermediateDirectories: withIntermediateDirectories)
+            subDirPaths.append(subPath)
+        }
+        return (newDirectoryPath, subDirPaths)
+    } catch let error {
+        print("An error occured when creating a new directory: \(error).")
+    }
+    subDirPaths += [URL](repeating: basePath, count: subDirectories.count - subDirPaths.count)
+    return (basePath, subDirPaths)
+}
+
+public extension String {
+    /**
+     Returns a string with self appended by the unix time.
+     */
+    func appendedUnixTime(_ time: Date = Date(), separator: String = "_") -> String {
+        return self + separator + String(Int(time.timeIntervalSince1970))
+    }
+    
+    /**
+     Append the string with the unix time.
+     */
+    mutating func appendUnixTime(_ time: Date = Date(), separator: String = "_") {
+        self = appendedUnixTime(time, separator: separator)
+    }
+}
+
 public extension Double {
+    /**
+     Returns the string describing the double number with digits after decimal.
+     */
     func srounded(digitsAfterDecimal: Int, option: String = "f") -> String {
         String(format: "%.\(digitsAfterDecimal)\(option)", self)
     }
 }
 
 public extension Array where Element == Double {
+    /**
+     Map the double array to a string array with each string describing the double element with digits after decimal.
+     */
     func srounded(digitsAfterDecimal: Int, option: String = "f") -> [String] {
         self.map { String(format: "%.\(digitsAfterDecimal)\(option)", $0)}
     }
     
+    /**
+     Describes the `srounded(digitsAfterDecimal: Int, option: String)` as a standard array. (Mainly for printing)
+     */
     func sroundedString(digitsAfterDecimal: Int, option: String = "f") -> String {
         "[" + srounded(digitsAfterDecimal: digitsAfterDecimal, option: option).joined(separator: ", ") + "]"
     }

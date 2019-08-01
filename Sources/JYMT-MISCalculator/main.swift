@@ -22,11 +22,10 @@ var log = TextFile()
 let sisCount = sabcSet.substituted!.count
 
 var maximumDepth: Int = 2
-
 maximumDepth = Int(input(name: "maximum depth", type: "int", defaultValue: 2, doubleRange: 0...Double(Int.max), printAfterSec: true)) ?? 2
-
 print()
-print("Number of atoms in SIS: \(sisCount)")
+
+print("Number of atoms in SIS Data: \(sisCount)")
 print()
 log.add("----Imported Data----")
 log.add("[Parent Molecule]")
@@ -41,33 +40,24 @@ for (i, sisTuple) in sabcSet.substituted!.enumerated() {
 log.add("---------------------")
 log.add()
 
-
 let tInitial = Date()
-
-let baseFileName = fileName + "_" + String(Int(tInitial.timeIntervalSince1970))
+let baseFileName = fileName.appendedUnixTime(tInitial)
 
 if saveResults {
-    do {
-        let newDirectoryPath = writePath.appendingPathComponent(baseFileName, isDirectory: true)
-        try FileManager.default.createDirectory(at: newDirectoryPath, withIntermediateDirectories: false)
-        writePath = newDirectoryPath
-    } catch let error {
-        print("An error occured when creating a new directory: \(error).")
-    }
+    (writePath, _) = createNewDirectory(baseFileName, at: writePath)
 }
 
 var rawAtoms = sabcSet.exportToAtoms()
 
 for rAtom in rawAtoms {
-    guard let element = rAtom.element, let number = element.secondCommonMassNumber else {
+    guard let number = rAtom.element?.secondCommonMassNumber else {
         continue
     }
     rAtom.massNumber = number
 }
 
-let identifiers = rawAtoms.map { $0.identifier }
-
-var idDict = [Int: Int]()
+let identifiers = rawAtoms.compactMap { $0.identifier }
+let idDict: [Int: Int] = identifiers.enumerated().reduce(into: [Int: Int](), { $0[$1.1] = $1.0 })
 
 func stringIdsOfAtoms(_ atoms: [Atom]) -> ([String], [Int], [Int]) {
     var result = [String]()
@@ -83,31 +73,20 @@ func stringIdsOfAtoms(_ atoms: [Atom]) -> ([String], [Int], [Int]) {
     return (result, idResult, order)
 }
 
-for (i, id) in identifiers.enumerated() {
-    guard id != nil else {
-        continue
-    }
-    idDict[id!] = i
-}
-
 guard rawAtoms.count == sisCount else {
     fatalError("Fatal Error: fail to calculate from SIS to atoms")
 }
 
-rawAtoms.sort(by: { $0.rvec!.magnitude > $1.rvec!.magnitude })
-let nonZeroAtoms = rawAtoms.filter({ !$0.rvec!.dictVec.contains(0.0) })
-
-let A1 = nonZeroAtoms.isEmpty ? rawAtoms[0] : nonZeroAtoms[0]
+let A1 = selectFarthestAtom(from: rawAtoms) ?? rawAtoms[0]
 print()
 
 print("Calculating possible combinations...\n")
+print()
 
 let combrAtoms = rawAtoms.removed(A1)
 let initialSMol = StrcMolecule(Set([A1]))
 
 let possibleMols = rcsActionDynProgrammed(rAtoms: combrAtoms, stMolList: [initialSMol])
-
-print()
 
 let possibleSAtoms: [[Atom]] = possibleMols.map({ Array($0.atoms) })
 

@@ -86,7 +86,7 @@ Use test mode to test whether a known molecule will pass all the filters (with g
 
 Simple mode is available for use in version 0.1.4 or later. Enable the simple mode by passing the command line argument `-s`. In simple mode, all the parameters will be set to default values and you will not be promopted to enter them. You still need to identify the input xyz file path and optional exporting path.
 
-You can use the simple mode and test mode at the same time by passing the commmand line arguments `-s -t` or `-t -s`. 
+You can use the simple mode and test mode at the same time by passing the commmand line arguments `-s -t` or `-t -s`.
 
 ### Input
 
@@ -176,16 +176,16 @@ The tool takes a `.sabc` file as input for the rotational constants and the tota
 ```
 1936.55844    1228.63567    1127.02099    120
 Comment line
-1929.20910    1226.98871    1125.97313    13.003355    C
-1935.85590    1222.67766    1121.80384    13.003355    C
-1928.89130    1221.20643    1119.50458    13.003355    C
-1911.05500    1227.55856    1118.84796    13.003355    C
-1926.66350    1226.18046    1121.82067    13.003355    C
-1935.45920    1225.01889    1123.79430    13.003355    C
-1915.87640    1221.12368    1125.75989    13.003355    C
-1912.26360    1217.63188    1123.33119    13.003355    C
-1929.98960    1211.19930    1110.61206    13.003355    C
-1924.63160    1209.41975    1106.97962    13.003355    C
+1929.20910    1226.98871    1125.97313    13    C
+1935.85590    1222.67766    1121.80384    13    C
+1928.89130    1221.20643    1119.50458    13    C
+1911.05500    1227.55856    1118.84796    13    C
+1926.66350    1226.18046    1121.82067    13    C
+1935.45920    1225.01889    1123.79430    13    C
+1915.87640    1221.12368    1125.75989    13    C
+1912.26360    1217.63188    1123.33119    13    C
+1929.98960    1211.19930    1110.61206    13    C
+1924.63160    1209.41975    1106.97962    13    C
 ```
 
 (Source: Neeman, Avilés Moreno, and Huet, J. Chem. Phys. **147**, 214305 (2017).)
@@ -208,7 +208,7 @@ The tool will print the output to the console, and there is an option to save th
 
 ### Discussion
 
-See discussion of the imaginary issue [here](#discussion-2).
+See discussion of the imaginary coordinate issue [here](#discussion-2).
 
 ## ABC Calculator
 ABC Calculator is a tool to calculate the rotational constants A, B, and C from the structural information (XYZ). It is basically the inverse process of ABC Tool.
@@ -278,7 +278,7 @@ The tool uses libraries `JYMTBasicKit` and `JYMTAdvancedKit`.
 
 ### Usage
 
-- Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest). **(Not available yet)**
+- Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest).
 - Alternatively, run the program directly by
 
 ```
@@ -304,16 +304,16 @@ The tool takes a `.sabc` file as input for the rotational constants and the tota
 ```
 1936.55844    1228.63567    1127.02099    120
 Comment line
-1929.20910    1226.98871    1125.97313    13.003355    C
-1935.85590    1222.67766    1121.80384    13.003355    C
-1928.89130    1221.20643    1119.50458    13.003355    C
-1911.05500    1227.55856    1118.84796    13.003355    C
-1926.66350    1226.18046    1121.82067    13.003355    C
-1935.45920    1225.01889    1123.79430    13.003355    C
-1915.87640    1221.12368    1125.75989    13.003355    C
-1912.26360    1217.63188    1123.33119    13.003355    C
-1929.98960    1211.19930    1110.61206    13.003355    C
-1924.63160    1209.41975    1106.97962    13.003355    C
+1929.20910    1226.98871    1125.97313    13    C
+1935.85590    1222.67766    1121.80384    13    C
+1928.89130    1221.20643    1119.50458    13    C
+1911.05500    1227.55856    1118.84796    13    C
+1926.66350    1226.18046    1121.82067    13    C
+1935.45920    1225.01889    1123.79430    13    C
+1915.87640    1221.12368    1125.75989    13    C
+1912.26360    1217.63188    1123.33119    13    C
+1929.98960    1211.19930    1110.61206    13    C
+1924.63160    1209.41975    1106.97962    13    C
 ```
 
 (Source: Neeman, Avilés Moreno, and Huet, J. Chem. Phys. **147**, 214305 (2017).)
@@ -363,7 +363,7 @@ C2    A: 8555.9200    B: 3631.1660   C: 2787.5640   Isotope: 13
 the following warning will be raised during the calculation
 
 ```
-WARNING: Imaginary number 6.968e-12i appeared. Rounded to zero. (ABC dev: 252.13kHz)
+WARNING: Imaginary coordinate 6.968e-12i appeared. Rounded to zero. (ABC dev: 252.13kHz)
 ```
 
 and the following coordinates with be passed to the later calculations after structure filtering
@@ -382,4 +382,4 @@ C2    A: 8555.225504    B: 3631.165991   C: 2787.489864
 ...
 ```
 
-In practical, this problem is worrying because it makes the predictions from the tool less reliable even there are no imagninary coordinates presented. Certain physical theories underlying the program might cause this "imgainary self-contradiction" as some effects including vibrations and centrifugal distortions are not fully considered in the calculations. Deeper reseraches are in progress in attempt to solve the problem, or, at least to minimize the error presented in this problem. 
+In practical, this problem is worrying because it makes the predictions from the tool less reliable even there are no imagninary coordinates presented. Certain physical theories underlying the program might cause this "imgainary self-contradiction" as some effects including vibrations and centrifugal distortions are not fully considered in the calculations. Deeper reseraches are in progress in attempt to solve the problem, or, at least to minimize the error presented in this problem.

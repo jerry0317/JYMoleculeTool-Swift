@@ -297,22 +297,37 @@ public enum Constants {
                 atomicMass * PhysConst.amu
             }
             
+            /**
+             The mass numbers of the most common isotopes of the element with the order of abundance.
+             */
             public var commonMassNumbers: [Int] {
                 ChemConst.commonMassNumbers[self]!
             }
             
+            /**
+             The mass number of the most common isotopes of the element.
+             */
             public var mostCommonMassNumber: Int {
                 commonMassNumbers[0]
             }
             
+            /**
+             The atomic mass of the most common isotope of the element. Unit in `amu`.
+             */
             public var mostCommonIsotopeAtomicMass: Double {
                 isotopeAtomicMasses[mostCommonMassNumber]!
             }
             
+            /**
+             The mass number of the second-most common isotope of the element. If there is only one common isotope of the element, then it returns `nil`.
+             */
             public var secondCommonMassNumber: Int? {
                 commonMassNumbers.count >= 2 ? commonMassNumbers[1] : nil
             }
             
+            /**
+             The atomic mass of the second-most common isotope of the element. If there is only one common isotope of the element, hten it returns `nil`.
+             */
             public var secondCommonIsotopeAtomicMass: Double? {
                 if secondCommonMassNumber == nil {
                     return nil
@@ -321,6 +336,9 @@ public enum Constants {
                 }
             }
             
+            /**
+             The atomic masses for the isotopes of the element, accessed by the mass number.
+             */
             public var isotopeAtomicMasses: [Int: Double] {
                 ChemConst.isotopeAtomicMasses[self]!
             }

@@ -77,11 +77,8 @@ combAtoms.roundRVecs(digitsAfterDecimal: roundDigits)
 
 print("Total number of non-hydrogen atoms: \(combAtoms.count).")
 
-combAtoms.sort(by: { $0.rvec!.magnitude > $1.rvec!.magnitude })
-let nonZeroAtoms = combAtoms.filter({ !$0.rvec!.dictVec.contains(0.0) })
-
 // Fix the first atom
-let A1 = nonZeroAtoms.isEmpty ? combAtoms[0] : nonZeroAtoms[0]
+let A1 = selectFarthestAtom(from: rawAtoms) ?? rawAtoms[0]
 print()
 
 let combrAtoms = combAtoms.removed(A1)
@@ -110,20 +107,15 @@ var iCode = 0
 var success = false
 let baseFileName = fileName + "_" + String(Int(tInitial.timeIntervalSince1970))
 
+var (xyzPath, molPath) = (writePath, writePath)
+
 if saveResults {
-    do {
-        let newDirectoryPath = writePath.appendingPathComponent(baseFileName, isDirectory: true)
-        try FileManager.default.createDirectory(at: newDirectoryPath, withIntermediateDirectories: false)
-        try FileManager.default.createDirectory(at: newDirectoryPath.appendingPathComponent("xyz", isDirectory: true), withIntermediateDirectories: false)
-        try FileManager.default.createDirectory(at: newDirectoryPath.appendingPathComponent("mol", isDirectory: true), withIntermediateDirectories: false)
-        writePath = newDirectoryPath
-    } catch let error {
-        print("An error occured when creating a new directory: \(error).")
-    }
+    let cndResult = createNewDirectory(baseFileName, subDirectories: ["xyz", "mol"], at: writePath)
+    writePath = cndResult.0
+    xyzPath = cndResult.1[0]
+    molPath = cndResult.1[1]
 }
 
-let xyzPath = writePath.appendingPathComponent("xyz", isDirectory: true)
-let molPath = writePath.appendingPathComponent("mol", isDirectory: true)
 print("**------------Results------------**")
 log.add("-----------------------------------")
 log.add("[Basic Settings]")

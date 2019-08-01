@@ -22,14 +22,15 @@ public func principalMoments(_ tensorI: Matrix) -> [Double]? {
 
 /**
  Calculate the rotational constants A, B, and C based on the information of the atoms of a molecule. It takes the atoms and an optional origin vector as parameters. If the `origin` is set to the default value `nil`, the function will take the center of mass as the origin by default.
- 
- - TODO: Add single isotopic substitutions (SIS)
  */
 public func ABCFromAtoms(_ atoms: [Atom], origin: Vector3D? = nil) -> ABCTuple? {
     let tensorI = tensorIFromAtoms(atoms, origin: origin)
     return ABCFromTensorI(tensorI, totalAtomicMass: atoms.totalAtomicMass)
 }
 
+/**
+ Calculate rotational constants A, B, and C based on an inertia tensor I. Total atomic mass is required to be passed as a parameter to construct the returning `ABCTuple`.
+ */
 public func ABCFromTensorI(_ tensorI: Matrix, totalAtomicMass: Double, substitutedIsotopes: [(ChemElement, Int)] = []) -> ABCTuple? {
     guard let pM = principalMoments(tensorI), pM.count == 3 else {
         return nil
@@ -41,6 +42,9 @@ public func ABCFromTensorI(_ tensorI: Matrix, totalAtomicMass: Double, substitut
     return abcTuple
 }
 
+/**
+ Calculate the possible isotopic substitutions (including single) from the original ABC Information and a set of subtituted atoms.
+ */
 public func MISFromSubstitutedAtoms(depth: Int, original: ABCTuple, substitutedAtoms: [Atom]) -> [([Atom], ABCTuple)] {
     guard depth >= 1 && depth <= substitutedAtoms.count else {
         return []

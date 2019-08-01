@@ -1569,6 +1569,11 @@ public func bondAnglesInDeg(center: Atom, bonds: [ChemBond]) -> [(Double?, Set<C
     return attachedAtomsList.map { (bondAngleInDeg(center: center, bonds: Array($0)), $0) }
 }
 
+/**
+ Determine the center of a list of point masses.
+ 
+ - Parameter masses: an array of `(Double, Vector3D)` tuples containing the mass as the first element and the position vector as the second element.
+ */
 public func centerOfPointMasses(_ masses: [(Double, Vector3D)]) -> Vector3D {
     var cmVec = Vector3D()
     var totalMass = 0.0
@@ -1580,3 +1585,22 @@ public func centerOfPointMasses(_ masses: [(Double, Vector3D)]) -> Vector3D {
     return cmVec
 }
 
+/**
+ Select the farthest atom used by Structure Finder.
+ */
+public func selectFarthestAtom(from atomList: [Atom]) -> Atom? {
+    guard !atomList.isEmpty else {
+        print("No atoms in atom list.")
+        return nil
+    }
+    
+    guard atomList.filter({ $0.rvec == nil }).isEmpty else {
+        print("Contain nil rvecs. Illegal.")
+        return nil
+    }
+    
+    let sortedAtoms = atomList.sorted(by: { $0.rvec!.magnitude > $1.rvec!.magnitude })
+    let nonZeroAtoms = sortedAtoms.filter { !$0.rvec!.dictVec.contains(0.0) }
+    let A1 = nonZeroAtoms.isEmpty ? sortedAtoms[0] : nonZeroAtoms[0]
+    return A1
+}
