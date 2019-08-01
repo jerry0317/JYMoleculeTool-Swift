@@ -97,7 +97,6 @@ guard rawAtoms.count == sisCount else {
 rawAtoms.sort(by: { $0.rvec!.magnitude > $1.rvec!.magnitude })
 let nonZeroAtoms = rawAtoms.filter({ !$0.rvec!.dictVec.contains(0.0) })
 
-// Fix the first atom
 let A1 = nonZeroAtoms.isEmpty ? rawAtoms[0] : nonZeroAtoms[0]
 print()
 

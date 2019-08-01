@@ -31,6 +31,7 @@ if saveResults {
     xyzSet.note = "* unsigned positions (absolute values)"
     xyzSet.safelyExport(toFile: writePath.appendingPathComponent(fileName + ".xyz"))
 }
+
 print("-----------------------------------")
 print("Computation time: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
 print()

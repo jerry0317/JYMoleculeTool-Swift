@@ -206,9 +206,9 @@ The tool will print the output to the console, and there is an option to save th
   - If you want to save the results, please enter/drag the folder where you want to save the results in.
   - If you don't want to save the results, just leave it empty.
 
-### Discusssion
+### Discussion
 
-See discussion of the imaginary issue [here](#discussion-2)
+See discussion of the imaginary issue [here](#discussion-2).
 
 ## ABC Calculator
 ABC Calculator is a tool to calculate the rotational constants A, B, and C from the structural information (XYZ). It is basically the inverse process of ABC Tool.
@@ -355,7 +355,9 @@ If the imaginary number is small, then the problem is not significantly serious 
 [Parent Molecule]
 PM    A: 8572.0553    B: 3640.1063   C: 2790.9666   Mass: 76.09
 [Single Isotopic Substitution]
-C1    A: 8555.9200    B: 3631.1660   C: 2787.5640   Isotope: 13
+...
+C2    A: 8555.9200    B: 3631.1660   C: 2787.5640   Isotope: 13
+...
 ```
 
 the following warning will be raised during the calculation
@@ -367,13 +369,17 @@ WARNING: Imaginary number 6.968e-12i appeared. Rounded to zero. (ABC dev: 252.13
 and the following coordinates with be passed to the later calculations after structure filtering
 
 ```
-C1   [-0.47733, 0.00000, -0.34254]
+...
+C2   [-0.47733, 0.00000, -0.34254]
+...
 ```
 
 As observed, the rounded coordinates don't reflect the actual position of the atom in the molecule because when the program reconstructs the single isotopic substitution, it yields a different result than the input source:
 
 ```
+...
 C2    A: 8555.225504    B: 3631.165991   C: 2787.489864
+...
 ```
 
 In practical, this problem is worrying because it makes the predictions from the tool less reliable even there are no imagninary coordinates presented. Certain physical theories underlying the program might cause this "imgainary self-contradiction" as some effects including vibrations and centrifugal distortions are not fully considered in the calculations. Deeper reseraches are in progress in attempt to solve the problem, or, at least to minimize the error presented in this problem. 
