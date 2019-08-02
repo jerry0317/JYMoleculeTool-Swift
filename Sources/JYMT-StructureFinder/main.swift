@@ -78,7 +78,7 @@ combAtoms.roundRVecs(digitsAfterDecimal: roundDigits)
 print("Total number of non-hydrogen atoms: \(combAtoms.count).")
 
 // Fix the first atom
-let A1 = selectFarthestAtom(from: rawAtoms) ?? rawAtoms[0]
+let A1 = selectFarthestAtom(from: combAtoms) ?? rawAtoms[0]
 print()
 
 let combrAtoms = combAtoms.removed(A1)
