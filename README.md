@@ -47,6 +47,10 @@ and run any executable by
 
 You'll be able to find how to compile and run for each specific tool in the sections below.
 
+### Models and Results
+
+Some molecule models and results produced from this set of tool can be founded on this [repository](https://github.com/jerry0317/JYMoleculeTool-Results).
+
 ## Structure Finder
 Structure Finder provides the ability to calculate the possible structures of a molecule from the known absolute values (or uncertain-signed values) of positions |x|, |y|, and |z| for each atom in the molecule. The latter data can be obtained via the single isotope substitution based on Kraitchman's equations.
 
@@ -133,21 +137,23 @@ You can visualize the `.xyz` files and `.mol` files with softwares like [Avogadr
 
 ### Discussion
 
-As tested on computation-capable platforms, for molecules containing no more than 20 non-hydrogen atoms, the program is able to complete the computation in a reasonable amount of time (mostly less 10 minutes). Some computation time and number of results are listed for reference (tested with CPU [i7-8700B](https://ark.intel.com/content/www/us/en/ark/products/134905/intel-core-i7-8700b-processor-12m-cache-up-to-4-60-ghz.html), with commit [f81634f](https://github.com/jerry0317/JYMoleculeTool-Swift/commit/f81634f)).\*
+As tested on computation-capable platforms, for molecules containing no more than 20 non-hydrogen atoms, the program is able to complete the computation in a reasonable amount of time (mostly less 10 minutes). Some computation time and number of results are listed for reference (tested with CPU [i7-8700B](https://ark.intel.com/content/www/us/en/ark/products/134905/intel-core-i7-8700b-processor-12m-cache-up-to-4-60-ghz.html), with commit [c0ca257](https://github.com/jerry0317/JYMoleculeTool-Swift/commit/c0ca257)).\*
 
-|Molecule|Non-H Atoms|Results|Computation Time (s)|
-|---|---|---|---|
-|[Glycine](https://pubchem.ncbi.nlm.nih.gov/compound/750)|5|32|0.017|
-|[alpha-Pinene](https://pubchem.ncbi.nlm.nih.gov/compound/6654)|10|108|0.9508|
-|[Aspirin](https://pubchem.ncbi.nlm.nih.gov/compound/2244)|13|428|9.7029|
-|[Branched laurylphenol](https://pubchem.ncbi.nlm.nih.gov/compound/22833469)|17|2880|420.06|
-|[Ethyldihydro-alpha-isomorphine](https://pubchem.ncbi.nlm.nih.gov/compound/5745717)|23|17208|45804|
+|Molecule|Non-H Atoms|Result - Structures|**Result - Bond Graphs**|**Computation Time (s)**|
+|---|---|---|---|---|
+|[1,2-propanediol](https://pubchem.ncbi.nlm.nih.gov/compound/1030)|5|32|46|0.0134|
+|[Benzene](https://pubchem.ncbi.nlm.nih.gov/compound/241)|6|12|216|0.0872|
+|[Alpha Pinene](https://pubchem.ncbi.nlm.nih.gov/compound/6654)|10|158|174|1.0746|
+|[Aspirin](https://pubchem.ncbi.nlm.nih.gov/compound/2244)|13|450|2762|36.345|
+|[Branched laurylphenol](https://pubchem.ncbi.nlm.nih.gov/compound/22833469)|17|2520|14154|1584.4|
+|[Isomorphine](https://pubchem.ncbi.nlm.nih.gov/compound/44246529)|21|18187|58590|22490|
+|[Monoacetyl-alpha-isomorphine](https://pubchem.ncbi.nlm.nih.gov/compound/5745678)|24|14416|65277|131448|
 
-*\*Note: The results and computaion time listed in this table may not match the performance of the current versions because the computation algorithms were changed siginificantly in a recent update of version 0.1.2.*
+\**Detailed results may be found [here](https://github.com/jerry0317/JYMoleculeTool-Results/tree/master/Structure%20Finder/results).*
 
 As the first atom is arbitrarily fixed, the total number of structural combinations for *k* non-hygrogen atoms should be *8^(k-1)*. After optimization in algorithms, the runtime complexity of the program should be *O(n logn)*, where *n = 8^(k-1)*. Therefore, in terms of *k*, the runtime complexity is basically *2^O(k)*, which grows exponentially with the increase of number of non-H atoms.
 
-According to the tests, the program is able to complete most of the computations for molecules containing no more than 20 non-hydrogen atoms in less than 10 minutes. The limit is extended to around 23 if the computation time is allowed to be less than one day. Under current test, **the upper limit of the number of non-hydrogen atoms in the molecules is 24**, which takes over 40 hours to complete the computation. Also note that an extensive amount of memory is needed for computations of large molecules (20+ non-H atoms).
+According to the tests, the program is able to complete most of the computations for molecules containing no more than 20 non-hydrogen atoms in less than 10 minutes. The limit is extended to around 23 if the computation time is allowed to be less than one day. Under current test, **the upper limit of the number of non-hydrogen atoms in the molecules is 24**, which takes over 36 hours (a day and a half) to complete the computation. Also note that an extensive amount of memory is needed for computations of large molecules (20+ non-H atoms).
 
 ## ABC Tool
 This is a tool for implementing [Kraitchman's equations](https://doi.org/10.1119/1.1933338) (J. Kraitchman, *Am. J. Phys.*, **21**, 17 (1953)) to find the absolute values of the position vector (components) of each atoms in the molecule. The program takes data of A,B,C (rotational constants) of the original molecule and the ones after single isotopic substitution.
