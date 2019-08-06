@@ -102,6 +102,10 @@ possibleList.sort(by: {
     ($0.centerOfMass - combAtoms.centerOfMass).magnitude < ($1.centerOfMass - combAtoms.centerOfMass).magnitude
 })
 
+let hashGraphs = possibleList.reduce(Set<HashGraph>(), {
+    $0.union($1.bondGraphs.map({ $0.hashGraph }))
+})
+
 var log = TextFile()
 var iCode = 0
 var success = false
@@ -205,6 +209,7 @@ log.add("Total number of non-hydrogen atoms: \(combAtoms.count).")
 log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
 log.add("Total number of possible structures: \(possibleList.count).")
 log.add("Total number of possible bond graphs: \(possibleList.reduce(0, { $0 + $1.bondGraphs.count })).")
+log.add("Total number of possible hash graphs: \(hashGraphs.count).")
 log.add("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1)).")
 log.add("-----------------------------------")
 

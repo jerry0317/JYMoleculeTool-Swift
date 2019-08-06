@@ -32,6 +32,8 @@ public struct GlobalCache {
      */
     public var possibleBondTypes: [Array<ChemElement>: [ChemBondType]] = [:]
     
+    public var minimumBondLength: [Array<ChemElement>: Double] = [:]
+    
     /**
      Record how many times the atoms has been matched by structure molecules.
      

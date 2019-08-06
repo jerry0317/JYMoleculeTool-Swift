@@ -789,3 +789,101 @@ extension Array where Element : RangeReplaceableCollection {
         return result
     }
 }
+
+public struct HashPoint {
+    public var value: Int
+    
+    public init(_ value: Int) {
+        self.value = value
+    }
+}
+
+extension HashPoint: Hashable {
+    public static func == (lhs: HashPoint, rhs: HashPoint) -> Bool {
+        return lhs.value == rhs.value
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(value)
+    }
+}
+
+extension HashPoint: Comparable {
+    public static func < (lhs: HashPoint, rhs: HashPoint) -> Bool {
+        lhs.hashValue < rhs.hashValue
+    }
+}
+
+public struct HashEdge {
+    private var _point1: HashPoint
+    private var _point2: HashPoint
+    
+    public var points: [HashPoint] {
+        get {
+            return [_point1, _point2].sorted()
+        }
+        set {
+            assignSortedPoints(newValue)
+        }
+    }
+    
+    public var value: Int
+    
+    public init(_ point1: HashPoint, _ point2: HashPoint, _ value: Int){
+        let sortedPoints = [point1, point2].sorted()
+        self._point1 = sortedPoints[0]
+        self._point2 = sortedPoints[1]
+        self.value = value
+    }
+    
+    public init(points: [HashPoint], value: Int){
+        precondition(points.count >= 2, "Must provide an argument of at least two points")
+        self.init(points[0], points[1], value)
+    }
+    
+    public init(hashValues: [Int], value: Int){
+        self.init(points: hashValues.map({ HashPoint($0) }), value: value)
+    }
+    
+    private mutating func assignSortedPoints(_ points: [HashPoint]) {
+        guard points.count == 2 else {
+            return
+        }
+        let sortedPoints = points.sorted()
+        _point1 = sortedPoints[0]
+        _point2 = sortedPoints[1]
+    }
+}
+
+extension HashEdge: Hashable {
+    public static func == (lhs: HashEdge, rhs: HashEdge) -> Bool {
+        return lhs.points == rhs.points && lhs.value == rhs.value
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(points)
+        hasher.combine(value)
+    }
+}
+
+extension HashEdge: Comparable {
+    public static func < (lhs: HashEdge, rhs: HashEdge) -> Bool {
+        lhs.hashValue < rhs.hashValue
+    }
+}
+
+public struct HashGraph {
+    public var points: [HashPoint] = []
+    public var edges: [HashEdge] = []
+}
+
+extension HashGraph: Hashable {
+    public static func == (lhs: HashGraph, rhs: HashGraph) -> Bool {
+        return lhs.points.sorted() == rhs.points.sorted() && lhs.edges.sorted() == rhs.edges.sorted()
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(points.sorted())
+        hasher.combine(edges.sorted())
+    }
+}

@@ -342,6 +342,11 @@ public final class ChemBondType {
     }
     
     /**
+     A set storing disabled bdcodes (mainly for debug use).
+     */
+    static let disabledBondCodes: Set<BondCode> = []
+    
+    /**
      The validity of a bond type.
      */
     public var isValid: Bool {
@@ -352,7 +357,7 @@ public final class ChemBondType {
      Tells if a bond type is valid.
      */
     public func validate() -> Bool{
-        return bdCode != nil
+        return bdCode != nil && !ChemBondType.disabledBondCodes.contains(bdCode!)
     }
     
     /**
@@ -573,6 +578,20 @@ public struct ChemBondGraph {
     public func findVseprGraph(_ atom: Atom) -> VSEPRGraph {
         let (attached, bonds) = adjacenciesOfAtom(atom)
         return VSEPRGraph(center: atom, attached: attached, bonds: bonds)
+    }
+    
+    private func createHashGraph() -> HashGraph {
+        var hGraph = HashGraph()
+        
+        for bond in bonds {
+            hGraph.edges.append(HashEdge(points: bond.atoms.map({ HashPoint($0.identifier ?? 0) }), value: bond.type.hashValue))
+        }
+        
+        return hGraph
+    }
+    
+    public var hashGraph: HashGraph {
+        createHashGraph()
     }
 }
 
@@ -1071,6 +1090,28 @@ public func bondAnglesFilter(center aAtom: Atom, attached: [Atom], range: Closed
     return bondAnglesFilter(thetaList, range: range, tolRatio: tolRatio)
 }
 
+public func minimumBondLength(_ element1: ChemElement, _ element2: ChemElement) -> Double {
+    let possibleBTs = possibleBondTypes(element1, element2)
+    return possibleBTs.map({ $0.lengthRangeTuple?.0 ?? 0.0}).min() ?? 0
+}
+
+public func minimumBondLengthDynProgrammed(_ element1: ChemElement, _ element2: ChemElement) -> Double {
+    let elements = [element1, element2]
+    guard let len = globalCache.minimumBondLength[elements] else {
+        let newLen = minimumBondLength(element1, element2)
+        globalCache.minimumBondLength[elements] = newLen
+        return newLen
+    }
+    return len
+}
+
+public func minimumBondLengthFilter(_ atom1: Atom, _ atom2: Atom, tolRange: Double = 0.01) -> Bool {
+    guard let element1 = atom1.element, let element2 = atom2.element else {
+        return false
+    }
+    return (atomDistance(atom1, atom2) ?? 0.0) > (minimumBondLengthDynProgrammed(element1, element2) - tolRange)
+}
+
 /**
  Molecule constructor for an atom. One atom is compared with a valid structural molecule. The atom will be added to the structural molecule. If the atom is valid to be connected through certain bonds to the structural molecule, that bond will be added to the existing bond graphs. Otherwise, the bond graphs will be empty.
  
@@ -1094,7 +1135,7 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
         mol.bondGraphs.removeAll()
         
         // Step 1: Make sure the new atom is not too close to any of the existing atoms.
-        let minimumBDLCheck = stMol.atoms.filter({ (atomDistance($0, atom) ?? 0) < ChemConst.minimumBondLength }).isEmpty
+        let minimumBDLCheck = stMol.atoms.filter({ !minimumBondLengthFilter(atom, $0, tolRange: tolRange) }).isEmpty
         if !minimumBDLCheck {
             return mol
         }
@@ -1109,9 +1150,10 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
             for bondType in possibleBts {
                 if !bondTypeLengthFilter(vAtom, atom, bondType, tolRange) {
                     continue
+                } else {
+                    let pBond = ChemBond(vAtom, atom, bondType)
+                    possibleBonds.append(pBond)
                 }
-                let pBond = ChemBond(vAtom, atom, bondType)
-                possibleBonds.append(pBond)
             }
             if !possibleBonds.isEmpty {
                 possibleBondsCollected.append(possibleBonds)
