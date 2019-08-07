@@ -32,6 +32,9 @@ public struct GlobalCache {
      */
     public var possibleBondTypes: [Array<ChemElement>: [ChemBondType]] = [:]
     
+    /**
+     Cached minimum bond lengths keyed by the **Array** of `ChemElement`. The minimum bond lengths should be found by the minimum bond length in the `constants.swift`.
+     */
     public var minimumBondLength: [Array<ChemElement>: Double] = [:]
     
     /**

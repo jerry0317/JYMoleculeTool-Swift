@@ -540,6 +540,9 @@ public struct ChemBondGraph {
         self.bonds = bonds
     }
     
+    /**
+     The atoms engaged in the bond graph. Calculated from `bonds`.
+     */
     public var atoms: Set<Atom> {
         bonds.reduce(Set<Atom>(), { $0.union($1.atoms) })
     }
@@ -584,6 +587,9 @@ public struct ChemBondGraph {
         return VSEPRGraph(center: atom, attached: attached, bonds: bonds)
     }
     
+    /**
+     An identifier graph is a hash graph which treats atoms as identifiers (which is equivalent to a labeled graph). The number of identifier graphs should be greater than the number of Lewis structures.
+     */
     private func createIdentifierGraph() -> HashGraph {
         var hGraph = HashGraph()
         
@@ -597,7 +603,9 @@ public struct ChemBondGraph {
         
         return hGraph
     }
-    
+    /**
+     An element graph is a hash graph which treats atoms as elements (which is equivalent to a categorized labeled graph). The number of identifier graphs should be less than the number of Lewis structures.
+    */
     private func createElementGraph() -> HashGraph {
         var hGraph = HashGraph()
                 
@@ -612,10 +620,16 @@ public struct ChemBondGraph {
         return hGraph
     }
     
+    /**
+     The identifier graph created from the bond graph.
+     */
     public var identifierGraph: HashGraph {
         createIdentifierGraph()
     }
     
+    /**
+     The element graph created from the bond graph.
+     */
     public var elementGrpah: HashGraph {
         createElementGraph()
     }
@@ -1127,11 +1141,17 @@ public func bondAnglesFilter(center aAtom: Atom, attached: [Atom], range: Closed
     return bondAnglesFilter(thetaList, range: range, tolRatio: tolRatio)
 }
 
+/**
+ Find the lowest possible bond length between two elements that presented in the constants page.
+ */
 public func minimumBondLength(_ element1: ChemElement, _ element2: ChemElement) -> Double {
     let possibleBTs = possibleBondTypes(element1, element2)
     return possibleBTs.map({ $0.lengthRangeTuple?.0 ?? 0.0}).min() ?? 0
 }
 
+/**
+ Use cache to implement the memoized dynamic programming in the determination of minimum bond length between two elements.
+ */
 public func minimumBondLengthDynProgrammed(_ element1: ChemElement, _ element2: ChemElement) -> Double {
     let elements = [element1, element2]
     guard let len = globalCache.minimumBondLength[elements] else {
@@ -1142,6 +1162,9 @@ public func minimumBondLengthDynProgrammed(_ element1: ChemElement, _ element2: 
     return len
 }
 
+/**
+ A filter to filter out the atoms that are too close to the target atom.
+ */
 public func minimumBondLengthFilter(_ atom1: Atom, _ atom2: Atom, tolRange: Double = 0.01) -> Bool {
     guard let element1 = atom1.element, let element2 = atom2.element else {
         return false
@@ -1520,6 +1543,9 @@ public func degreeThreeAtomPlanarDistance(center: Atom, attached: [Atom]) -> Dou
     return abs(dVec.scalarProject(on: nVec))
 }
 
+/**
+ (D3APD filter) A filter to filter out if a degree-3 atom is "out of plane" based on a given range.
+ */
 public func degreeThreeAtomPlanarDistanceFilter(center: Atom, attached: [Atom], range: ClosedRange<Double>, tolLevel: Double = 0.01) -> Bool {
     guard let distance = degreeThreeAtomPlanarDistance(center: center, attached: attached) else {
         return true

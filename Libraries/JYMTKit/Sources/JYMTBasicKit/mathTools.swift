@@ -790,6 +790,9 @@ extension Array where Element : RangeReplaceableCollection {
     }
 }
 
+/**
+ A point represented by an integer value.
+ */
 public struct HashPoint {
     public var value: Int
     
@@ -814,6 +817,9 @@ extension HashPoint: Comparable {
     }
 }
 
+/**
+ An edge between two `HashPoint`s with a characterization of edge represented by an integer value.
+ */
 public struct HashEdge {
     private var _point1: HashPoint
     private var _point2: HashPoint
@@ -872,18 +878,29 @@ extension HashEdge: Comparable {
     }
 }
 
+/**
+ A graph consisted by an array of `HashPoint` and an array of `HashEdge`. Equivalence is determined by the sorted array of the two.
+ */
 public struct HashGraph {
     public var points: [HashPoint] = []
     public var edges: [HashEdge] = []
+    
+    private var sortedPoints: [HashPoint] {
+        points.sorted()
+    }
+    
+    private var sortedEdges: [HashEdge] {
+        edges.sorted()
+    }
 }
 
 extension HashGraph: Hashable {
     public static func == (lhs: HashGraph, rhs: HashGraph) -> Bool {
-        return lhs.points.sorted() == rhs.points.sorted() && lhs.edges.sorted() == rhs.edges.sorted()
+        return lhs.sortedPoints == rhs.sortedPoints && lhs.sortedEdges == rhs.sortedEdges
     }
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(points.sorted())
-        hasher.combine(edges.sorted())
+        hasher.combine(sortedPoints)
+        hasher.combine(sortedEdges)
     }
 }

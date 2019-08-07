@@ -119,7 +119,7 @@ You can visualize the `.xyz` files and `.mol` files with softwares like [Avogadr
   - If you want to save the results, please enter/drag the folder where you want to save the results in.
   - If you don't want to save the results, just leave it empty.
 - Bond length tolerance level in angstrom (Optional)
-  - You'll be prompted to enter a desired value if you want to customize the tolerance level used in bond length filters. If the distance between two atoms lies in the bond length range extended by the tolerance level, the program will form a bond between these two atoms. The formula for the range is `(bondLengthRange.min - tolLevel, bondLengthRange.max + tolLevel)`.
+  - You'll be prompted to enter a desired value if you want to customize the tolerance level used in bond length filters and co-planarity filters. If the distance between two atoms lies in the bond length range extended by the tolerance level, the program will form a bond between these two atoms. The formula for the range is `(bondLengthRange.min - tolLevel, bondLengthRange.max + tolLevel)`.
   - The default value is 0.01.
   - For experimentally determined data, the tolerance level is suggested to be larger to match the uncertainties persented in the data set.
   - *\*Note: In version 0.1.2 or before, the tolerance level meant if the distance between two atoms is in the bond length typical value plus or minus the tolerance level, the program will form a bond between these two atoms. The formula for the range was* `(typBondLength - tolLevel, typBondLength + tolLevel)`. *The default value in these versions was 0.1.*
@@ -149,7 +149,7 @@ As tested on computation-capable platforms, for molecules containing no more tha
 |[Isomorphine](https://pubchem.ncbi.nlm.nih.gov/compound/44246529)|21|18187|58590|22490|
 |[Monoacetyl-alpha-isomorphine](https://pubchem.ncbi.nlm.nih.gov/compound/5745678)|24|14416|65277|131448|
 
-\**Detailed results may be found [here](https://github.com/jerry0317/JYMoleculeTool-Results/tree/master/Structure%20Finder/results).*
+\**Detailed results may be found [here](https://github.com/jerry0317/JYMoleculeTool-Results/tree/master/Structure%20Finder/results).* ***These results do not reflect the most recent version which implements a co-planarity filter for AX3E0 VSEPR graphs.***
 
 As the first atom is arbitrarily fixed, the total number of structural combinations for *k* non-hygrogen atoms should be *8^(k-1)*. After optimization in algorithms, the runtime complexity of the program should be *O(n logn)*, where *n = 8^(k-1)*. Therefore, in terms of *k*, the runtime complexity is basically *2^O(k)*, which grows exponentially with the increase of number of non-H atoms.
 
