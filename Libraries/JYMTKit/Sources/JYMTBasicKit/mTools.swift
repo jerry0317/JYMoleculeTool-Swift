@@ -540,6 +540,10 @@ public struct ChemBondGraph {
         self.bonds = bonds
     }
     
+    public var atoms: Set<Atom> {
+        bonds.reduce(Set<Atom>(), { $0.union($1.atoms) })
+    }
+    
     /**
      The number of bonds that is connected to the atom.
      */
@@ -580,18 +584,40 @@ public struct ChemBondGraph {
         return VSEPRGraph(center: atom, attached: attached, bonds: bonds)
     }
     
-    private func createHashGraph() -> HashGraph {
+    private func createIdentifierGraph() -> HashGraph {
         var hGraph = HashGraph()
         
         for bond in bonds {
             hGraph.edges.append(HashEdge(points: bond.atoms.map({ HashPoint($0.identifier ?? 0) }), value: bond.type.hashValue))
         }
         
+        for atom in atoms {
+            hGraph.points.append(HashPoint(atom.identifier ?? 0))
+        }
+        
         return hGraph
     }
     
-    public var hashGraph: HashGraph {
-        createHashGraph()
+    private func createElementGraph() -> HashGraph {
+        var hGraph = HashGraph()
+                
+        for bond in bonds {
+            hGraph.edges.append(HashEdge(points: bond.atoms.map({ HashPoint($0.element.hashValue) }), value: bond.type.hashValue))
+        }
+        
+        for atom in atoms {
+            hGraph.points.append(HashPoint(atom.element.hashValue))
+        }
+        
+        return hGraph
+    }
+    
+    public var identifierGraph: HashGraph {
+        createIdentifierGraph()
+    }
+    
+    public var elementGrpah: HashGraph {
+        createElementGraph()
     }
 }
 
@@ -802,7 +828,7 @@ public struct VSEPRGraph: SubChemBondGraph {
     /**
      A filter to determine if this VSEPR graph is valid.
      */
-    public func filter(tolRatio: Double = 0.1, csTolRatio: Double? = nil) -> Bool {
+    public func filter(tolRatio: Double = 0.1, csTolRatio: Double? = nil, copTolRange: Double = 0.01) -> Bool {
         guard (center.valence - valenceOccupied) >= 0 else {
             return false
         }
@@ -814,6 +840,7 @@ public struct VSEPRGraph: SubChemBondGraph {
         switch vType {
         case .ax2e0, .ax2e1, .ax2e2, .ax3e0, .ax3e1, .ax4e0:
             var range = 0.0...360.0
+            var copRange: ClosedRange<Double>? = nil // Co-planrity range
             switch vType {
             case .ax2e0: // linear
                 range = 180.0...180.0
@@ -821,13 +848,23 @@ public struct VSEPRGraph: SubChemBondGraph {
             case .ax3e0, .ax2e1: // trigonal planar
                 range = 120.0...120.0
 //                range = 115.0...125.0
+                if vType == .ax3e0 {
+                    copRange = 0.0...0.05
+                }
             case .ax4e0, .ax3e1, .ax2e2: // tetrahedral
 //                range = 90...109.5
                 range = 90.0...115.0
+//                if vType == .ax3e1 {
+//                    copRange = 0.4...0.7
+//                }
             default:
                 break
             }
             if !bondAnglesFilter(center: center, attached: attached, range: range, tolRatio: tolRatio) {
+                return false
+            }
+            
+            if degree == 3 && copRange != nil && !degreeThreeAtomPlanarDistanceFilter(center: center, attached: attached, range: copRange!, tolLevel: copTolRange) {
                 return false
             }
             
@@ -1177,7 +1214,7 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
                     pBondGraph.bonds.formUnion(pBonds)
                     for bAtom in mol.atoms {
                         let vseprGraph = pBondGraph.findVseprGraph(bAtom)
-                        if !vseprGraph.filter(tolRatio: tolRatio) {
+                        if !vseprGraph.filter(tolRatio: tolRatio, copTolRange: tolRange) {
                             continue outer
                         }
                     }
@@ -1481,6 +1518,18 @@ public func degreeThreeAtomPlanarDistance(center: Atom, attached: [Atom]) -> Dou
     let dVec = center.rvec! - attachedRVecs[0]
     
     return abs(dVec.scalarProject(on: nVec))
+}
+
+public func degreeThreeAtomPlanarDistanceFilter(center: Atom, attached: [Atom], range: ClosedRange<Double>, tolLevel: Double = 0.01) -> Bool {
+    guard let distance = degreeThreeAtomPlanarDistance(center: center, attached: attached) else {
+        return true
+    }
+    
+    if (distance < range.lowerBound - tolLevel) || (distance > range.upperBound + tolLevel) {
+        return false
+    } else {
+        return true
+    }
 }
 
 /**

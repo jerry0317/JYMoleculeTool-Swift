@@ -102,8 +102,12 @@ possibleList.sort(by: {
     ($0.centerOfMass - combAtoms.centerOfMass).magnitude < ($1.centerOfMass - combAtoms.centerOfMass).magnitude
 })
 
-let hashGraphs = possibleList.reduce(Set<HashGraph>(), {
-    $0.union($1.bondGraphs.map({ $0.hashGraph }))
+let idGraphs = possibleList.reduce(Set<HashGraph>(), {
+    $0.union($1.bondGraphs.map({ $0.identifierGraph }))
+})
+
+let elementGraphs = possibleList.reduce(Set<HashGraph>(), {
+    $0.union($1.bondGraphs.map({ $0.elementGrpah }))
 })
 
 var log = TextFile()
@@ -161,6 +165,9 @@ for pMol in possibleList {
         
         let bAString: String = bondAnglesInDeg(center: atom, attached: adjacentAtoms).map({ Array($0.1.map { $0.name }).joined(separator: atom.name) + ": " + String($0.0!.rounded(digitsAfterDecimal: 1)) + "°" }).joined(separator: ", ")
         log.add("     BAs: [" + bAString + "]", terminator: "")
+        if firstBondGraph.degreeOfAtom(atom) == 3 {
+            log.add("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))", terminator: "")
+        }
         log.add()
     }
     
@@ -209,7 +216,7 @@ log.add("Total number of non-hydrogen atoms: \(combAtoms.count).")
 log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
 log.add("Total number of possible structures: \(possibleList.count).")
 log.add("Total number of possible bond graphs: \(possibleList.reduce(0, { $0 + $1.bondGraphs.count })).")
-log.add("Total number of possible hash graphs: \(hashGraphs.count).")
+log.add("Total number of Lewis structures: between \(elementGraphs.count) and \(idGraphs.count).")
 log.add("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1)).")
 log.add("-----------------------------------")
 
