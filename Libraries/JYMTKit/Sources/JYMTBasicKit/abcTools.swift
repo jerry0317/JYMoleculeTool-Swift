@@ -187,7 +187,7 @@ public func rVecFromSIS(mu: Double, deltaP: Matrix, I: Matrix, errLevel: Double 
         if result < 0 {
             let dev = abs(result).squareRoot()
             let abcDev = PhysConst.h * (-deltaP[i, i]) / (4 * Double.pi * Double.pi * I[i, i] * I[i, i])
-            print("WARNING: Imaginary coordinate \(String(format: "%.3e", dev))i appeared. Rounded to zero. (ABC dev: \(String(format: "%.2f", abcDev * 1e-3))kHz)")
+            print("WARNING: Imaginary coordinate \(String(format: "%.4f", dev * 1e10))i appeared. Rounded to zero. (ABC dev: \(String(format: "%.2f", abcDev * 1e-3))kHz)")
             result = 0.0
         } else {
             result = result.squareRoot()

@@ -1512,18 +1512,36 @@ public extension Collection where Iterator.Element == Atom {
         self.reduce(0.0, { $0 + ($1.atomicMass ?? 0.0) })
     }
     
+    /**
+     Set all the mass numbers in the array to `nil`.
+     */
     mutating func clearMassNumbers() {
         for i in self.indices {
             self[i].massNumber = nil
         }
     }
     
+   /**
+    Set the mass number of all the atoms in the array with a given closure.
+    */
+   mutating func setMassNumber(with selectFunc: (Atom) -> Int?) {
+       for i in self.indices {
+           self[i].massNumber = selectFunc(self[i])
+       }
+   }
+    
+    /**
+     Set the mass number of each atom in the array to their most common isotope.
+     */
     mutating func setMassNumbersToMostCommon() {
-        for i in self.indices {
-            if self[i].element != nil {
-                self[i].massNumber = self[i].element!.mostCommonMassNumber
-            }
-        }
+        setMassNumber(with: { $0.element?.mostCommonMassNumber })
+    }
+    
+    /**
+     Set the mass number of each atom in the array to their second most common isotope.
+     */
+    mutating func setMassNumbersToSecondCommon() {
+        setMassNumber(with: { $0.element?.secondCommonMassNumber })
     }
 }
 
