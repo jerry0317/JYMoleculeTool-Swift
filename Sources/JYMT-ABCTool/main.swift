@@ -29,7 +29,7 @@ print(xyzSet)
 
 if saveResults {
     xyzSet.note = "* unsigned positions (absolute values)"
-    xyzSet.safelyExport(toFile: writePath.appendingPathComponent(fileName + ".xyz"))
+    xyzSet.safelyExport(toFile: writePath.appendingPathComponent(fileName.appendedUnixTime(tInitial) + ".xyz"))
 }
 
 print("-----------------------------------")

@@ -58,20 +58,7 @@ for rAtom in rawAtoms {
 
 let identifiers = rawAtoms.compactMap { $0.identifier }
 let idDict: [Int: Int] = identifiers.enumerated().reduce(into: [Int: Int](), { $0[$1.1] = $1.0 })
-
-func stringIdsOfAtoms(_ atoms: [Atom]) -> ([String], [Int], [Int]) {
-    var result = [String]()
-    var idResult = [Int]()
-    for atom in atoms {
-        guard let identifier = atom.identifier, let id = idDict[identifier] else {
-            continue
-        }
-        result.append(atom.name + String(id + 1))
-        idResult.append(id)
-    }
-    let order = (0..<result.count).sorted(by: {idResult[$0] < idResult[$1]})
-    return (result, idResult, order)
-}
+let stringIdsOfAtoms = createStringIdFunction(idDict)
 
 guard rawAtoms.count == sisCount else {
     fatalError("Fatal Error: fail to calculate from SIS to atoms")
@@ -81,7 +68,6 @@ let A1 = selectFarthestAtom(from: rawAtoms) ?? rawAtoms[0]
 print()
 
 print("Calculating possible combinations...\n")
-print()
 
 let combrAtoms = rawAtoms.removed(A1)
 let initialSMol = StrcMolecule(Set([A1]))
@@ -119,20 +105,18 @@ for (i, pMol) in possibleMols.enumerated() {
 
 log.add("-----------------------------------------\n")
 
-for depth in 1...maximumDepth {
-    log.add("----\(depth)-atom Isotopic Substitutions----")
-    for (i, sAtoms) in possibleSAtoms.enumerated() {
-        log.add("**** Structure No.\(i+1) ****")
-        var rABC = MISFromSubstitutedAtoms(depth: depth, original: sabcSet.original!, substitutedAtoms: sAtoms)
-        rABC.sort(by: { stringIdsOfAtoms($0.0).1.reduce(0, +) < stringIdsOfAtoms($1.0).1.reduce(0, +)})
-        for (atoms, abc) in rABC {
-            let atomsStrings = stringIdsOfAtoms(atoms)
-            let atomsStr = atomsStrings.2.map( { atomsStrings.0[$0] }).joined(separator: ",")
-            let misMhzForm = abc.megaHertzForm().map { String(format: "%.6f", $0) }
-            log.add("\(toPrintWithSpace(atomsStr, 4 * depth))  A: \(misMhzForm[0])    B: \(misMhzForm[1])   C: \(misMhzForm[2])")
-        }
-        if i < possibleSAtoms.endIndex - 1 {
-            log.add()
+let maxDep = min(maximumDepth, sisCount)
+for depth in 1..<(maxDep + 1) {
+    log.add("----\(depthForISStr(depth)) Isotopic Substitutions----")
+    if depth == 1 && !possibleSAtoms.isEmpty {
+        misHandler(log: &log, depth: depth, original: sabcSet.original!, subAtoms: possibleSAtoms[0], str: stringIdsOfAtoms)
+    } else {
+        for (i, sAtoms) in possibleSAtoms.enumerated() {
+            log.add("**** Structure No.\(i+1) ****")
+            misHandler(log: &log, depth: depth, original: sabcSet.original!, subAtoms: sAtoms, str: stringIdsOfAtoms)
+            if i < possibleSAtoms.endIndex - 1 {
+                log.add()
+            }
         }
     }
     log.add("-------------------------------------\n")
@@ -145,11 +129,5 @@ log.add()
 
 if saveResults {
     let txtUrl = writePath.appendingPathComponent(baseFileName + ".txt")
-    do {
-        try log.save(asURL: txtUrl)
-        print("Results have been saved to txt file.")
-    } catch let error {
-        print("Failed to save the results. An error occured: \(error).")
-        print("Note: You may save the console log for further reference of the results.")
-    }
+    log.safelyExport(toFile: txtUrl)
 }

@@ -264,6 +264,19 @@ public struct TextFile: File {
     public func print(terminator: String = "\n") {
         Swift.print(content, terminator: terminator)
     }
+    
+    /**
+     Safely export the log file to URL. Print the error when the error raises.
+    */
+    public func safelyExport(toFile path: URL) {
+        do {
+            try save(asURL: path)
+            Swift.print("Results have been saved to txt file.")
+        } catch let error {
+            Swift.print("Failed to save the results. An error occured: \(error).")
+            Swift.print("Note: You may save the console log for further reference of the results.")
+        }
+    }
 }
 
 public struct SABCFile: File {

@@ -222,13 +222,7 @@ log.add("-----------------------------------")
 
 if saveResults {
     let txtUrl = writePath.appendingPathComponent(baseFileName + ".txt")
-    do {
-        try log.save(asURL: txtUrl)
-        print("Results have been saved to txt file.")
-    } catch let error {
-        print("Failed to save the results. An error occured: \(error).")
-        print("Note: You may save the console log for further reference of the results.")
-    }
+    log.safelyExport(toFile: txtUrl)
 }
 print()
 
