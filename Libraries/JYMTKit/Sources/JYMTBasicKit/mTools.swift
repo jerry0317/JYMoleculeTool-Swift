@@ -1010,6 +1010,48 @@ public extension StrcMolecule {
     }
 }
 
+public enum StrcFilter {
+    case minimumBondLength
+    case bondTypeLength
+    case bondAngle
+    case coplanarity
+}
+
+public struct StrcDeviation {
+    public var isValid: Bool
+    
+    public var devInSigma: Double
+    
+    public init(_ validity: Bool, _ sigma: Double) {
+        isValid = validity
+        devInSigma = sigma
+    }
+}
+
+extension StrcDeviation {
+    public var inRange: Bool {
+        devInSigma.isZero
+    }
+}
+
+public extension StrcDeviation {
+    static let failure = StrcDeviation(false, Double.infinity)
+    static let success = StrcDeviation(true, 0)
+}
+
+/**
+ Structure score (STS) is an evaluation of the "goodness" of a `StrcMolecule`. The score would be based on the deviation of the molecule from the four filters.
+ */
+public struct StrcScore {
+    public var deviations: [StrcFilter: StrcDeviation] = [:]
+    
+    public var baseScore: Double = 100
+    
+    public init(base: Double){
+        baseScore = base
+    }
+}
+
 /**
  Calculate the distance between two atoms
  */
@@ -1026,15 +1068,24 @@ public func atomDistance(_ atom1: Atom, _ atom2: Atom) -> Double?{
  Filtering by bond length with the reference of bond type (bondlength range implemented)
  */
 public func bondTypeLengthFilter(_ atom1: Atom, _ atom2: Atom, _ bondType: ChemBondType, _ tolRange: Double = 0.1) -> Bool {
+    return bondTypeLengthFilterSTS(atom1, atom2, bondType, tolRange).isValid
+}
+
+public func bondTypeLengthFilterSTS(_ atom1: Atom, _ atom2: Atom, _ bondType: ChemBondType, _ tolRange: Double = 0.1) -> StrcDeviation {
     guard let d = atomDistance(atom1, atom2), let length = bondType.lengthRangeTuple else {
-        return false
+        return StrcDeviation.failure
     }
-    if d < (length.0 - tolRange) || d > (length.1 + tolRange) {
-        return false
+    var dev = 0.0
+    if d < length.0 {
+        dev = (d - length.0) / tolRange
+    } else if d > (length.1 + tolRange) {
+        dev = (d - length.1) / tolRange
     }
     else {
-        return true
+        return StrcDeviation.success
     }
+    let pass = (abs(dev) <= 1)
+    return StrcDeviation(pass, dev)
 }
 
 /**
