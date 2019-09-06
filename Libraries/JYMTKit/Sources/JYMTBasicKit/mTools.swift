@@ -1078,10 +1078,9 @@ public func bondTypeLengthFilterSTS(_ atom1: Atom, _ atom2: Atom, _ bondType: Ch
     var dev = 0.0
     if d < length.0 {
         dev = (d - length.0) / tolRange
-    } else if d > (length.1 + tolRange) {
+    } else if d > length.1 {
         dev = (d - length.1) / tolRange
-    }
-    else {
+    } else {
         return StrcDeviation.success
     }
     let pass = (abs(dev) <= 1)
@@ -1139,19 +1138,25 @@ public func possibleBondTypesDynProgrammed(_ atomName1: ChemElement?, _ atomName
  Filtering by bond angle with a given range. Given a list of angles in degrees.
  */
 public func bondAnglesFilter(_ angles: [Double?], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
+    return bondAnglesFilterSTS(angles, range: range, tolRatio: tolRatio).isValid
+}
+
+public func bondAnglesFilterSTS(_ angles: [Double?], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> StrcDeviation {
     let lowerBound = tolRatio < 1 ? range.lowerBound * (1 - tolRatio) : 0
     let upperBound = range.upperBound * (1 + tolRatio)
     let tRange: ClosedRange<Double> = lowerBound...upperBound
+    let midpoint = (range.lowerBound + range.upperBound) / 2
+    let sigma = midpoint * tolRatio
     for theta in angles {
         guard let t = theta else {
-            return false
+            return StrcDeviation.failure
         }
         
         if !tRange.contains(t) && !tRange.contains(360.0 - t) {
-            return false
+            return StrcDeviation(false, (t - midpoint) / sigma)
         }
     }
-    return true
+    return StrcDeviation.success
 }
 
 /**
@@ -1217,10 +1222,17 @@ public func minimumBondLengthDynProgrammed(_ element1: ChemElement, _ element2: 
  A filter to filter out the atoms that are too close to the target atom.
  */
 public func minimumBondLengthFilter(_ atom1: Atom, _ atom2: Atom, tolRange: Double = 0.01) -> Bool {
+    return minimumBondLengthFilterSTS(atom1, atom2, tolRange: tolRange).isValid
+}
+
+public func minimumBondLengthFilterSTS(_ atom1: Atom, _ atom2: Atom, tolRange: Double = 0.01) -> StrcDeviation {
     guard let element1 = atom1.element, let element2 = atom2.element else {
-        return false
+        return StrcDeviation.failure
     }
-    return (atomDistance(atom1, atom2) ?? 0.0) > (minimumBondLengthDynProgrammed(element1, element2) - tolRange)
+    let atomd = atomDistance(atom1, atom2) ?? 0.0
+    let minimumd = minimumBondLengthDynProgrammed(element1, element2)
+    let dev = (minimumd - atomd) / tolRange
+    return StrcDeviation(dev < 1, dev)
 }
 
 /**
@@ -1616,15 +1628,22 @@ public func degreeThreeAtomPlanarDistance(center: Atom, attached: [Atom]) -> Dou
  (D3APD filter) A filter to filter out if a degree-3 atom is "out of plane" based on a given range.
  */
 public func degreeThreeAtomPlanarDistanceFilter(center: Atom, attached: [Atom], range: ClosedRange<Double>, tolLevel: Double = 0.01) -> Bool {
+    return degreeThreeAtomPlanarDistanceFilterSTS(center: center, attached: attached, range: range, tolLevel: tolLevel).isValid
+}
+
+public func degreeThreeAtomPlanarDistanceFilterSTS(center: Atom, attached: [Atom], range: ClosedRange<Double>, tolLevel: Double = 0.01) -> StrcDeviation {
     guard let distance = degreeThreeAtomPlanarDistance(center: center, attached: attached) else {
-        return true
+        return StrcDeviation.success
     }
-    
-    if (distance < range.lowerBound - tolLevel) || (distance > range.upperBound + tolLevel) {
-        return false
+    var dev = 0.0
+    if distance < range.lowerBound {
+        dev = (distance - range.lowerBound) / tolLevel
+    } else if distance > range.upperBound {
+        dev = (distance - range.upperBound) / tolLevel
     } else {
-        return true
+        return StrcDeviation.success
     }
+    return StrcDeviation(abs(dev) <= 1, dev)
 }
 
 /**
