@@ -1038,13 +1038,61 @@ public extension StrcDeviation {
  Structure score (STS) is an evaluation of the "goodness" of a `StrcMolecule`. The score would be based on the deviation of the molecule from the four filters.
  */
 public struct StrcScore {
-    public var deviations: [StrcFilter: StrcDeviation] = [:]
+//    public var deviations: [StrcFilter: StrcDeviation] = [:]
+    
+    public var deviations: [(StrcFilter, StrcDeviation)] = []
     
     public var baseScore: Double = 100
     
     public init(base: Double){
         baseScore = base
     }
+}
+
+public extension StrcScore {
+    var devDict: [StrcFilter: [StrcDeviation]] {
+        var bDict = [StrcFilter: [StrcDeviation]]()
+        for (filter, dev) in deviations {
+            if bDict[filter] == nil {
+                bDict[filter] = [dev]
+            } else {
+                bDict[filter]!.append(dev)
+            }
+        }
+        return bDict
+    }
+}
+
+public extension StrcScore {
+    /**
+     A linear-model determination of simple-deviation.
+     */
+    static let sBases: [StrcFilter: Double] = [
+        .minimumBondLength: 200,
+        .bondTypeLength: 80,
+        .bondAngle: 50,
+        .coplanarity: 50
+    ]
+}
+
+public extension StrcScore {
+    /**
+     Score determined by simple-deviation.
+     */
+    var sScore: Double {
+        deviations.reduce(baseScore, { $0 - StrcScore.sBases[$1.0]! * $1.1.devInSigma })
+    }
+}
+
+public extension StrcScore {
+    var isValid: Bool {
+        sScore >= 0
+    }
+}
+
+public extension StrcScore {
+    static let ultimateSuccess = StrcScore(base: Double.infinity)
+    static let ultimateFailure = StrcScore(base: -Double.infinity)
 }
 
 // MARK: Tools
