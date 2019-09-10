@@ -1603,7 +1603,81 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
     return mol
 }
 
-
+public func strcMoleculeConstructorSTS(stMol: StrcMolecule, atom: Atom, tolRange: Double, tolRatio: Double = 0.1, baseScore: Double = 100) -> StrcMolecule {
+    var mol = stMol
+    let bondGraphs = mol.bondGraphs
+    
+    if mol.size <= 0 {
+        mol.addAtom(atom)
+    } else {
+        mol.bondGraphs.removeAll()
+        
+        if mol.score == nil {
+            mol.score = StrcScore(base: baseScore)
+        }
+        
+        // Step 1: Make sure the new atom is not too close to any of the existing atoms.
+        for sAtom in stMol.atoms {
+            let mStDev = minimumBondLengthFilterSTS(atom, sAtom, tolRange: tolRange)
+            mol.score!.append(dev: mStDev, filter: .minimumBondLength)
+            if !mol.isValid {
+                return mol
+            }
+        }
+        
+        // Step 2: Find all the possible bond connections between the new atom and any of the existing atoms.
+        var possibleBondsCollected: [[ChemBond]] = []
+        
+        // Step 2.1: Find possible new bond connections of each existing atom.
+        for vAtom in stMol.atoms {
+            let possibleBts = possibleBondTypesDynProgrammed(vAtom.element, atom.element)
+            var possibleBonds = [ChemBond]()
+            for bondType in possibleBts {
+                let bStDev = bondTypeLengthFilterSTS(vAtom, atom, bondType, tolRange)
+                mol.score!.append(dev: bStDev, filter: .bondTypeLength)
+                if !mol.isValid {
+                    continue
+                } else {
+                    let pBond = ChemBond(vAtom, atom, bondType)
+                    possibleBonds.append(pBond)
+                }
+                if !possibleBonds.isEmpty {
+                    possibleBondsCollected.append(possibleBonds)
+                }
+            }
+        }
+        
+        // Step 2.2: Find the Cartesian product of the collected possible bonds.
+        if possibleBondsCollected.isEmpty {
+            return mol
+        }
+        
+        // Step 3: Perform VSEPR filter on each of the possible Cartesian combination of the bonds.
+        mol.addAtom(atom)
+        
+        for pBonds in possibleBondsCollected.cartesianProduct() {
+            if stMol.size == 1 {
+                mol.bondGraphs.insert(ChemBondGraph(pBonds))
+            } else if stMol.size > 1 {
+                outer: for bondGraph in bondGraphs {
+                    var pBondGraph = bondGraph
+                    pBondGraph.bonds.formUnion(pBonds)
+                    for bAtom in mol.atoms {
+                        let vseprGraph = pBondGraph.findVseprGraph(bAtom)
+                        let vStDevs = vseprGraph.filterSTS(tolRatio: tolRatio, copTolRange: tolRange)
+                        mol.score!.deviations.append(contentsOf: vStDevs)
+                        if !mol.isValid {
+                            continue outer
+                        }
+                    }
+                    mol.bondGraphs.insert(pBondGraph)
+                }
+            }
+        }
+    }
+    
+    return mol
+}
 
 /**
  The recursion constructor. It takes a test atom and compared it with a valid structrual molecule. It will return the possible structural molecules as the atom and the molecule join together.
@@ -1613,7 +1687,7 @@ public func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0
     var possibleSMList: [StrcMolecule] = []
     
     for pAtom in possibleAtoms {
-        let sMol = strcMoleculeConstructor(stMol: stMol, atom: pAtom, tolRange: tolRange, tolRatio: tolRatio)
+        let sMol = strcMoleculeConstructorSTS(stMol: stMol, atom: pAtom, tolRange: tolRange, tolRatio: tolRatio)
         
         if !sMol.bondGraphs.isEmpty {
             possibleSMList.append(sMol)
