@@ -522,6 +522,10 @@ public struct ChemBondGraph {
         self.bonds = bonds
     }
     
+    public init(_ bonds: Array<ChemBond> = []) {
+        self = .init(Set(bonds))
+    }
+    
     /**
      The atoms engaged in the bond graph. Calculated from `bonds`.
      */
@@ -825,14 +829,19 @@ public struct VSEPRGraph: SubChemBondGraph {
      A filter to determine if this VSEPR graph is valid.
      */
     public func filter(tolRatio: Double = 0.1, csTolRatio: Double? = nil, copTolRange: Double = 0.01) -> Bool {
-        guard (center.valence - valenceOccupied) >= 0 else {
-            return false
+        let sts = filterSTS(tolRatio: tolRatio, csTolRatio: csTolRatio, copTolRange: copTolRange)
+        return !sts.map({ $1.isValid }).contains(false)
+    }
+    
+    public func filterSTS(tolRatio: Double = 0.1, csTolRatio: Double? = nil, copTolRange: Double = 0.01) -> [(StrcFilter, StrcDeviation)] {
+        var rList = [(StrcFilter, StrcDeviation)]()
+        
+        if (center.valence - valenceOccupied) < 0 {
+            rList.append((.valence, StrcDeviation(false, Double(valenceOccupied - center.valence))))
+        } else {
+            rList.append((.valence, StrcDeviation.success))
         }
         let vType = type
-//        var csRatio = tolRatio
-//        if csTolRatio != nil {
-//            csRatio = csTolRatio!
-//        }
         switch vType {
         case .ax2e0, .ax2e1, .ax2e2, .ax3e0, .ax3e1, .ax4e0:
             var range = 0.0...360.0
@@ -856,12 +865,13 @@ public struct VSEPRGraph: SubChemBondGraph {
             default:
                 break
             }
-            if !bondAnglesFilter(center: center, attached: attached, range: range, tolRatio: tolRatio) {
-                return false
-            }
             
-            if degree == 3 && copRange != nil && !degreeThreeAtomPlanarDistanceFilter(center: center, attached: attached, range: copRange!, tolLevel: copTolRange) {
-                return false
+            let baDev = bondAnglesFilterSTS(center: center, attached: attached, range: range, tolRatio: tolRatio)
+            rList.append((.bondAngle, baDev))
+            
+            if degree == 3 && copRange != nil {
+                let d3Dev = degreeThreeAtomPlanarDistanceFilterSTS(center: center, attached: attached, range: copRange!, tolLevel: copTolRange)
+                rList.append((.coplanarity, d3Dev))
             }
             
 //            if !completelySymmetricFilter(tolRatio: csRatio) {
@@ -872,7 +882,7 @@ public struct VSEPRGraph: SubChemBondGraph {
             break
         }
         
-        return true
+        return rList
     }
 }
 
@@ -890,9 +900,12 @@ public struct StrcMolecule {
      */
     public var bondGraphs: Set<ChemBondGraph>
     
-    public init(_ atoms: Set<Atom> = Set(), _ bondGraphs: Set<ChemBondGraph> = Set()) {
+    public var score: StrcScore? = nil
+    
+    public init(_ atoms: Set<Atom> = Set(), _ bondGraphs: Set<ChemBondGraph> = Set(), _ score: StrcScore? = nil) {
         self.atoms = atoms
         self.bondGraphs = bondGraphs
+        self.score = score
     }
     
     /**
@@ -907,6 +920,13 @@ public struct StrcMolecule {
      */
     public var centerOfMass: Vector3D {
         return atoms.centerOfMass
+    }
+    
+    public var isValid: Bool {
+        guard let s = score else {
+            return true
+        }
+        return s.isValid
     }
     
     /**
@@ -955,6 +975,7 @@ public struct StrcMolecule {
         }
         return false
     }
+    
 }
 
 extension StrcMolecule: Hashable {
@@ -1000,6 +1021,8 @@ public enum StrcFilter {
     case bondTypeLength
     case bondAngle
     case coplanarity
+    case valence
+    case fatalError
 }
 
 /**
@@ -1038,8 +1061,6 @@ public extension StrcDeviation {
  Structure score (STS) is an evaluation of the "goodness" of a `StrcMolecule`. The score would be based on the deviation of the molecule from the four filters.
  */
 public struct StrcScore {
-//    public var deviations: [StrcFilter: StrcDeviation] = [:]
-    
     public var deviations: [(StrcFilter, StrcDeviation)] = []
     
     public var baseScore: Double = 100
@@ -1071,7 +1092,9 @@ public extension StrcScore {
         .minimumBondLength: 200,
         .bondTypeLength: 80,
         .bondAngle: 50,
-        .coplanarity: 50
+        .coplanarity: 50,
+        .valence: 200,
+        .fatalError: Double.infinity
     ]
 }
 
@@ -1087,6 +1110,16 @@ public extension StrcScore {
 public extension StrcScore {
     var isValid: Bool {
         sScore >= 0
+    }
+}
+
+public extension StrcScore {
+    mutating func append(dev: StrcDeviation, filter: StrcFilter) {
+        deviations.append((filter, dev))
+    }
+    
+    mutating func append(filter: StrcFilter, dev: StrcDeviation) {
+        append(dev: dev, filter: filter)
     }
 }
 
@@ -1413,38 +1446,44 @@ public func bondAnglesFilterSTS(_ angles: [Double?], range: ClosedRange<Double>,
  Filtering by bond angle with a given range. Takes the center atom and attached bonds as parameters.
  */
 public func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
-    var thetaList: [Double?] = []
-    if bonds.count == 2 {
+    return bondAnglesFilterSTS(center: aAtom, bonds: bonds, range: range, tolRatio: tolRatio).isValid
+}
+
+public func bondAnglesFilterSTS(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> StrcDeviation {
+    var thetaList = [Double?]()
+    if bonds.count == 2{
         thetaList = [bondAngleInDeg(center: aAtom, bonds: bonds)]
     } else if bonds.count >= 2 {
-        let rList = bondAnglesInDeg(center: aAtom, bonds: bonds)
-        thetaList = rList.map { $0.0 }
-    } else if bonds.count >= 0{
-        return true
+        thetaList = bondAnglesInDeg(center: aAtom, bonds: bonds).map { $0.0 }
+    } else if bonds.count >= 0 {
+        return StrcDeviation.success
     } else {
-        return false
+        return StrcDeviation.failure
     }
     
-    return bondAnglesFilter(thetaList, range: range, tolRatio: tolRatio)
+    return bondAnglesFilterSTS(thetaList, range: range, tolRatio: tolRatio)
 }
 
 /**
  Filtering by bond angle with a given range. Takes the center atom and attached atoms as parameters.
  */
 public func bondAnglesFilter(center aAtom: Atom, attached: [Atom], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> Bool {
-    var thetaList: [Double?] = []
+    return bondAnglesFilterSTS(center: aAtom, attached: attached, range: range, tolRatio: tolRatio).isValid
+}
+
+public func bondAnglesFilterSTS(center aAtom: Atom, attached: [Atom], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> StrcDeviation {
+    var thetaList = [Double?]()
     if attached.count == 2 {
         thetaList = [bondAngleInDeg(center: aAtom, attached: attached)]
     } else if attached.count >= 2 {
-        let rList = bondAnglesInDeg(center: aAtom, attached: attached)
-        thetaList = rList.map { $0.0 }
-    } else if attached.count >= 0{
-        return true
+        thetaList = bondAnglesInDeg(center: aAtom, attached: attached).map { $0.0 }
+    } else if attached.count >= 0 {
+        return StrcDeviation.success
     } else {
-        return false
+        return StrcDeviation.failure
     }
     
-    return bondAnglesFilter(thetaList, range: range, tolRatio: tolRatio)
+    return bondAnglesFilterSTS(thetaList, range: range, tolRatio: tolRatio)
 }
 
 /**
@@ -1506,8 +1545,7 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
     
     if mol.size <= 0 {
         mol.addAtom(atom)
-    }
-    else {
+    } else {
         mol.bondGraphs.removeAll()
         
         // Step 1: Make sure the new atom is not too close to any of the existing atoms.
@@ -1546,7 +1584,7 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
         
         for pBonds in possibleBondsCollected.cartesianProduct() {
             if stMol.size == 1 {
-                mol.bondGraphs.insert(ChemBondGraph(Set(pBonds)))
+                mol.bondGraphs.insert(ChemBondGraph(pBonds))
             } else if stMol.size > 1 {
                 outer: for bondGraph in bondGraphs {
                     var pBondGraph = bondGraph
@@ -1564,6 +1602,8 @@ public func strcMoleculeConstructor(stMol: StrcMolecule, atom: Atom, tolRange: D
     }
     return mol
 }
+
+
 
 /**
  The recursion constructor. It takes a test atom and compared it with a valid structrual molecule. It will return the possible structural molecules as the atom and the molecule join together.
