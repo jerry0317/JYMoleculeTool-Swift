@@ -835,8 +835,8 @@ public struct VSEPRGraph: SubChemBondGraph {
         return !sts.map({ $1.isValid }).contains(false)
     }
     
-    public func filterSTS(tolRatio: Double = 0.1, csTolRatio: Double? = nil, copTolRange: Double = 0.01) -> [(StrcFilter, StrcDeviation)] {
-        var rList = [(StrcFilter, StrcDeviation)]()
+    public func filterSTS(tolRatio: Double = 0.1, csTolRatio: Double? = nil, copTolRange: Double = 0.01) -> [StrcDevTuple] {
+        var rList = [StrcDevTuple]()
         
         if (center.valence - valenceOccupied) < 0 {
             rList.append((.valence, StrcDeviation(false, Double(valenceOccupied - center.valence))))
@@ -1052,11 +1052,13 @@ public extension StrcDeviation {
     static let success = StrcDeviation(true, 0)
 }
 
+public typealias StrcDevTuple = (filter: StrcFilter, dev: StrcDeviation)
+
 /**
  Structure score (STS) is an evaluation of the "goodness" of a `StrcMolecule`. The score would be based on the deviation of the molecule from the four filters.
  */
 public struct StrcScore {
-    private var _deviations: [(StrcFilter, StrcDeviation)] = []
+    private var _deviations: [StrcDevTuple] = []
     
     public var baseScore: Double = 100
     
@@ -1081,7 +1083,7 @@ public extension StrcScore {
         return bDict
     }
     
-    var deviations: [(StrcFilter, StrcDeviation)] {
+    var deviations: [StrcDevTuple] {
         get {
             _deviations
         }
@@ -1122,7 +1124,7 @@ private extension StrcScore {
         }
     }
     
-    mutating func _sScoreUpdate(with contents: [(StrcFilter, StrcDeviation)]) {
+    mutating func _sScoreUpdate(with contents: [StrcDevTuple]) {
         for (filter, dev) in contents {
             _sScoreUpdate(dev: dev, filter: filter)
         }
@@ -1145,7 +1147,7 @@ public extension StrcScore {
         append(dev: dev, filter: filter)
     }
     
-    mutating func append(contentsOf contents: [(StrcFilter, StrcDeviation)]) {
+    mutating func append(contentsOf contents: [StrcDevTuple]) {
         _deviations.append(contentsOf: contents)
         _sScoreUpdate(with: contents)
     }
@@ -1695,7 +1697,7 @@ public func strcMoleculeConstructorSTS(stMol: StrcMolecule, atom: Atom, tolRange
         mol.addAtom(atom)
         
         for pBondDevCombo in possibleBondsCollected.cartesianProduct() {
-            let (pBonds, pDevs) = pBondDevCombo.reduce(into: ([ChemBond](), [(StrcFilter, StrcDeviation)]()), {
+            let (pBonds, pDevs) = pBondDevCombo.reduce(into: ([ChemBond](), [StrcDevTuple]()), {
                 $0.0.append($1.0)
                 $0.1.append((.bondTypeLength, $1.1))
             })
