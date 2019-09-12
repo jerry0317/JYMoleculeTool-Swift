@@ -512,11 +512,13 @@ extension ChemBond: Hashable {
 /**
  Chemical bond graph constructed by multiple bonds
  */
-public struct ChemBondGraph {
+public struct ChemBondGraph: StrcScoreable {
     /**
      The bonds engaged in this bond graph.
      */
     public var bonds: Set<ChemBond>
+    
+    public var score: StrcScore? = nil
     
     public init(_ bonds: Set<ChemBond> = Set()){
         self.bonds = bonds
@@ -889,7 +891,7 @@ public struct VSEPRGraph: SubChemBondGraph {
 /**
  Structural molecule: a not necessarily meaningful "molecule" with atoms constrained by serveral possible bond graphs
  */
-public struct StrcMolecule {
+public struct StrcMolecule: StrcScoreable {
     /**
      The atoms in this structural molecule.
      */
@@ -920,13 +922,6 @@ public struct StrcMolecule {
      */
     public var centerOfMass: Vector3D {
         return atoms.centerOfMass
-    }
-    
-    public var isValid: Bool {
-        guard let s = score else {
-            return true
-        }
-        return s.isValid
     }
     
     /**
@@ -1061,19 +1056,22 @@ public extension StrcDeviation {
  Structure score (STS) is an evaluation of the "goodness" of a `StrcMolecule`. The score would be based on the deviation of the molecule from the four filters.
  */
 public struct StrcScore {
-    public var deviations: [(StrcFilter, StrcDeviation)] = []
+    private var _deviations: [(StrcFilter, StrcDeviation)] = []
     
     public var baseScore: Double = 100
     
+    private var _sScore: Double
+    
     public init(base: Double){
         baseScore = base
+        _sScore = base
     }
 }
 
 public extension StrcScore {
     var devDict: [StrcFilter: [StrcDeviation]] {
         var bDict = [StrcFilter: [StrcDeviation]]()
-        for (filter, dev) in deviations {
+        for (filter, dev) in _deviations {
             if bDict[filter] == nil {
                 bDict[filter] = [dev]
             } else {
@@ -1082,6 +1080,12 @@ public extension StrcScore {
         }
         return bDict
     }
+    
+    var deviations: [(StrcFilter, StrcDeviation)] {
+        get {
+            _deviations
+        }
+    }
 }
 
 public extension StrcScore {
@@ -1089,11 +1093,15 @@ public extension StrcScore {
      A linear-model determination of simple-deviation.
      */
     static let sBases: [StrcFilter: Double] = [
-        .minimumBondLength: 200,
-        .bondTypeLength: 80,
-        .bondAngle: 50,
-        .coplanarity: 50,
+        // StrcMolecule level
+        .minimumBondLength: 100,
+        // Inter StrcMolecule-ChemBondGraph level
+        .bondTypeLength: 100,
+        // ChemBondGraph level
+        .bondAngle: 100,
+        .coplanarity: 100,
         .valence: 200,
+        // Miscellaneous
         .fatalError: Double.infinity
     ]
 }
@@ -1103,7 +1111,21 @@ public extension StrcScore {
      Score determined by simple-deviation.
      */
     var sScore: Double {
-        deviations.reduce(baseScore, { $0 - StrcScore.sBases[$1.0]! * $1.1.devInSigma })
+        _sScore
+    }
+}
+
+private extension StrcScore {
+    mutating func _sScoreUpdate(dev: StrcDeviation, filter: StrcFilter) {
+        if dev.isValid == false {
+            _sScore = _sScore - StrcScore.sBases[filter]! * abs(dev.devInSigma)
+        }
+    }
+    
+    mutating func _sScoreUpdate(with contents: [(StrcFilter, StrcDeviation)]) {
+        for (filter, dev) in contents {
+            _sScoreUpdate(dev: dev, filter: filter)
+        }
     }
 }
 
@@ -1115,17 +1137,33 @@ public extension StrcScore {
 
 public extension StrcScore {
     mutating func append(dev: StrcDeviation, filter: StrcFilter) {
-        deviations.append((filter, dev))
+        _deviations.append((filter, dev))
+        _sScoreUpdate(dev: dev, filter: filter)
     }
     
     mutating func append(filter: StrcFilter, dev: StrcDeviation) {
         append(dev: dev, filter: filter)
+    }
+    
+    mutating func append(contentsOf contents: [(StrcFilter, StrcDeviation)]) {
+        _deviations.append(contentsOf: contents)
+        _sScoreUpdate(with: contents)
     }
 }
 
 public extension StrcScore {
     static let ultimateSuccess = StrcScore(base: Double.infinity)
     static let ultimateFailure = StrcScore(base: -Double.infinity)
+}
+
+public protocol StrcScoreable {
+    var score: StrcScore? { get }
+}
+
+public extension StrcScoreable {
+    var isValid: Bool {
+        score?.isValid ?? true
+    }
 }
 
 // MARK: Tools
@@ -1626,20 +1664,21 @@ public func strcMoleculeConstructorSTS(stMol: StrcMolecule, atom: Atom, tolRange
         }
         
         // Step 2: Find all the possible bond connections between the new atom and any of the existing atoms.
-        var possibleBondsCollected: [[ChemBond]] = []
+        var possibleBondsCollected: [[(ChemBond, StrcDeviation)]] = []
         
         // Step 2.1: Find possible new bond connections of each existing atom.
         for vAtom in stMol.atoms {
             let possibleBts = possibleBondTypesDynProgrammed(vAtom.element, atom.element)
-            var possibleBonds = [ChemBond]()
+            var possibleBonds = [(ChemBond, StrcDeviation)]()
             for bondType in possibleBts {
                 let bStDev = bondTypeLengthFilterSTS(vAtom, atom, bondType, tolRange)
-                mol.score!.append(dev: bStDev, filter: .bondTypeLength)
-                if !mol.isValid {
+                var intScore = mol.score!
+                intScore.append(dev: bStDev, filter: .bondTypeLength)
+                if !intScore.isValid {
                     continue
                 } else {
                     let pBond = ChemBond(vAtom, atom, bondType)
-                    possibleBonds.append(pBond)
+                    possibleBonds.append((pBond, bStDev))
                 }
                 if !possibleBonds.isEmpty {
                     possibleBondsCollected.append(possibleBonds)
@@ -1655,18 +1694,38 @@ public func strcMoleculeConstructorSTS(stMol: StrcMolecule, atom: Atom, tolRange
         // Step 3: Perform VSEPR filter on each of the possible Cartesian combination of the bonds.
         mol.addAtom(atom)
         
-        for pBonds in possibleBondsCollected.cartesianProduct() {
+        for pBondDevCombo in possibleBondsCollected.cartesianProduct() {
+            let (pBonds, pDevs) = pBondDevCombo.reduce(into: ([ChemBond](), [(StrcFilter, StrcDeviation)]()), {
+                $0.0.append($1.0)
+                $0.1.append((.bondTypeLength, $1.1))
+            })
             if stMol.size == 1 {
-                mol.bondGraphs.insert(ChemBondGraph(pBonds))
+                var newBondGraph = ChemBondGraph(pBonds)
+                newBondGraph.score = StrcScore(base: 100)
+                newBondGraph.score?.append(contentsOf: pDevs)
+                if newBondGraph.isValid {
+                    mol.bondGraphs.insert(newBondGraph)
+                }
             } else if stMol.size > 1 {
                 outer: for bondGraph in bondGraphs {
                     var pBondGraph = bondGraph
+                    if pBondGraph.score == nil {
+                        pBondGraph.score = StrcScore(base: 100)
+                    }
+                    var intScore = pBondGraph.score!
+                    intScore.append(contentsOf: pDevs)
+                    
+                    guard intScore.isValid else {
+                        continue outer
+                    }
+                    
+                    pBondGraph.score = intScore
                     pBondGraph.bonds.formUnion(pBonds)
                     for bAtom in mol.atoms {
                         let vseprGraph = pBondGraph.findVseprGraph(bAtom)
                         let vStDevs = vseprGraph.filterSTS(tolRatio: tolRatio, copTolRange: tolRange)
-                        mol.score!.deviations.append(contentsOf: vStDevs)
-                        if !mol.isValid {
+                        pBondGraph.score!.append(contentsOf: vStDevs)
+                        if !pBondGraph.isValid {
                             continue outer
                         }
                     }
@@ -1687,6 +1746,7 @@ public func rcsConstructor(atom: Atom, stMol: StrcMolecule, tolRange: Double = 0
     var possibleSMList: [StrcMolecule] = []
     
     for pAtom in possibleAtoms {
+        // To be STS-ize
         let sMol = strcMoleculeConstructorSTS(stMol: stMol, atom: pAtom, tolRange: tolRange, tolRatio: tolRatio)
         
         if !sMol.bondGraphs.isEmpty {
