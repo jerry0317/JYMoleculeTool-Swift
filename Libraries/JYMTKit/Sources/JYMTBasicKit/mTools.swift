@@ -1682,9 +1682,9 @@ public func strcMoleculeConstructorSTS(stMol: StrcMolecule, atom: Atom, tolRange
                     let pBond = ChemBond(vAtom, atom, bondType)
                     possibleBonds.append((pBond, bStDev))
                 }
-                if !possibleBonds.isEmpty {
-                    possibleBondsCollected.append(possibleBonds)
-                }
+            }
+            if !possibleBonds.isEmpty {
+                possibleBondsCollected.append(possibleBonds)
             }
         }
         
@@ -1704,7 +1704,7 @@ public func strcMoleculeConstructorSTS(stMol: StrcMolecule, atom: Atom, tolRange
             if stMol.size == 1 {
                 var newBondGraph = ChemBondGraph(pBonds)
                 newBondGraph.score = StrcScore(base: 100)
-                newBondGraph.score?.append(contentsOf: pDevs)
+                newBondGraph.score!.append(contentsOf: pDevs)
                 if newBondGraph.isValid {
                     mol.bondGraphs.insert(newBondGraph)
                 }
