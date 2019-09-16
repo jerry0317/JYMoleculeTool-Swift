@@ -433,9 +433,9 @@ public struct MOLFile: File {
         get {
             molString ?? ""
         }
-//        set {
-//            // Not available yet
-//        }
+        set {
+            // Not available yet
+        }
     }
     
     public var title: String = ""
