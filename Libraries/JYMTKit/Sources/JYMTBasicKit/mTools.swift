@@ -55,7 +55,7 @@ public final class Atom {
         }
     }
     
-    private var storedMassNumber: Int? = nil
+    private var storedMassNumber: Int?
     
     public var massNumber: Int? {
         get {
@@ -518,7 +518,7 @@ public struct ChemBondGraph: StrcScoreable {
      */
     public var bonds: Set<ChemBond>
     
-    public var score: StrcScore? = nil
+    public var score: StrcScore?
     
     public init(_ bonds: Set<ChemBond> = Set()){
         self.bonds = bonds
@@ -680,7 +680,7 @@ public struct VSEPRGraph: SubChemBondGraph {
             return nil
         }
         let atomList = bonds.flatMap { Array($0.atoms) }
-        var centerAtom: Atom? = nil
+        var centerAtom: Atom?
         for atom in atomList {
             if (atomList.filter { $0 == atom }).count == bonds.count {
                 centerAtom = atom
@@ -847,7 +847,7 @@ public struct VSEPRGraph: SubChemBondGraph {
         switch vType {
         case .ax2e0, .ax2e1, .ax2e2, .ax3e0, .ax3e1, .ax4e0:
             var range = 0.0...360.0
-            var copRange: ClosedRange<Double>? = nil // Co-planrity range
+            var copRange: ClosedRange<Double>? // Co-planrity range
             switch vType {
             case .ax2e0: // linear
                 range = 180.0...180.0
@@ -902,7 +902,7 @@ public struct StrcMolecule: StrcScoreable {
      */
     public var bondGraphs: Set<ChemBondGraph>
     
-    public var score: StrcScore? = nil
+    public var score: StrcScore?
     
     public init(_ atoms: Set<Atom> = Set(), _ bondGraphs: Set<ChemBondGraph> = Set(), _ score: StrcScore? = nil) {
         self.atoms = atoms
@@ -1070,7 +1070,7 @@ public struct StrcScore {
         }
     }
     
-    private var _deviations: [StrcDevTuple]? = nil
+    private var _deviations: [StrcDevTuple]?
     
     private var _sScore: Double
     
@@ -1494,13 +1494,14 @@ public func bondAnglesFilter(center aAtom: Atom, bonds: [ChemBond], range: Close
 
 public func bondAnglesFilterSTS(center aAtom: Atom, bonds: [ChemBond], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> StrcDeviation {
     var thetaList = [Double?]()
-    if bonds.count == 2{
+    switch bonds.count {
+    case 2:
         thetaList = [bondAngleInDeg(center: aAtom, bonds: bonds)]
-    } else if bonds.count >= 2 {
+    case 3...:
         thetaList = bondAnglesInDeg(center: aAtom, bonds: bonds).map { $0.0 }
-    } else if bonds.count >= 0 {
+    case 0...:
         return StrcDeviation.success
-    } else {
+    default:
         return StrcDeviation.failure
     }
     
@@ -1516,13 +1517,14 @@ public func bondAnglesFilter(center aAtom: Atom, attached: [Atom], range: Closed
 
 public func bondAnglesFilterSTS(center aAtom: Atom, attached: [Atom], range: ClosedRange<Double>, tolRatio: Double = 0.1) -> StrcDeviation {
     var thetaList = [Double?]()
-    if attached.count == 2 {
+    switch attached.count {
+    case 2:
         thetaList = [bondAngleInDeg(center: aAtom, attached: attached)]
-    } else if attached.count >= 2 {
+    case 3...:
         thetaList = bondAnglesInDeg(center: aAtom, attached: attached).map { $0.0 }
-    } else if attached.count >= 0 {
+    case 0...:
         return StrcDeviation.success
-    } else {
+    default:
         return StrcDeviation.failure
     }
     
