@@ -143,9 +143,9 @@ public struct XYZFile: File {
      */
     private func importFromString(_ str: String) -> (Int?, String?, [Atom]?) {
         let lines = str.split(omittingEmptySubsequences: false, whereSeparator: {$0.isNewline})
-        var countFromFile: Int? = nil
-        var noteFromFile: String? = nil
-        var atomsFromFile: Array<Atom>? = nil
+        var countFromFile: Int?
+        var noteFromFile: String?
+        var atomsFromFile: Array<Atom>?
         
         for (i, line) in lines.enumerated() {
             switch i {
@@ -355,9 +355,9 @@ public struct SABCFile: File {
      */
     private func importFromString(_ str: String) -> (ABCTuple?, String?, [ABCTuple]?) {
         let lines = str.split(omittingEmptySubsequences: false, whereSeparator: {$0.isNewline})
-        var originalFromFile: ABCTuple? = nil
-        var commentFromFile: String? = nil
-        var substitutedFromFile: [ABCTuple]? = nil
+        var originalFromFile: ABCTuple?
+        var commentFromFile: String?
+        var substitutedFromFile: [ABCTuple]?
         
         for (i, line) in lines.enumerated() {
             switch i {
@@ -433,9 +433,9 @@ public struct MOLFile: File {
         get {
             molString ?? ""
         }
-        set {
-            // Not available yet
-        }
+//        set {
+//            // Not available yet
+//        }
     }
     
     public var title: String = ""
