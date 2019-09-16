@@ -1058,32 +1058,31 @@ public typealias StrcDevTuple = (filter: StrcFilter, dev: StrcDeviation)
  Structure score (STS) is an evaluation of the "goodness" of a `StrcMolecule`. The score would be based on the deviation of the molecule from the four filters.
  */
 public struct StrcScore {
-    private var _deviations: [StrcDevTuple] = []
-    
     public var baseScore: Double = 100
+    
+    public var saved: Bool = false {
+        didSet(newValue) {
+            if _deviations == nil && newValue == true {
+                _deviations = [StrcDevTuple]()
+            } else if _deviations != nil && newValue == false {
+                _deviations = nil
+            }
+        }
+    }
+    
+    private var _deviations: [StrcDevTuple]? = nil
     
     private var _sScore: Double
     
-    public init(base: Double){
+    public init(base: Double, save: Bool = false){
         baseScore = base
         _sScore = base
+        saved = save
     }
 }
 
 public extension StrcScore {
-    var devDict: [StrcFilter: [StrcDeviation]] {
-        var bDict = [StrcFilter: [StrcDeviation]]()
-        for (filter, dev) in _deviations {
-            if bDict[filter] == nil {
-                bDict[filter] = [dev]
-            } else {
-                bDict[filter]!.append(dev)
-            }
-        }
-        return bDict
-    }
-    
-    var deviations: [StrcDevTuple] {
+    var deviations: [StrcDevTuple]? {
         get {
             _deviations
         }
@@ -1139,7 +1138,9 @@ public extension StrcScore {
 
 public extension StrcScore {
     mutating func append(dev: StrcDeviation, filter: StrcFilter) {
-        _deviations.append((filter, dev))
+        if saved {
+            _deviations!.append((filter, dev))
+        }
         _sScoreUpdate(dev: dev, filter: filter)
     }
     
@@ -1148,7 +1149,9 @@ public extension StrcScore {
     }
     
     mutating func append(contentsOf contents: [StrcDevTuple]) {
-        _deviations.append(contentsOf: contents)
+        if saved {
+            _deviations!.append(contentsOf: contents)
+        }
         _sScoreUpdate(with: contents)
     }
 }
