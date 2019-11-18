@@ -11,7 +11,8 @@ let package = Package(
         .executable(name: "JYMT-StructureFinder", targets: ["JYMT-StructureFinder"]),
         .executable(name: "JYMT-ABCTool", targets: ["JYMT-ABCTool"]),
         .executable(name: "JYMT-ABCCalculator", targets: ["JYMT-ABCCalculator"]),
-        .executable(name: "JYMT-MISCalculator", targets: ["JYMT-MISCalculator"])
+        .executable(name: "JYMT-MISCalculator", targets: ["JYMT-MISCalculator"]),
+        .executable(name: "JYMT-MISTool", targets: ["JYMT-MISTool"])
     ],
     dependencies: [
         .package(path: "Libraries/JYMTKit")
@@ -19,7 +20,7 @@ let package = Package(
     targets: [
         .target(
             name: "JYMT-StructureFinder",
-            dependencies: ["JYMTBasicKit"]),
+            dependencies: ["JYMTBasicKit", "JYMTAdvancedKit"]),
         .target(
             name: "JYMT-ABCTool",
             dependencies: ["JYMTBasicKit"]
@@ -30,6 +31,10 @@ let package = Package(
         ),
         .target(
             name: "JYMT-MISCalculator",
+            dependencies: ["JYMTBasicKit", "JYMTAdvancedKit"]
+        ),
+        .target(
+            name: "JYMT-MISTool",
             dependencies: ["JYMTBasicKit", "JYMTAdvancedKit"]
         )
     ]

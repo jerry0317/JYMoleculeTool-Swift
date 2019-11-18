@@ -267,14 +267,14 @@ public func tensorIFromAtoms(_ atoms: [Atom], origin: Vector3D? = nil) -> Matrix
  
  - **Reference**: Abdulghany, A. R. (2017). Generalization of parallel axis theorem for rotational inertia. *American Journal of Physics, 85*(10), 791-795. doi:10.1119/1.4994835
  */
-public func translateTensorI(_ tensorI: Matrix, totalMass: Double, newOrigin no: Vector3D, centerOfMass cm: Vector3D = Vector3D(0,0,0)) -> Matrix {
+public func translateTensorI(_ tensorI: Matrix, totalMass mtot: Double, newOrigin no: Vector3D, centerOfMass cm: Vector3D = Vector3D(0,0,0)) -> Matrix {
     var newTensorI = Matrix(3,3)
     
     for ix in [0, 1, 2].cyclicTransformed() {
         let (i, j, k) = (ix[0], ix[1], ix[2])
         
-        let resultDiag = tensorI[i, i] + totalMass * (no[j] * no[j] + no[k] * no[k] - 2 * (no[j] * cm[j] + no[k] * cm[k]))
-        let resultOffDiag = tensorI[i, j] + totalMass * (no[i] * cm[j] + no[j] * cm[i] - no[i] * no[j])
+        let resultDiag = tensorI[i, i] + mtot * (no[j] * no[j] + no[k] * no[k] - 2 * (no[j] * cm[j] + no[k] * cm[k]))
+        let resultOffDiag = tensorI[i, j] + mtot * (no[i] * cm[j] + no[j] * cm[i] - no[i] * no[j])
         
         newTensorI[i, i] = resultDiag
         newTensorI[i, j] = resultOffDiag

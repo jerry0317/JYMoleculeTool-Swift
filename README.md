@@ -8,6 +8,7 @@ The project currently includes the following tools:
 - ABC Tool
 - ABC Calculator
 - MIS Calculator *(Under early development)*
+- MIS Tool *(Under early development)*
 
 The programs currently support molcules containing hydrogen\*, carbon, oxygen, nitrogen, fluorine, and chlorine atoms.
 
@@ -58,7 +59,7 @@ Structure Finder provides the ability to calculate the possible structures of a 
 *Note: the program ignores hydrogen atoms in the calculation, and the hydrogen atoms are not included in the output results.*
 
 ### Dependencies
-The tool uses library `JYMTBasicKit`.
+The tool uses library `JYMTBasicKit`. *`JYMTAdvancedKit` will be also used in the next version (0.4) for the calculation of SMILES data through RDKit.*
 
 ### Usage
 - Download the executable from the [release](https://github.com/jerry0317/JYMoleculeTool-Swift/releases/latest).
@@ -396,6 +397,10 @@ In practical, this problem is worrying because it makes the predictions from the
 As of the current reserach goes, it was found that this problem of imaginary coordinates were common and often happened when the atom was near the principal axes or the principal plane of the molecule. The root of this problem comes from the neglection of the change of the rovibrational effect on the molecule before/after the isotopic substitutions. This was the assumption of Kraitchman's equations, which is the underlying theory of the algorithm used in this program. The structure derived from Kraitchman's equation, which is usually named *r<sub>s</sub>*, is one of the most popular derived data in rotational spectroscopy because it requires less amount of experimental data and gives a relatively accurate estimation of the structure. However, the reliability of *r<sub>s</sub>* decreases as the atom becomes closer to the principal axes or the principal plane, which is the major issue presented here.
 
 Other popular alternatives including *r<sub>m</sub>*, *r<sub>c</sub>*, *r<sub>m</sub><sup>ρ</sup>* are usually used to take the change in rovibrational effect and inertial defects into account. But these parameters require a massive amount of data (for example, *r<sub>m</sub>* requires a complete set of single isotopic substitutions or more) which are unrealistic in the actual lab environment, especially for large molecules. Therefore, we must look for an intermediate parameter bewteen *r<sub>s</sub>* and *r<sub>m</sub>* that requires less amount of data than *r<sub>m</sub>*, but provides a more accurate estimate of structure than *r<sub>s</sub>*. More researches on this topic are in progress.
+
+## MIS Tool
+
+MIS Tool is a tool to deduce the relative positions of the atoms in a molecule based on single substitution data and mutual double substitution data. **It is still under early development.**
 
 ## Acknowledgement
 
