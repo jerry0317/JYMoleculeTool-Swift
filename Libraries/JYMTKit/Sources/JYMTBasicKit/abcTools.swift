@@ -172,27 +172,68 @@ public func tensorDeltaP(fromDeltaI deltaI: Matrix) -> Matrix? {
 }
 
 /**
+ Calculate the squares of the position vectors from the reduced mass, delta P tensor, and the original I tensor. **The squares might be negative.**
+ */
+public func rSquaresFromSIS(mu: Double, deltaP: Matrix, I: Matrix, errLevel: Double = 0.5) -> [Double]?{
+    guard deltaP.size == (3,3) && I.size == (3,3) else {
+        return nil
+    }
+    
+    var rSqaures:[Double] = [0,0,0]
+    
+    for ix in [0,1,2].cyclicTransformed() {
+        let (i, j, k) = (ix[0], ix[1], ix[2])
+        let result = (deltaP[i, i] / mu) * (1.0 + (deltaP[j, j] / (I[i, i] - I[j, j]))) * (1.0 + (deltaP[k, k] / (I[i, i] - I[k, k])))
+        rSqaures[i] = result
+    }
+    
+    return rSqaures
+}
+
+/**
+ Calcualte the postion vector (all absolute valued) <|x|, |y|, |z|> from the reduced mass, delta P tensor, and the original inertia tensor. Real components and Imaginary components are returned as a tuple.
+ */
+public func rComplexFromSIS(mu: Double, deltaP: Matrix, I: Matrix, errLevel: Double = 0.5) -> (re: [Double?], im: [Double?])? {
+    guard let rS = rSquaresFromSIS(mu: mu, deltaP: deltaP, I: I, errLevel: errLevel) else {
+        return nil
+    }
+    
+    var rRe = [Double?](repeating: nil, count: 3)
+    var rIm = [Double?](repeating: nil, count: 3)
+    
+    for i in [0,1,2] {
+        let result = rS[i]
+        if result < 0 {
+            rIm[i] = (-result).squareRoot()
+        } else {
+            rRe[i] = result.squareRoot()
+        }
+    }
+    
+    return (re: rRe, im: rIm)
+}
+
+/**
  Calculate the position vector (all absolute valued) <|x|, |y|, |z|> from the reduced mass, delta P tensor, and the original inertia tensor.
  */
 public func rVecFromSIS(mu: Double, deltaP: Matrix, I: Matrix, errLevel: Double = 0.5) -> Vector3D? {
-    guard deltaP.size == (3,3) && I.size == (3,3) else {
+    guard let (rRe, rIm) = rComplexFromSIS(mu: mu, deltaP: deltaP, I: I, errLevel: errLevel) else {
         return nil
     }
     
     var vec = Vector3D()
     
-    for ix in [0,1,2].cyclicTransformed() {
-        let (i, j, k) = (ix[0], ix[1], ix[2])
-        var result = (deltaP[i, i] / mu) * (1.0 + (deltaP[j, j] / (I[i, i] - I[j, j]))) * (1.0 + (deltaP[k, k] / (I[i, i] - I[k, k])))
-        if result < 0 {
-            let dev = abs(result).squareRoot()
+    for i in [0,1,2] {
+        if rRe[i] != nil {
+            vec.dictVec[i] = rRe[i]!
+            continue
+        }
+        if rIm[i] != nil {
+            let dev = rIm[i]!
             let abcDev = PhysConst.h * (-deltaP[i, i]) / (4 * Double.pi * Double.pi * I[i, i] * I[i, i])
             print("WARNING: Imaginary coordinate \(String(format: "%.4f", dev * 1e10))i appeared. Rounded to zero. (ABC dev: \(String(format: "%.2f", abcDev * 1e-3))kHz)")
-            result = 0.0
-        } else {
-            result = result.squareRoot()
         }
-        vec.dictVec[i] = result
+        
     }
     
     return vec
