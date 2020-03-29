@@ -15,7 +15,8 @@ let package = Package(
         .executable(name: "JYMT-MISTool", targets: ["JYMT-MISTool"])
     ],
     dependencies: [
-        .package(path: "Libraries/JYMTKit")
+//        .package(path: "Libraries/JYMTKit")
+        .package(url: "https://github.com/jerry0317/JYMTKit", .branch("master"))
     ],
     targets: [
         .target(
