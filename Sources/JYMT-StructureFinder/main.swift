@@ -90,7 +90,7 @@ let tInitial = Date()
 print("Computation started on \(displayTime(tInitial)).")
 print()
 
-possibleList = rcsActionDynProgrammed(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: toleranceLevel, tolRatio: toleranceRatio, trueMol: StrcMolecule(Set(combAtoms)), testMode: testMode)
+possibleList = rcsActionDynProgrammed(rAtoms: combrAtoms, stMolList: [initialSMol], tolRange: toleranceLevel, tolRatio: toleranceRatio, trueMol: StrcMolecule(Set(combAtoms)), testMode: testMode, cache: &globalCache)
 
 let timeTaken = -(Double(tInitial.timeIntervalSinceNow))
 
@@ -163,7 +163,7 @@ for pMol in possibleList {
             log.add("n/a  ", terminator: "")
         }
         
-        let bAString: String = bondAnglesInDeg(center: atom, attached: adjacentAtoms).map({ Array($0.1.map { $0.name }).joined(separator: atom.name) + ": " + String($0.0!.rounded(digitsAfterDecimal: 1)) + "°" }).joined(separator: ", ")
+        let bAString: String = bondAnglesInDegDynProgrammed(center: atom, attached: adjacentAtoms, cache: &globalCache).map({ Array($0.1.map { $0.name }).joined(separator: atom.name) + ": " + String($0.0!.rounded(digitsAfterDecimal: 1)) + "°" }).joined(separator: ", ")
         log.add("     BAs: [" + bAString + "]", terminator: "")
         if firstBondGraph.degreeOfAtom(atom) == 3 {
             log.add("     D3APD: \(degreeThreeAtomPlanarDistance(center: atom, attached: adjacentAtoms)!.rounded(digitsAfterDecimal: 5))", terminator: "")

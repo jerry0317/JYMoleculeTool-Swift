@@ -72,7 +72,7 @@ print("Calculating possible combinations...\n")
 let combrAtoms = rawAtoms.removed(A1)
 let initialSMol = StrcMolecule(Set([A1]))
 
-let possibleMols = rcsActionDynProgrammed(rAtoms: combrAtoms, stMolList: [initialSMol])
+let possibleMols = rcsActionDynProgrammed(rAtoms: combrAtoms, stMolList: [initialSMol], cache: &globalCache)
 
 let possibleSAtoms: [[Atom]] = possibleMols.map({ Array($0.atoms) })
 
