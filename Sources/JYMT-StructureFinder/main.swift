@@ -23,9 +23,15 @@ if CommandLine.arguments.count >= 2 {
         modes.insert(.simple)
         print("[Simple mode] All the parameters will be set as default values.\n")
     }
+    if CommandLine.arguments.contains("-c") {
+        modes.insert(.clean)
+        print("[Clean mode] The detailed molecule structural information will not be printed to the console.\n")
+    }
 }
 
 let testMode = modes.contains(.test)
+
+let cleanMode = modes.contains(.clean)
 
 var (xyzSet, fileName) = xyzFileInput()
 
@@ -111,6 +117,7 @@ let elementGraphs = possibleList.reduce(Set<HashGraph>(), {
 })
 
 var log = TextFile()
+log.defaultPrint = !cleanMode
 var iCode = 0
 var success = false
 let baseFileName = fileName + "_" + String(Int(tInitial.timeIntervalSince1970))
@@ -201,24 +208,24 @@ for pMol in possibleList {
     }
 }
 
-log.add("-----------------------------------")
-log.add("[Molecule name] \(fileName)")
-log.add("-- -- -- -- -- -- -- -- -- -- -- --")
-log.add("[Note] ", terminator: "")
+log.add("-----------------------------------", print: True)
+log.add("[Molecule name] \(fileName)", print: True)
+log.add("-- -- -- -- -- -- -- -- -- -- -- --", print: True)
+log.add("[Note] ", terminator: "", print: True)
 if success {
-    log.add("The original structure is in the results.")
+    log.add("The original structure is in the results.", print: True)
 } else {
-    log.add("The original structure is not in the results.")
+    log.add("The original structure is not in the results.", print: True)
 }
-log.add("-----------------------------------")
-log.add("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.")
-log.add("Total number of non-hydrogen atoms: \(combAtoms.count).")
-log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).")
-log.add("Total number of possible structures: \(possibleList.count).")
-log.add("Total number of possible bond graphs: \(possibleList.reduce(0, { $0 + $1.bondGraphs.count })).")
-log.add("Total number of Lewis structures: between \(elementGraphs.count) and \(idGraphs.count).")
-log.add("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1)).")
-log.add("-----------------------------------")
+log.add("-----------------------------------", print: True)
+log.add("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.", print: True)
+log.add("Total number of non-hydrogen atoms: \(combAtoms.count).", print: True)
+log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).", print: True)
+log.add("Total number of possible structures: \(possibleList.count).", print: True)
+log.add("Total number of possible bond graphs: \(possibleList.reduce(0, { $0 + $1.bondGraphs.count })).", print: True)
+log.add("Total number of Lewis structures: between \(elementGraphs.count) and \(idGraphs.count).", print: True)
+log.add("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1)).", print: True)
+log.add("-----------------------------------", print: True)
 
 if saveResults {
     let txtUrl = writePath.appendingPathComponent(baseFileName + ".txt")
