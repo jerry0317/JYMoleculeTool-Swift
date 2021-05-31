@@ -208,24 +208,24 @@ for pMol in possibleList {
     }
 }
 
-log.add("-----------------------------------", print: True)
-log.add("[Molecule name] \(fileName)", print: True)
-log.add("-- -- -- -- -- -- -- -- -- -- -- --", print: True)
-log.add("[Note] ", terminator: "", print: True)
+log.add("-----------------------------------", print: true)
+log.add("[Molecule name] \(fileName)", print: true)
+log.add("-- -- -- -- -- -- -- -- -- -- -- --", print: true)
+log.add("[Note] ", terminator: "", print: true)
 if success {
-    log.add("The original structure is in the results.", print: True)
+    log.add("The original structure is in the results.", print: true)
 } else {
-    log.add("The original structure is not in the results.", print: True)
+    log.add("The original structure is not in the results.", print: true)
 }
-log.add("-----------------------------------", print: True)
-log.add("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.", print: True)
-log.add("Total number of non-hydrogen atoms: \(combAtoms.count).", print: True)
-log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).", print: True)
-log.add("Total number of possible structures: \(possibleList.count).", print: True)
-log.add("Total number of possible bond graphs: \(possibleList.reduce(0, { $0 + $1.bondGraphs.count })).", print: True)
-log.add("Total number of Lewis structures: between \(elementGraphs.count) and \(idGraphs.count).", print: True)
-log.add("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1)).", print: True)
-log.add("-----------------------------------", print: True)
+log.add("-----------------------------------", print: true)
+log.add("Duration of computation: \(timeTaken.rounded(digitsAfterDecimal: 4)) s.", print: true)
+log.add("Total number of non-hydrogen atoms: \(combAtoms.count).", print: true)
+log.add("Total number of combinations to work with: \(pow(8, combrAtoms.count)).", print: true)
+log.add("Total number of possible structures: \(possibleList.count).", print: true)
+log.add("Total number of possible bond graphs: \(possibleList.reduce(0, { $0 + $1.bondGraphs.count })).", print: true)
+log.add("Total number of Lewis structures: between \(elementGraphs.count) and \(idGraphs.count).", print: true)
+log.add("Reduction efficiency: \((Double(pow(8, Double(combrAtoms.count))) / Double(possibleList.count)).rounded(digitsAfterDecimal: 1)).", print: true)
+log.add("-----------------------------------", print: true)
 
 if saveResults {
     let txtUrl = writePath.appendingPathComponent(baseFileName + ".txt")
