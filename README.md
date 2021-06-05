@@ -139,7 +139,24 @@ You can visualize the `.xyz` files and `.mol` files with softwares like [Avogadr
 
 ### Discussion
 
-As tested on computation-capable platforms, for molecules containing no more than 20 non-hydrogen atoms, the program is able to complete the computation in a reasonable amount of time (mostly less 10 minutes). Some computation time and number of results are listed for reference (tested with CPU [i7-8700B](https://ark.intel.com/content/www/us/en/ark/products/134905/intel-core-i7-8700b-processor-12m-cache-up-to-4-60-ghz.html), with commit [0075521](https://github.com/jerry0317/JYMoleculeTool-Swift/commit/0075521)).\*
+As tested on computation-capable platforms, for molecules containing no more than 20 non-hydrogen atoms, the program is able to complete the computation in a reasonable amount of time (mostly less 10 minutes). Some computation time and number of results are listed for reference below (tested with CPU [Ryzen 7 5800X](https://www.amd.com/en/products/cpu/amd-ryzen-7-5800x) with 64GB of RAM, under commit [38b219c](https://github.com/jerry0317/JYMoleculeTool-Swift/commit/38b219c), on Ubuntu 20.04 LTS).
+
+| Molecule                                                     | Non-H Atoms | Structures in Result | **Bond Graphs in Result** | Lewis Structures in Result | **Computation Time (s)** |
+| ------------------------------------------------------------ | ----------- | -------------------- | ------------------------- | -------------------------- | ------------------------ |
+| [1,2-propanediol](https://pubchem.ncbi.nlm.nih.gov/compound/1030) | 5           | 32                   | 32                        | 1                          | 0.0125                   |
+| [Benzene](https://pubchem.ncbi.nlm.nih.gov/compound/241)     | 6           | 12                   | 216                       | between 4 and 126          | 0.0571                   |
+| [Alpha Pinene](https://pubchem.ncbi.nlm.nih.gov/compound/6654) | 10          | 132                  | 148                       | between 7 and 23           | 0.4187                   |
+| [Aspirin](https://pubchem.ncbi.nlm.nih.gov/compound/2244)    | 13          | 124                  | 618                       | between 19 and 120         | 8.666                    |
+| [Branched laurylphenol](https://pubchem.ncbi.nlm.nih.gov/compound/22833469) | 17          | 1008                 | 9534                      | between 6 and 140          | 599.8                    |
+| [Isomorphine](https://pubchem.ncbi.nlm.nih.gov/compound/44246529) | 21          | 10638                | 34267                     | between 291 and 12929      | 6763.0                   |
+| [Monoacetyl-alpha-isomorphine](https://pubchem.ncbi.nlm.nih.gov/compound/5745678) | 24          | 7980                 | 36980                     | between 116 and 6253       | 37827                    |
+| [Simvastatin](https://pubchem.ncbi.nlm.nih.gov/compound/54454) | 30          | 5216                 | 7808                      | between 43 and 599         | 45232                    |
+| [Vitamin E](https://pubchem.ncbi.nlm.nih.gov/compound/14985) | 31          | 1976                 | 7432                      | Between 20 and 1344        | 29188                    |
+
+<details>
+  <summary>Previous test results with i7-8700B on macOS</summary>
+
+Computation time and number of results are listed for reference below (tested with CPU [i7-8700B](https://ark.intel.com/content/www/us/en/ark/products/134905/intel-core-i7-8700b-processor-12m-cache-up-to-4-60-ghz.html) with 32GB of RAM, under commit [0075521](https://github.com/jerry0317/JYMoleculeTool-Swift/commit/0075521), on macOS 10.14.5).\*
 
 |Molecule|Non-H Atoms|Structures in Result|**Bond Graphs in Result**|Lewis Structures in Result|**Computation Time (s)**|
 |---|---|---|---|---|---|
@@ -152,6 +169,8 @@ As tested on computation-capable platforms, for molecules containing no more tha
 |[Monoacetyl-alpha-isomorphine](https://pubchem.ncbi.nlm.nih.gov/compound/5745678)|24|7980|36980|between 116 and 6253|84726|
 
 \**Detailed results may be found [here](https://github.com/jerry0317/JYMoleculeTool-Results/tree/master/Structure%20Finder/results).*
+
+</details>
 
 As the first atom is arbitrarily fixed, the total number of structural combinations for *k* non-hygrogen atoms should be *8<sup>k-1</sup>*. After optimization in algorithms, the runtime complexity of the program should be *O(n logn)*, where *n = 8<sup>k-1</sup>*. Therefore, in terms of *k*, the runtime complexity is basically *2<sup>O(k)</sup>*, which grows exponentially with the increase of number of non-H atoms.
 
